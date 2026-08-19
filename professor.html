@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ADM Arena 360 — Professor</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<main class="shell wide">
+  <header class="topbar">
+    <div><div class="eyebrow">PAINEL MESTRE</div><h1>🎮 ADM ARENA 360</h1></div>
+    <a class="ghost" href="index.html">← Início</a>
+  </header>
+
+  <section class="grid-2">
+    <div class="card glass">
+      <h2>Nova partida</h2>
+      <label>Nome da turma</label>
+      <input id="turma" placeholder="Ex.: 3ª M01 — Técnico ADM">
+      <label>Senha do professor</label>
+      <input id="senha" type="password" placeholder="Crie uma senha para esta sala">
+      <button class="primary" id="criarSala">CRIAR SALA</button>
+      <div id="codigoWrap" class="room-code hidden">
+        <span>CÓDIGO DA SALA</span><strong id="codigoSala">ADM-0000</strong>
+        <button class="ghost" id="copiarCodigo">Copiar</button>
+      </div>
+    </div>
+
+    <div class="card glass">
+      <h2>Controle da partida</h2>
+      <div class="control-grid">
+        <button id="iniciar">▶ Iniciar</button>
+        <button id="proxima">⏭ Próxima rodada</button>
+        <button id="pausar">⏸ Pausar</button>
+        <button id="crise">🚨 Lançar crise</button>
+        <button id="leilao">🔨 Abrir leilão</button>
+        <button id="mercado">🤝 Mercado livre</button>
+      </div>
+      <div class="status">
+        <span>Rodada</span><strong id="rodada">0/8</strong>
+        <span>Status</span><strong id="status">Aguardando sala</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="card glass">
+    <div class="section-title"><h2>Empresas conectadas</h2><span id="qtdEmpresas">0 empresas</span></div>
+    <div id="empresas" class="company-list empty">Crie uma sala para iniciar.</div>
+  </section>
+
+  <section class="card glass">
+    <h2>Disparar evento</h2>
+    <div class="event-grid">
+      <button class="event" data-event="fornecedor">📦 Fornecedor +18%</button>
+      <button class="event" data-event="viral">📱 Reclamação viral</button>
+      <button class="event" data-event="equipe">👥 Equipe insatisfeita</button>
+      <button class="event" data-event="boom">📈 Boom de vendas</button>
+      <button class="event" data-event="logistica">🚚 Crise logística</button>
+      <button class="event" data-event="credito">🏦 Crédito liberado</button>
+    </div>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+</main>
+<script type="module" src="js/professor.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ADM Arena 360 — Empresa</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<main class="shell wide">
+  <header class="topbar">
+    <div><div class="eyebrow">CENTRAL DA EMPRESA</div><h1>🏢 ADM ARENA 360</h1></div>
+    <a class="ghost" href="index.html">← Início</a>
+  </header>
+
+  <section id="entrada" class="card glass entry-card">
+    <h2>Entrar na disputa</h2>
+    <div class="grid-2">
+      <div><label>Código da sala</label><input id="codigo" placeholder="ADM-1234" maxlength="8"></div>
+      <div><label>Nome da empresa</label><input id="nomeEmpresa" placeholder="Ex.: Infinity Business"></div>
+    </div>
+    <label>Segmento</label>
+    <select id="segmento">
+      <option>Cafeteria</option><option>Moda</option><option>Alimentação</option>
+      <option>Turismo</option><option>Tecnologia</option><option>Academia</option>
+      <option>Pet Shop</option><option>Eventos</option>
+    </select>
+    <button class="primary" id="entrar">ENTRAR NA ARENA</button>
+    <p class="muted">Modo demonstração funciona sem Firebase. Para multiplayer entre Chromebooks, conecte o Firebase.</p>
+  </section>
+
+  <section id="jogo" class="hidden">
+    <div class="company-header card glass">
+      <div><div class="eyebrow">EMPRESA</div><h2 id="empresaNome">—</h2><small id="empresaSegmento">—</small></div>
+      <div class="pill" id="salaPill">Sala —</div>
+      <div class="pill danger" id="fasePill">Aguardando</div>
+    </div>
+
+    <section class="metrics">
+      <div class="metric"><span>💰 Caixa</span><strong id="caixa">ADM$ 100.000</strong></div>
+      <div class="metric"><span>👥 Clientes</span><strong id="clientes">50</strong></div>
+      <div class="metric"><span>⭐ Reputação</span><strong id="reputacao">50</strong></div>
+      <div class="metric"><span>😊 Equipe</span><strong id="equipe">100%</strong></div>
+      <div class="metric"><span>💡 Inovação</span><strong id="inovacao">0</strong></div>
+      <div class="metric"><span>🏆 XP</span><strong id="xp">0</strong></div>
+    </section>
+
+    <section class="grid-2">
+      <div class="card glass">
+        <h2>🎯 Decisão da rodada</h2>
+        <p id="missaoTexto">Aguarde o professor iniciar a partida.</p>
+        <div id="decisaoArea"></div>
+      </div>
+      <div class="card glass">
+        <h2>🔔 Central de notificações</h2>
+        <div id="notificacoes" class="notifications">
+          <div class="notification">Bem-vindos à arena. Preparem a estratégia.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="card glass">
+        <h2>🤝 Negociar</h2>
+        <label>Empresa destinatária</label>
+        <input id="destino" placeholder="Nome da empresa">
+        <label>Proposta</label>
+        <textarea id="proposta" placeholder="Ex.: Oferecemos ADM$ 8.000 por acesso à tecnologia."></textarea>
+        <button id="enviarProposta">ENVIAR PROPOSTA</button>
+      </div>
+      <div class="card glass">
+        <h2>🛡️ Inventário estratégico</h2>
+        <div class="inventory">
+          <div>🛡️ Escudo financeiro <b id="escudo">0</b></div>
+          <div>🔍 Pesquisa de mercado <b id="pesquisa">0</b></div>
+          <div>📣 Campanha viral <b id="campanha">0</b></div>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <div id="modalEvento" class="modal hidden">
+    <div class="modal-card">
+      <div class="eyebrow">🚨 EVENTO DE MERCADO</div>
+      <h2 id="eventoTitulo">Crise!</h2>
+      <p id="eventoTexto"></p>
+      <div id="eventoOpcoes" class="stack"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+</main>
+<script type="module" src="js/empresa.js"></script>
+</body>
+</html>
