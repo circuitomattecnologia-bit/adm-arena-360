@@ -431,6 +431,17 @@ $("#entrar").addEventListener("click",async()=>{
     return;
   }
 
+  const normalizedName = name.trim().toLocaleLowerCase("pt-BR");
+  const duplicate = Object.values(room.companies || {}).find(
+    c => String(c?.name || "").trim().toLocaleLowerCase("pt-BR") === normalizedName
+  );
+
+  if(duplicate){
+    toast(`Já existe uma empresa chamada "${duplicate.name}" nesta sala. Use outro nome.`);
+    $("#nomeEmpresa")?.focus();
+    return;
+  }
+
   companyId=safeId(name);
   company={
     id:companyId,
