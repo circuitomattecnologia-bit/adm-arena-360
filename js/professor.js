@@ -1,5 +1,5 @@
 import { FIREBASE } from "./firebase-config.js";
-import { getFirebase, demoSet, roomCode } from "./firebase-service.js";
+import { getFirebase, demoGet, demoSet, roomCode } from "./firebase-service.js";
 import { rounds, events } from "./game.js";
 
 let currentRoom = null;
@@ -146,6 +146,61 @@ async function closeAuction(){
   }catch(e){ console.error(e); toast(`Erro ao encerrar leilão: ${e.message}`,"error"); }
 }
 
+
+async function acessarSalaExistente() {
+  const codigo = ($("#codigoExistente")?.value || "").trim().toUpperCase();
+  const senha = ($("#senhaExistente")?.value || "").trim();
+
+  if (!codigo) {
+    toast("Digite o código da sala.", "error");
+    $("#codigoExistente")?.focus();
+    return;
+  }
+  if (!senha) {
+    toast("Digite a senha do professor.", "error");
+    $("#senhaExistente")?.focus();
+    return;
+  }
+
+  try {
+    const f = await getFirebase();
+    let data = null;
+
+    if (f) {
+      const snap = await f.get(f.ref(f.db, `rooms/${codigo}`));
+      data = snap.val();
+    } else {
+      data = demoGet(`room:${codigo}`, null);
+    }
+
+    if (!data) {
+      toast("Sala não encontrada.", "error");
+      return;
+    }
+
+    if (String(data.teacherPassword || "") !== senha) {
+      toast("Senha do professor incorreta.", "error");
+      return;
+    }
+
+    currentRoom = codigo;
+    roomData = data;
+
+    $("#codigoSala").textContent = currentRoom;
+    $("#codigoWrap").classList.remove("hidden");
+    if ($("#turma")) $("#turma").value = roomData.className || "";
+
+    await listen();
+    render();
+    toast(`Sala ${currentRoom} recuperada com sucesso.`);
+  } catch (e) {
+    console.error(e);
+    toast(`Não foi possível acessar a sala: ${e.message}`, "error");
+  }
+}
+
+$("#acessarSala")?.addEventListener("click", acessarSalaExistente);
+
 $("#criarSala").addEventListener("click",async()=>{
   const turma=$("#turma").value.trim(), senha=$("#senha").value.trim();
   if(!turma){toast("Digite o nome da turma.","error");$("#turma").focus();return}
@@ -159,17 +214,17 @@ $("#criarSala").addEventListener("click",async()=>{
   }catch(err){console.error(err);currentRoom=null;roomData=null;toast(`Não foi possível criar a sala: ${err.message}`,"error")}finally{setBusy(false)}
 });
 $("#copiarCodigo").addEventListener("click",async()=>{if(!currentRoom)return;try{await navigator.clipboard.writeText(currentRoom);toast("Código copiado.")}catch{toast(`Código da sala: ${currentRoom}`)}});
-$("#iniciar").addEventListener("click",async()=>{if(!roomData)return toast("Crie uma sala primeiro.","error");roomData.status="Em andamento";roomData.round=1;roomData.currentEvent=null;try{await saveRoom()}catch(e){toast(e.message,"error")}});
-$("#proxima").addEventListener("click",async()=>{if(!roomData)return toast("Crie uma sala primeiro.","error");roomData.round=Math.min(8,(roomData.round||0)+1);roomData.status=rounds[roomData.round-1]?.name||"Final";roomData.currentEvent=null;try{await saveRoom()}catch(e){toast(e.message,"error")}});
-$("#pausar").addEventListener("click",async()=>{if(!roomData)return toast("Crie uma sala primeiro.","error");roomData.status=roomData.status==="Pausado"?"Em andamento":"Pausado";try{await saveRoom()}catch(e){toast(e.message,"error")}});
-$("#crise").addEventListener("click",()=>{if(!roomData)return toast("Crie uma sala primeiro.","error");const keys=Object.keys(events);document.querySelector(`[data-event="${keys[Math.floor(Math.random()*keys.length)]}"]`)?.click()});
+$("#iniciar").addEventListener("click",async()=>{if(!roomData)return toast("Crie ou acesse uma sala primeiro.","error");roomData.status="Em andamento";roomData.round=1;roomData.currentEvent=null;try{await saveRoom()}catch(e){toast(e.message,"error")}});
+$("#proxima").addEventListener("click",async()=>{if(!roomData)return toast("Crie ou acesse uma sala primeiro.","error");roomData.round=Math.min(8,(roomData.round||0)+1);roomData.status=rounds[roomData.round-1]?.name||"Final";roomData.currentEvent=null;try{await saveRoom()}catch(e){toast(e.message,"error")}});
+$("#pausar").addEventListener("click",async()=>{if(!roomData)return toast("Crie ou acesse uma sala primeiro.","error");roomData.status=roomData.status==="Pausado"?"Em andamento":"Pausado";try{await saveRoom()}catch(e){toast(e.message,"error")}});
+$("#crise").addEventListener("click",()=>{if(!roomData)return toast("Crie ou acesse uma sala primeiro.","error");const keys=Object.keys(events);document.querySelector(`[data-event="${keys[Math.floor(Math.random()*keys.length)]}"]`)?.click()});
 $("#leilao").addEventListener("click",async()=>{
-  if(!roomData)return toast("Crie uma sala primeiro.","error");
+  if(!roomData)return toast("Crie ou acesse uma sala primeiro.","error");
   const item=AUCTION_ITEMS[Math.floor(Math.random()*AUCTION_ITEMS.length)];
   roomData.round=Math.max(3,roomData.round||0); roomData.status="Leilão aberto";
   roomData.auction={status:"open",itemId:item.id,title:item.title,description:item.description,field:item.field,qty:item.qty,minBid:item.minBid,openedAt:Date.now(),bids:{}};
   try{await saveRoom();toast(`Leilão aberto: ${item.title}`)}catch(e){toast(e.message,"error")}
 });
-$("#mercado").addEventListener("click",async()=>{if(!roomData)return toast("Crie uma sala primeiro.","error");roomData.status="Mercado de negociações aberto";roomData.round=Math.max(6,roomData.round||0);try{await saveRoom();toast("Mercado livre aberto.")}catch(e){toast(e.message,"error")}});
-document.querySelectorAll(".event").forEach(b=>b.addEventListener("click",async()=>{if(!roomData)return toast("Crie uma sala primeiro.","error");roomData.currentEvent={id:b.dataset.event,nonce:Date.now()};roomData.status="Evento de mercado";try{await saveRoom();toast("Evento disparado para as empresas!")}catch(e){toast(e.message,"error")}}));
+$("#mercado").addEventListener("click",async()=>{if(!roomData)return toast("Crie ou acesse uma sala primeiro.","error");roomData.status="Mercado de negociações aberto";roomData.round=Math.max(6,roomData.round||0);try{await saveRoom();toast("Mercado livre aberto.")}catch(e){toast(e.message,"error")}});
+document.querySelectorAll(".event").forEach(b=>b.addEventListener("click",async()=>{if(!roomData)return toast("Crie ou acesse uma sala primeiro.","error");roomData.currentEvent={id:b.dataset.event,nonce:Date.now()};roomData.status="Evento de mercado";try{await saveRoom();toast("Evento disparado para as empresas!")}catch(e){toast(e.message,"error")}}));
 console.log("ADM Arena 360 — Painel do Professor carregado.");
