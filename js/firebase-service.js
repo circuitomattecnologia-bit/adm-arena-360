@@ -59,6 +59,18 @@ export async function getFirebase() {
       return snapshot(await response.json());
     },
 
+    async remove(refPath) {
+      const response = await fetch(pathUrl(refPath), {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) {
+        const txt = await response.text();
+        throw new Error(`Firebase recusou a exclusão (${response.status}): ${txt}`);
+      }
+      return true;
+    },
+
     onValue(refPath, callback) {
       let active = true;
       let last = Symbol("initial");
