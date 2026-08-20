@@ -186,11 +186,8 @@ function bindInvestmentPlan(){
 
     company.investmentPlan = v;
     company.reservaFinanceira = v.reserva;
-
-    // A reserva permanece no caixa. As demais áreas consomem recursos.
     company.caixa = caixaAtual - gasto;
 
-    // Consequências pedagógicas da distribuição.
     company.reputacao += Math.floor(v.estrutura / 10000) * 2;
     company.equipe += Math.floor(v.pessoas / 10000) * 5;
     company.clientes += Math.floor(v.marketing / 5000) * 2;
@@ -198,13 +195,10 @@ function bindInvestmentPlan(){
     company.clientes += Math.floor(v.estoque / 10000);
     company.reputacao += Math.floor(v.estoque / 20000);
 
-    // Reserva fortalece segurança financeira.
     company.escudo = (company.escudo || 0) + Math.floor(v.reserva / 20000);
 
-    // XP por planejamento completo.
     const areasUsadas = Object.values(v).filter(x=>x>0).length;
     company.xp += 6 + areasUsadas;
-
     company.lastDecisionRound = room.round;
 
     await saveCompany();
@@ -416,66 +410,146 @@ function showEvent(id){
   });
 }
 
-$("#entrar").addEventListener("click",async()=>{
-  roomCode=$("#codigo").value.trim().toUpperCase();
-  const name=$("#nomeEmpresa").value.trim();
+function normalizeName(s){
+  return String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ");
+}
 
-  if(!roomCode||!name){
-    toast("Informe o código e o nome da empresa.");
+function findExistingCompany(name){
+  const target=normalizeName(name);
+  return Object.values(room?.companies||{}).find(c=>normalizeName(c?.name)===target)||null;
+}
+
+function ensureCompanyAccessFields(){
+  const entrada=$("#entrada");
+  if(!entrada || $("#senhaEmpresa")) return;
+  const entrar=$("#entrar");
+  if(!entrar) return;
+
+  const wrap=document.createElement("div");
+  wrap.className="stack company-access-extra";
+  wrap.innerHTML=`
+    <label for="senhaEmpresa">Senha da empresa</label>
+    <input id="senhaEmpresa" type="password" autocomplete="current-password" placeholder="Crie ou digite a senha da empresa" minlength="4" maxlength="30">
+    <p class="muted" style="margin:0">Primeiro acesso: crie uma senha. Nos próximos acessos, use a mesma sala, o mesmo nome da empresa e esta senha.</p>`;
+  entrar.parentNode.insertBefore(wrap,entrar);
+}
+
+function rememberAccess(){
+  try{
+    localStorage.setItem("adm360:lastCompanyAccess",JSON.stringify({
+      roomCode,
+      companyId,
+      name:company?.name||""
+    }));
+  }catch{}
+}
+
+async function enterCompany(){
+  roomCode=$("#codigo")?.value.trim().toUpperCase();
+  const name=$("#nomeEmpresa")?.value.trim();
+  const password=$("#senhaEmpresa")?.value.trim();
+
+  if(!roomCode||!name||!password){
+    toast("Informe o código da sala, o nome e a senha da empresa.");
+    return;
+  }
+
+  if(password.length<4){
+    toast("A senha da empresa deve ter pelo menos 4 caracteres.");
     return;
   }
 
   room=await getRoom();
+
   if(!room){
-    toast("Sala não encontrada. No modo demonstração, crie a sala neste mesmo navegador.");
+    toast("Sala não encontrada. Confira o código informado.");
     return;
   }
 
-  const normalizedName = name.trim().toLocaleLowerCase("pt-BR");
-  const duplicate = Object.values(room.companies || {}).find(
-    c => String(c?.name || "").trim().toLocaleLowerCase("pt-BR") === normalizedName
-  );
+  const existing=findExistingCompany(name);
 
-  if(duplicate){
-    toast(`Já existe uma empresa chamada "${duplicate.name}" nesta sala. Use outro nome.`);
-    $("#nomeEmpresa")?.focus();
-    return;
+  if(existing){
+    if(!existing.accessPassword){
+      existing.accessPassword=password;
+      existing.passwordCreatedAt=Date.now();
+    } else if(String(existing.accessPassword)!==password){
+      toast("Senha da empresa incorreta.");
+      return;
+    }
+
+    companyId=existing.id;
+    company=existing;
+
+    await saveCompany();
+    toast(`Empresa ${company.name} recuperada. Progresso mantido.`);
+  } else {
+    companyId=safeId(name);
+
+    company={
+      id:companyId,
+      name,
+      segment:$("#segmento")?.value||"",
+      accessPassword:password,
+      passwordCreatedAt:Date.now(),
+      caixa:100000,
+      clientes:50,
+      reputacao:50,
+      equipe:100,
+      inovacao:0,
+      xp:0,
+      escudo:0,
+      pesquisa:0,
+      campanha:0,
+      joinedAt:Date.now()
+    };
+
+    await saveCompany();
+    toast(`Empresa ${company.name} criada. Guarde a senha para retornar.`);
   }
 
-  companyId=safeId(name);
-  company={
-    id:companyId,
-    name,
-    segment:$("#segmento").value,
-    caixa:100000,
-    clientes:50,
-    reputacao:50,
-    equipe:100,
-    inovacao:0,
-    xp:0,
-    escudo:0,
-    pesquisa:0,
-    campanha:0,
-    joinedAt:Date.now()
-  };
+  rememberAccess();
 
-  await saveCompany();
-  $("#entrada").classList.add("hidden");
-  $("#jogo").classList.remove("hidden");
+  $("#entrada")?.classList.add("hidden");
+  $("#jogo")?.classList.remove("hidden");
+
   await listen();
   render();
+}
+
+ensureCompanyAccessFields();
+
+$("#entrar")?.addEventListener("click",async()=>{
+  const b=$("#entrar");
+  if(b) b.disabled=true;
+
+  try{
+    await enterCompany();
+  }catch(e){
+    console.error(e);
+    toast(`Não foi possível entrar: ${e.message}`);
+  }finally{
+    if(b) b.disabled=false;
+  }
 });
 
 $("#enviarProposta").addEventListener("click",async()=>{
   if(!company)return;
-  const to=$("#destino").value.trim(),message=$("#proposta").value.trim();
+
+  const to=$("#destino").value.trim();
+  const message=$("#proposta").value.trim();
 
   if(!to||!message){
     toast("Informe a empresa e a proposta.");
     return;
   }
 
-  await sendNegotiation({from:company.name,to,message,createdAt:Date.now()});
+  await sendNegotiation({
+    from:company.name,
+    to,
+    message,
+    createdAt:Date.now()
+  });
+
   $("#proposta").value="";
   toast("Proposta enviada!");
 });
