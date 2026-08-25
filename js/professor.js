@@ -32,7 +32,7 @@ const AUCTION_ITEMS = [
   {
     id: "campanha",
     title: "📣 Campanha Viral",
-    description: "Entrega 1 Campanha Viral ao inventário da empresa vencedora.",
+    description: "Entrega 1 Campanha Viral ao inventário da empresa vencedora. Os bônus só são aplicados quando a empresa ativar a campanha.",
     field: "campanha",
     qty: 1,
     minBid: 7000
@@ -60,16 +60,20 @@ function setBusy(busy) {
   b.textContent = busy ? "CRIANDO SALA..." : "CRIAR SALA";
 }
 
+function normalizeName(s) {
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
+}
+
 function getUsedEvents() {
   const used = {
     ...(roomData?.usedEvents || {})
   };
 
-  /*
-    Compatibilidade com partidas antigas:
-    se uma empresa já respondeu a um evento antes desta atualização,
-    ele também será considerado utilizado.
-  */
   Object.values(roomData?.companies || {}).forEach(company => {
     Object.values(company?.eventResponses || {}).forEach(response => {
       if (!response?.eventId) return;
@@ -96,7 +100,6 @@ function renderEventButtons() {
 
   document.querySelectorAll(".event").forEach(button => {
     const eventId = button.dataset.event;
-
     if (!eventId) return;
 
     if (!button.dataset.originalLabel) {
@@ -148,6 +151,21 @@ async function saveRoom() {
   render();
 }
 
+async function getLatestRoom() {
+  if (!currentRoom) return roomData;
+
+  const f = await getFirebase();
+
+  if (f) {
+    const snapshot = await f.get(
+      f.ref(f.db, `rooms/${currentRoom}`)
+    );
+    return snapshot.val() || roomData;
+  }
+
+  return demoGet(`room:${currentRoom}`, roomData);
+}
+
 async function listen() {
   const f = await getFirebase();
 
@@ -163,12 +181,18 @@ async function listen() {
       roomData = snapshot.val() || roomData;
       render();
     });
+  } else {
+    const timer = setInterval(() => {
+      roomData = demoGet(`room:${currentRoom}`, roomData);
+      render();
+    }, 900);
+
+    unsubscribe = () => clearInterval(timer);
   }
 }
 
 function ensureAuctionPanel() {
   let panel = $("#auctionTeacherPanel");
-
   if (panel) return panel;
 
   panel = document.createElement("section");
@@ -183,15 +207,10 @@ function ensureAuctionPanel() {
 
     <div id="auctionTeacherInfo"></div>
 
-    <div
-      id="auctionTeacherBids"
-      class="company-list">
-    </div>
+    <div id="auctionTeacherBids" class="company-list"></div>
 
     <div style="margin-top:16px">
-      <button
-        id="encerrarLeilao"
-        class="primary">
+      <button id="encerrarLeilao" class="primary">
         ENCERRAR LEILÃO E DEFINIR VENCEDOR
       </button>
     </div>
@@ -223,23 +242,15 @@ function renderAuctionTeacher() {
 
   panel.classList.remove("hidden");
 
-  const bids = Object.values(
-    auction.bids || {}
-  );
+  const bids = Object.values(auction.bids || {});
 
   $("#auctionBidCount").textContent =
     `${bids.length} lance${bids.length === 1 ? "" : "s"}`;
 
   $("#auctionTeacherInfo").innerHTML = `
-    <p>
-      <strong>
-        ${auction.title || "Item em disputa"}
-      </strong>
-    </p>
+    <p><strong>${auction.title || "Item em disputa"}</strong></p>
 
-    <p class="muted">
-      ${auction.description || ""}
-    </p>
+    <p class="muted">${auction.description || ""}</p>
 
     <p>
       <strong>Lance mínimo:</strong>
@@ -258,16 +269,11 @@ function renderAuctionTeacher() {
                   <strong>🏆 Vencedora:</strong>
                   ${auction.winnerName}
                   —
-                  ADM$
-                  ${Number(auction.winningBid || 0).toLocaleString("pt-BR")}
+                  ADM$ ${Number(auction.winningBid || 0).toLocaleString("pt-BR")}
                 </p>
               `
               : `
-                <p>
-                  <strong>
-                    Leilão encerrado sem lances válidos.
-                  </strong>
-                </p>
+                <p><strong>Leilão encerrado sem lances válidos.</strong></p>
               `
           )
         : ""
@@ -288,31 +294,22 @@ function renderAuctionTeacher() {
                 <div>
                   <strong>${bid.companyName}</strong>
                   <br>
-                  <small>
-                    Lance secreto recebido
-                  </small>
+                  <small>Lance secreto recebido</small>
                 </div>
 
                 <span>
-                  💰 ADM$
-                  ${Number(bid.amount || 0).toLocaleString("pt-BR")}
+                  💰 ADM$ ${Number(bid.amount || 0).toLocaleString("pt-BR")}
                 </span>
               </div>
             `
           )
           .join("")
-      : `
-          <p class="muted">
-            Nenhum lance recebido ainda.
-          </p>
-        `;
+      : `<p class="muted">Nenhum lance recebido ainda.</p>`;
 
   const btn = $("#encerrarLeilao");
 
   if (btn) {
-    btn.disabled =
-      auction.status !== "open";
-
+    btn.disabled = auction.status !== "open";
     btn.textContent =
       auction.status === "open"
         ? "ENCERRAR LEILÃO E DEFINIR VENCEDOR"
@@ -320,10 +317,107 @@ function renderAuctionTeacher() {
   }
 }
 
-async function excluirEmpresa(
-  companyId,
-  companyName
-) {
+function ensureNegotiationPanel() {
+  let panel = $("#teacherNegotiationPanel");
+  if (panel) return panel;
+
+  panel = document.createElement("section");
+  panel.id = "teacherNegotiationPanel";
+  panel.className = "card glass hidden";
+
+  panel.innerHTML = `
+    <div class="section-title">
+      <h2>🤝 Central de Negociações</h2>
+      <span id="teacherNegotiationCount">0 propostas</span>
+    </div>
+
+    <p class="muted">
+      O professor acompanha as propostas e seus status.
+      As decisões de aceitar, recusar ou fazer contraproposta são das empresas.
+    </p>
+
+    <div id="teacherNegotiationList" class="company-list"></div>
+  `;
+
+  const companiesSection =
+    $("#empresas")?.closest("section");
+
+  if (companiesSection) {
+    companiesSection.after(panel);
+  } else {
+    document.querySelector("main")?.appendChild(panel);
+  }
+
+  return panel;
+}
+
+function negotiationStatusLabel(status) {
+  const map = {
+    pending: "🟡 PENDENTE",
+    accepted: "✅ ACEITA",
+    refused: "❌ RECUSADA",
+    countered: "↩️ CONTRAPROPOSTA"
+  };
+
+  return map[status] || String(status || "PENDENTE").toUpperCase();
+}
+
+function renderNegotiationsTeacher() {
+  const panel = ensureNegotiationPanel();
+  const entries = Object.entries(roomData?.negotiations || {})
+    .sort(
+      (a, b) =>
+        Number(b[1]?.createdAt || 0) -
+        Number(a[1]?.createdAt || 0)
+    );
+
+  if (!entries.length) {
+    panel.classList.add("hidden");
+    return;
+  }
+
+  panel.classList.remove("hidden");
+
+  $("#teacherNegotiationCount").textContent =
+    `${entries.length} proposta${entries.length === 1 ? "" : "s"}`;
+
+  $("#teacherNegotiationList").innerHTML =
+    entries
+      .slice(0, 20)
+      .map(([id, n]) => {
+        const type =
+          n.type === "venda-campanha"
+            ? "📣 Venda de Campanha Viral"
+            : "🤝 Acordo / parceria";
+
+        const detail =
+          n.type === "venda-campanha"
+            ? `ADM$ ${Number(n.value || 0).toLocaleString("pt-BR")}`
+            : (n.message || "Sem descrição");
+
+        return `
+          <div class="company-item">
+            <div>
+              <strong>${type}</strong><br>
+              <small>
+                ${n.from || "?"} → ${n.to || "?"}
+              </small><br>
+              <small>${detail}</small>
+              ${
+                n.counterMessage
+                  ? `<br><small>Contraproposta: ${n.counterMessage}</small>`
+                  : ""
+              }
+            </div>
+
+            <span>${negotiationStatusLabel(n.status)}</span>
+          </div>
+        `;
+      })
+      .join("");
+}
+
+async function excluirEmpresa(companyId, companyName) {
   if (!currentRoom || !roomData) return;
 
   const confirmar = confirm(
@@ -345,19 +439,12 @@ async function excluirEmpresa(
     } else {
       if (roomData.companies?.[companyId]) {
         delete roomData.companies[companyId];
-
-        demoSet(
-          `room:${currentRoom}`,
-          roomData
-        );
-
+        demoSet(`room:${currentRoom}`, roomData);
         render();
       }
     }
 
-    toast(
-      `Empresa "${companyName}" excluída.`
-    );
+    toast(`Empresa "${companyName}" excluída.`);
   } catch (e) {
     console.error(e);
 
@@ -378,9 +465,7 @@ function render() {
     roomData.status || "Aguardando";
 
   const companies =
-    Object.values(
-      roomData.companies || {}
-    );
+    Object.values(roomData.companies || {});
 
   $("#qtdEmpresas").textContent =
     `${companies.length} empresa${
@@ -401,36 +486,31 @@ function render() {
           .map(
             company => `
               <div class="company-item">
-
                 <div>
-                  <strong>
-                    ${company.name}
-                  </strong>
+                  <strong>${company.name}</strong>
                   <br>
-                  <small>
-                    ${company.segment}
-                  </small>
+                  <small>${company.segment}</small>
                 </div>
 
                 <span>
-                  💰
-                  ${Number(company.caixa || 0)
-                    .toLocaleString("pt-BR")}
+                  💰 ${Number(company.caixa || 0).toLocaleString("pt-BR")}
                 </span>
 
                 <span>
-                  🏆
-                  ${company.xp || 0} XP
+                  🏆 ${company.xp || 0} XP
                 </span>
 
                 <span class="hide-sm">
-                  ⭐
-                  ${company.reputacao || 0}
+                  ⭐ ${company.reputacao || 0}
                 </span>
 
                 <span class="hide-sm">
-                  👥
-                  ${company.clientes || 0}
+                  👥 ${company.clientes || 0}
+                </span>
+
+                <span class="hide-sm">
+                  📣 ${company.campanha || 0}
+                  ${company.campaignActive ? " • ATIVA" : ""}
                 </span>
 
                 <button
@@ -440,7 +520,6 @@ function render() {
                   data-company-name="${company.name}">
                   🗑️ Excluir
                 </button>
-
               </div>
             `
           )
@@ -462,6 +541,7 @@ function render() {
     });
 
   renderAuctionTeacher();
+  renderNegotiationsTeacher();
   renderEventButtons();
 }
 
@@ -478,21 +558,8 @@ async function closeAuction() {
   }
 
   try {
-    const f = await getFirebase();
-
-    let latest = roomData;
-
-    if (f) {
-      const snapshot = await f.get(
-        f.ref(
-          f.db,
-          `rooms/${currentRoom}`
-        )
-      );
-
-      latest =
-        snapshot.val() || roomData;
-    }
+    const latest =
+      await getLatestRoom();
 
     const auction =
       latest.auction ||
@@ -571,8 +638,10 @@ async function closeAuction() {
       ) +
       Number(auction.qty || 1);
 
-    company.xp =
-      Number(company.xp || 0) + 8;
+    if (auction.field === "campanha") {
+      company.campaignActive = false;
+      company.campaignReceivedAt = Date.now();
+    }
 
     auction.status = "closed";
     auction.closedAt = Date.now();
@@ -590,8 +659,7 @@ async function closeAuction() {
     latest.auction = auction;
 
     latest.status =
-      `Leilão encerrado — ` +
-      `${winner.companyName} venceu`;
+      `Leilão encerrado — ${winner.companyName} venceu`;
 
     roomData = latest;
 
@@ -968,6 +1036,16 @@ $("#leilao")
         );
       }
 
+      if (
+        roomData.auction &&
+        roomData.auction.status === "open"
+      ) {
+        return toast(
+          "Já existe um leilão aberto.",
+          "error"
+        );
+      }
+
       const item =
         AUCTION_ITEMS[
           Math.floor(
@@ -1047,9 +1125,7 @@ $("#mercado")
     }
   );
 
-async function dispararEvento(
-  eventId
-) {
+async function dispararEvento(eventId) {
   if (!roomData) {
     return toast(
       "Crie ou acesse uma sala primeiro.",
@@ -1118,10 +1194,6 @@ async function dispararEvento(
       `✅ Evento disparado e marcado como utilizado: ${events[eventId].title}`
     );
   } catch (e) {
-    /*
-      Se a gravação falhar, não deixamos
-      o evento marcado apenas localmente.
-    */
     delete roomData.usedEvents[eventId];
 
     toast(
@@ -1148,5 +1220,5 @@ document
   });
 
 console.log(
-  "ADM Arena 360 — Painel do Professor carregado com controle de eventos utilizados."
+  "ADM Arena 360 — Painel do Professor carregado com leilão, eventos e monitor de negociações."
 );
