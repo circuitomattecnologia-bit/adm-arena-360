@@ -15,10 +15,21 @@ import {
 
 /* ============================================================
    ADM ARENA 360
-   PROJETO EMPREENDEDOR
+   DISCIPLINA: PROJETO EMPREENDEDOR
    PROF. LEOPOLDO
 
-   PAINEL DO PROFESSOR — VERSÃO CONSOLIDADA
+   PAINEL DO PROFESSOR
+   VERSÃO CONSOLIDADA
+
+   REGRA DE ACESSO
+   ------------------------------------------------------------
+   • PRIMEIRO acesso exige autorização.
+   • TODA nova entrada exige autorização.
+   • Celular/Mobile também exige autorização.
+   • Autorização vale somente para aquela entrada.
+   • Professor pode AUTORIZAR ou NEGAR.
+   • Divergência de senha só é corrigida se o professor autorizar.
+   • Progresso da empresa nunca é apagado ao sair.
    ============================================================ */
 
 
@@ -86,18 +97,6 @@ function escapeHtml(text) {
 }
 
 
-function normalizeName(text) {
-
-  return String(text || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ");
-
-}
-
-
 function money(value) {
 
   return Number(value || 0)
@@ -108,24 +107,33 @@ function money(value) {
 
 function toast(text, type = "ok") {
 
-  const box = $("#toast");
+  const box =
+    $("#toast");
 
   if (!box) return;
 
-  box.textContent = text;
+  box.textContent =
+    text;
 
   box.style.borderColor =
     type === "error"
       ? "#ff5b6e"
       : "";
 
-  box.classList.remove("hidden");
+  box.classList.remove(
+    "hidden"
+  );
 
-  clearTimeout(box._timer);
+  clearTimeout(
+    box._timer
+  );
 
   box._timer =
     setTimeout(
-      () => box.classList.add("hidden"),
+      () =>
+        box.classList.add(
+          "hidden"
+        ),
       3500
     );
 
@@ -134,11 +142,13 @@ function toast(text, type = "ok") {
 
 function setBusy(busy) {
 
-  const button = $("#criarSala");
+  const button =
+    $("#criarSala");
 
   if (!button) return;
 
-  button.disabled = busy;
+  button.disabled =
+    busy;
 
   button.textContent =
     busy
@@ -150,10 +160,14 @@ function setBusy(busy) {
 
 function componentsText(company) {
 
-  if (!company) return "Não informados";
+  if (!company) {
+    return "Não informados";
+  }
 
   if (
-    Array.isArray(company.components)
+    Array.isArray(
+      company.components
+    )
   ) {
 
     return company.components.length
@@ -163,7 +177,9 @@ function componentsText(company) {
   }
 
   if (
-    Array.isArray(company.componentes)
+    Array.isArray(
+      company.componentes
+    )
   ) {
 
     return company.componentes.length
@@ -192,14 +208,11 @@ async function saveRoom() {
     !currentRoom ||
     !roomData
   ) {
-
     return;
-
   }
 
   const f =
     await getFirebase();
-
 
   if (f) {
 
@@ -231,14 +244,11 @@ async function saveRoom() {
 async function getLatestRoom() {
 
   if (!currentRoom) {
-
     return roomData;
-
   }
 
   const f =
     await getFirebase();
-
 
   if (f) {
 
@@ -272,15 +282,14 @@ async function listen() {
   const f =
     await getFirebase();
 
-
   if (unsubscribe) {
 
     unsubscribe();
 
-    unsubscribe = null;
+    unsubscribe =
+      null;
 
   }
-
 
   if (f) {
 
@@ -289,7 +298,6 @@ async function listen() {
         f.db,
         `rooms/${currentRoom}`
       );
-
 
     unsubscribe =
       f.onValue(
@@ -329,7 +337,6 @@ async function listen() {
 
       );
 
-
     unsubscribe =
       () =>
         clearInterval(timer);
@@ -352,12 +359,6 @@ function getUsedEvents() {
   };
 
 
-  /*
-    Recuperação de segurança:
-    se uma versão anterior não salvou usedEvents,
-    procuramos no histórico das empresas.
-  */
-
   Object.values(
     roomData?.companies || {}
   )
@@ -369,14 +370,11 @@ function getUsedEvents() {
         .forEach(response => {
 
           if (!response?.eventId) {
-
             return;
-
           }
 
           const eventId =
             response.eventId;
-
 
           if (!used[eventId]) {
 
@@ -423,7 +421,9 @@ function renderEventButtons() {
 
 
   document
-    .querySelectorAll(".event")
+    .querySelectorAll(
+      ".event"
+    )
     .forEach(button => {
 
       const eventId =
@@ -458,7 +458,8 @@ function renderEventButtons() {
             : "";
 
 
-        button.disabled = true;
+        button.disabled =
+          true;
 
         button.innerHTML =
           `✅ ${escapeHtml(original)}<br>` +
@@ -468,29 +469,16 @@ function renderEventButtons() {
           "event-used"
         );
 
-        button.setAttribute(
-
-          "title",
-
-          used.round
-            ? `Evento utilizado na Rodada ${used.round}`
-            : "Evento já utilizado nesta Arena"
-
-        );
-
       } else {
 
-        button.disabled = false;
+        button.disabled =
+          false;
 
         button.textContent =
           original;
 
         button.classList.remove(
           "event-used"
-        );
-
-        button.removeAttribute(
-          "title"
         );
 
       }
@@ -501,8 +489,40 @@ function renderEventButtons() {
 
 
 /* ============================================================
-   SOLICITAÇÕES DE REENTRADA
+   AUTORIZAÇÃO DE ACESSO
+
+   IMPORTANTE:
+   A chave da solicitação NÃO é obrigatoriamente o companyId.
+
+   Empresa:
+     companyId
+
+   Mobile:
+     companyId__mobile
    ============================================================ */
+
+function getPendingAccessRequests() {
+
+  return Object.entries(
+    roomData?.accessRequests || {}
+  )
+    .filter(
+      ([, request]) =>
+        request?.status ===
+        "pending"
+    )
+    .sort(
+      (a, b) =>
+        Number(
+          a[1]?.requestedAt || 0
+        ) -
+        Number(
+          b[1]?.requestedAt || 0
+        )
+    );
+
+}
+
 
 function renderAccessRequests() {
 
@@ -516,29 +536,12 @@ function renderAccessRequests() {
     !box ||
     !counter
   ) {
-
     return;
-
   }
 
 
   const entries =
-    Object.entries(
-      roomData?.accessRequests || {}
-    )
-      .filter(
-        ([, request]) =>
-          request?.status === "pending"
-      )
-      .sort(
-        (a, b) =>
-          Number(
-            a[1]?.requestedAt || 0
-          ) -
-          Number(
-            b[1]?.requestedAt || 0
-          )
-      );
+    getPendingAccessRequests();
 
 
   counter.textContent =
@@ -552,15 +555,13 @@ function renderAccessRequests() {
       "empty"
     );
 
-    box.innerHTML =
-      `
-        <div class="access-empty">
-          ✅ Nenhuma solicitação de acesso pendente.
-        </div>
-      `;
+    box.innerHTML = `
+      <div class="access-empty">
+        ✅ Nenhuma solicitação de acesso pendente.
+      </div>
+    `;
 
     return;
-
   }
 
 
@@ -571,79 +572,133 @@ function renderAccessRequests() {
 
   box.innerHTML =
     entries
-      .map(([companyId, request]) => {
+      .map(
+        ([requestKey, request]) => {
 
-        const source =
-          request.source === "mobile"
-            ? "📱 Celular"
-            : "💻 Empresa";
+          const companyId =
+            request.companyId ||
+            requestKey.replace(
+              /__mobile$/,
+              ""
+            );
 
-        return `
 
-          <div class="access-request-item">
+          const source =
+            request.source ===
+            "mobile"
+              ? "📱 CENTRAL MOBILE"
+              : "💻 EMPRESA";
 
-            <div class="access-request-info">
 
-              <strong>
-                🔐 ${escapeHtml(
-                  request.companyName ||
-                  companyId
-                )}
-              </strong>
+          const accessType =
+            request.firstAccess
+              ? "🆕 PRIMEIRO ACESSO"
+              : "🔄 NOVA ENTRADA";
 
-              <span>
-                ${source}
-              </span>
 
-              <small>
-                👥 ${
-                  escapeHtml(
+          const company =
+            roomData?.companies?.[
+              companyId
+            ];
+
+
+          const passwordWarning =
+            request.passwordMismatch
+              ? `
+                  <div class="access-password-warning">
+                    ⚠️ SENHA DIVERGENTE
+                    <small>
+                      A senha digitada não corresponde ao registro anterior.
+                      Se você autorizar, a senha desta empresa será atualizada
+                      para a senha informada nesta solicitação.
+                    </small>
+                  </div>
+                `
+              : "";
+
+
+          return `
+
+            <div
+              class="access-request-item"
+            >
+
+              <div
+                class="access-request-info"
+              >
+
+                <strong>
+                  🔐 ${escapeHtml(
+                    request.companyName ||
+                    company?.name ||
+                    companyId
+                  )}
+                </strong>
+
+                <span>
+                  ${source}
+                </span>
+
+                <span>
+                  ${accessType}
+                </span>
+
+                <small>
+                  👥 ${escapeHtml(
                     request.components ||
-                    componentsText(
-                      roomData?.companies?.[
-                        companyId
-                      ]
-                    )
-                  )
-                }
-              </small>
+                    componentsText(company)
+                  )}
+                </small>
 
-              <small>
-                Rodada:
-                ${Number(
-                  request.round || 0
-                )}
-              </small>
+                <small>
+                  🏪 ${escapeHtml(
+                    request.segment ||
+                    company?.segment ||
+                    "Segmento não informado"
+                  )}
+                </small>
+
+                <small>
+                  🎯 Rodada:
+                  ${Number(
+                    request.round || 0
+                  )}
+                </small>
+
+                ${passwordWarning}
+
+              </div>
+
+
+              <div
+                class="access-request-actions"
+              >
+
+                <button
+                  type="button"
+                  class="approve-access"
+                  data-request-key="${escapeHtml(requestKey)}"
+                >
+                  ✅ AUTORIZAR
+                </button>
+
+
+                <button
+                  type="button"
+                  class="deny-access"
+                  data-request-key="${escapeHtml(requestKey)}"
+                >
+                  ❌ NEGAR
+                </button>
+
+              </div>
 
             </div>
 
+          `;
 
-            <div class="access-request-actions">
-
-              <button
-                type="button"
-                class="approve-access"
-                data-company-id="${escapeHtml(companyId)}"
-              >
-                ✅ AUTORIZAR
-              </button>
-
-
-              <button
-                type="button"
-                class="deny-access"
-                data-company-id="${escapeHtml(companyId)}"
-              >
-                ❌ NEGAR
-              </button>
-
-            </div>
-
-          </div>
-
-        `;
-
-      })
+        }
+      )
       .join("");
 
 
@@ -656,7 +711,7 @@ function renderAccessRequests() {
       button.onclick =
         () =>
           respondAccessRequest(
-            button.dataset.companyId,
+            button.dataset.requestKey,
             "approved"
           );
 
@@ -672,7 +727,7 @@ function renderAccessRequests() {
       button.onclick =
         () =>
           respondAccessRequest(
-            button.dataset.companyId,
+            button.dataset.requestKey,
             "denied"
           );
 
@@ -681,8 +736,12 @@ function renderAccessRequests() {
 }
 
 
+/* ============================================================
+   RESPONDER SOLICITAÇÃO
+   ============================================================ */
+
 async function respondAccessRequest(
-  companyId,
+  requestKey,
   status
 ) {
 
@@ -690,9 +749,7 @@ async function respondAccessRequest(
     !currentRoom ||
     !roomData
   ) {
-
     return;
-
   }
 
 
@@ -703,12 +760,13 @@ async function respondAccessRequest(
 
 
     latest.accessRequests =
-      latest.accessRequests || {};
+      latest.accessRequests ||
+      {};
 
 
     const request =
       latest.accessRequests[
-        companyId
+        requestKey
       ];
 
 
@@ -720,6 +778,54 @@ async function respondAccessRequest(
       );
 
       return;
+    }
+
+
+    const companyId =
+      request.companyId ||
+      requestKey.replace(
+        /__mobile$/,
+        ""
+      );
+
+
+    const currentCompany =
+      latest.companies?.[
+        companyId
+      ];
+
+
+    /* --------------------------------------------------------
+       SENHA DIVERGENTE
+
+       Só troca a senha se:
+       1. houve divergência;
+       2. professor clicou AUTORIZAR;
+       3. existe senha solicitada.
+       -------------------------------------------------------- */
+
+    if (
+      status === "approved" &&
+      request.passwordMismatch &&
+      request.requestedPassword &&
+      currentCompany
+    ) {
+
+      currentCompany.accessPassword =
+        String(
+          request.requestedPassword
+        );
+
+      currentCompany.passwordVersion =
+        2;
+
+      currentCompany.passwordUpdatedAt =
+        Date.now();
+
+      latest.companies[
+        companyId
+      ] =
+        currentCompany;
 
     }
 
@@ -741,6 +847,9 @@ async function respondAccessRequest(
       request.approvedBy =
         "Prof. Leopoldo";
 
+      request.sessionAuthorized =
+        true;
+
     } else {
 
       request.deniedAt =
@@ -749,12 +858,25 @@ async function respondAccessRequest(
       request.deniedBy =
         "Prof. Leopoldo";
 
+      request.sessionAuthorized =
+        false;
+
     }
 
 
+    /*
+      Nunca manter a senha digitada
+      dentro da solicitação após
+      a decisão do professor.
+    */
+
+    delete request.requestedPassword;
+
+
     latest.accessRequests[
-      companyId
-    ] = request;
+      requestKey
+    ] =
+      request;
 
 
     roomData =
@@ -767,7 +889,11 @@ async function respondAccessRequest(
     toast(
 
       status === "approved"
-        ? `✅ ${request.companyName} autorizada a entrar.`
+        ? (
+            request.passwordMismatch
+              ? `✅ ${request.companyName} autorizada. Senha atualizada e acesso liberado.`
+              : `✅ ${request.companyName} autorizada a entrar.`
+          )
         : `❌ Entrada de ${request.companyName} negada.`
 
     );
@@ -787,6 +913,55 @@ async function respondAccessRequest(
 
 
 /* ============================================================
+   INVALIDAR AUTORIZAÇÕES
+
+   Usado quando o professor pausa a Arena.
+   Assim uma autorização antiga não volta a funcionar
+   automaticamente depois da retomada.
+   ============================================================ */
+
+function invalidateApprovedAccesses(
+  targetRoom
+) {
+
+  targetRoom.accessRequests =
+    targetRoom.accessRequests ||
+    {};
+
+
+  Object.keys(
+    targetRoom.accessRequests
+  )
+    .forEach(key => {
+
+      const request =
+        targetRoom.accessRequests[
+          key
+        ];
+
+
+      if (
+        request?.status ===
+        "approved"
+      ) {
+
+        request.status =
+          "expired";
+
+        request.expiredAt =
+          Date.now();
+
+        request.sessionAuthorized =
+          false;
+
+      }
+
+    });
+
+}
+
+
+/* ============================================================
    EMPRESAS
    ============================================================ */
 
@@ -799,9 +974,7 @@ async function excluirEmpresa(
     !currentRoom ||
     !roomData
   ) {
-
     return;
-
   }
 
 
@@ -811,100 +984,82 @@ async function excluirEmpresa(
     );
 
 
-  if (!confirmar) return;
+  if (!confirmar) {
+    return;
+  }
 
 
   try {
 
-    const f =
-      await getFirebase();
+    const latest =
+      await getLatestRoom();
 
 
-    if (f) {
-
-      await f.remove(
-
-        f.ref(
-          f.db,
-          `rooms/${currentRoom}/companies/${companyId}`
-        )
-
-      );
+    latest.companies =
+      latest.companies ||
+      {};
 
 
-      /*
-        Remove também solicitações
-        e vínculo mobile desta empresa.
-      */
-
-      await f.remove(
-
-        f.ref(
-          f.db,
-          `rooms/${currentRoom}/accessRequests/${companyId}`
-        )
-
-      );
+    delete latest.companies[
+      companyId
+    ];
 
 
-      await f.remove(
+    /*
+      Remove TODAS as solicitações da empresa:
+      computador, mobile e futuras variantes.
+    */
 
-        f.ref(
-          f.db,
-          `rooms/${currentRoom}/mobileConnections/${companyId}`
-        )
-
-      );
-
-    } else {
-
-      if (
-        roomData.companies?.[
-          companyId
-        ]
-      ) {
-
-        delete roomData.companies[
-          companyId
-        ];
-
-      }
+    latest.accessRequests =
+      latest.accessRequests ||
+      {};
 
 
-      if (
-        roomData.accessRequests?.[
-          companyId
-        ]
-      ) {
+    Object.keys(
+      latest.accessRequests
+    )
+      .forEach(key => {
 
-        delete roomData.accessRequests[
-          companyId
-        ];
-
-      }
+        const request =
+          latest.accessRequests[
+            key
+          ];
 
 
-      if (
-        roomData.mobileConnections?.[
-          companyId
-        ]
-      ) {
+        if (
+          request?.companyId ===
+            companyId ||
+          key === companyId ||
+          key ===
+            `${companyId}__mobile`
+        ) {
 
-        delete roomData.mobileConnections[
-          companyId
-        ];
+          delete latest
+            .accessRequests[
+              key
+            ];
 
-      }
+        }
+
+      });
 
 
-      demoSet(
-        `room:${currentRoom}`,
-        roomData
-      );
+    latest.mobileConnections =
+      latest.mobileConnections ||
+      {};
 
-      render();
 
-    }
+    delete latest
+      .mobileConnections[
+        companyId
+      ];
+
+
+    roomData =
+      latest;
+
+
+    await saveRoom();
 
 
     toast(
@@ -937,9 +1092,7 @@ function renderCompanies() {
     !box ||
     !counter
   ) {
-
     return;
-
   }
 
 
@@ -960,10 +1113,9 @@ function renderCompanies() {
     );
 
     box.innerHTML =
-      "Nenhuma empresa conectada.";
+      "Nenhuma empresa cadastrada.";
 
     return;
-
   }
 
 
@@ -976,62 +1128,96 @@ function renderCompanies() {
     companies
       .sort(
         (a, b) =>
-          Number(b.xp || 0) -
-          Number(a.xp || 0)
+          Number(
+            b.xp || 0
+          ) -
+          Number(
+            a.xp || 0
+          )
       )
       .map(company => {
 
         const components =
           componentsText(company);
 
+
         return `
 
-          <div class="company-item professor-company-item">
+          <div
+            class="company-item professor-company-item"
+          >
 
-            <div class="company-main-info">
+            <div
+              class="company-main-info"
+            >
 
               <strong>
-                🏢 ${escapeHtml(company.name)}
+                🏢 ${escapeHtml(
+                  company.name
+                )}
               </strong>
 
               <small>
-                ${escapeHtml(company.segment || "Segmento não informado")}
+                ${escapeHtml(
+                  company.segment ||
+                  "Segmento não informado"
+                )}
               </small>
 
-              <small class="company-components">
-                👥 ${escapeHtml(components)}
+              <small
+                class="company-components"
+              >
+                👥 ${escapeHtml(
+                  components
+                )}
               </small>
 
             </div>
 
 
             <span>
-              💰 ADM$ ${money(company.caixa)}
+              💰 ADM$ ${money(
+                company.caixa
+              )}
             </span>
 
 
             <span>
-              👥 ${Number(company.clientes || 0)}
+              👥 ${Number(
+                company.clientes || 0
+              )}
             </span>
 
 
             <span>
-              ⭐ ${Number(company.reputacao || 0)}
+              ⭐ ${Number(
+                company.reputacao || 0
+              )}
             </span>
 
 
             <span>
-              🏆 ${Number(company.xp || 0)} XP
+              🏆 ${Number(
+                company.xp || 0
+              )} XP
             </span>
 
 
-            <span class="resource-summary">
+            <span
+              class="resource-summary"
+            >
 
-              🛡️ ${Number(company.escudo || 0)}
+              🛡️ ${Number(
+                company.escudo || 0
+              )}
 
-              • 🔍 ${Number(company.pesquisa || 0)}
+              • 🔍 ${Number(
+                company.pesquisa || 0
+              )}
 
-              • 📣 ${Number(company.campanha || 0)}
+              • 📣 ${Number(
+                company.campanha || 0
+              )}
 
               ${
                 company.campaignActive
@@ -1078,7 +1264,7 @@ function renderCompanies() {
 
 
 /* ============================================================
-   LEILÃO
+   LEILÃO — PAINEL DO PROFESSOR
    ============================================================ */
 
 function renderAuctionTeacher() {
@@ -1098,9 +1284,7 @@ function renderAuctionTeacher() {
     !content ||
     !status
   ) {
-
     return;
-
   }
 
 
@@ -1113,15 +1297,13 @@ function renderAuctionTeacher() {
     status.textContent =
       "Aguardando";
 
-    content.innerHTML =
-      `
-        <p class="muted">
-          O painel será ativado quando um leilão for aberto.
-        </p>
-      `;
+    content.innerHTML = `
+      <p class="muted">
+        O painel será ativado quando um leilão for aberto.
+      </p>
+    `;
 
     return;
-
   }
 
 
@@ -1131,8 +1313,12 @@ function renderAuctionTeacher() {
     )
       .sort(
         (a, b) =>
-          Number(b.amount || 0) -
-          Number(a.amount || 0)
+          Number(
+            b.amount || 0
+          ) -
+          Number(
+            a.amount || 0
+          )
       );
 
 
@@ -1144,7 +1330,9 @@ function renderAuctionTeacher() {
 
   content.innerHTML = `
 
-    <div class="auction-summary">
+    <div
+      class="auction-summary"
+    >
 
       <h3>
         ${escapeHtml(
@@ -1155,37 +1343,50 @@ function renderAuctionTeacher() {
 
       <p>
         ${escapeHtml(
-          auction.description || ""
+          auction.description ||
+          ""
         )}
       </p>
 
       <strong>
         Lance mínimo:
-        ADM$ ${money(auction.minBid)}
+        ADM$ ${money(
+          auction.minBid
+        )}
       </strong>
 
     </div>
 
 
-    <div class="auction-bids">
+    <div
+      class="auction-bids"
+    >
 
       ${
         bids.length
-          ? bids.map(bid => `
+          ? bids
+              .map(bid => `
 
-              <div class="auction-bid-item">
+                <div
+                  class="auction-bid-item"
+                >
 
-                <strong>
-                  🏢 ${escapeHtml(bid.companyName)}
-                </strong>
+                  <strong>
+                    🏢 ${escapeHtml(
+                      bid.companyName
+                    )}
+                  </strong>
 
-                <span>
-                  🔒 ADM$ ${money(bid.amount)}
-                </span>
+                  <span>
+                    🔒 ADM$ ${money(
+                      bid.amount
+                    )}
+                  </span>
 
-              </div>
+                </div>
 
-            `).join("")
+              `)
+              .join("")
           : `
               <p class="muted">
                 Nenhum lance recebido.
@@ -1207,20 +1408,26 @@ function renderAuctionTeacher() {
             </button>
           `
         : `
-            <div class="auction-result">
+            <div
+              class="auction-result"
+            >
 
               ${
                 auction.winnerName
                   ? `
                       🏆
                       <strong>
-                        ${escapeHtml(auction.winnerName)}
+                        ${escapeHtml(
+                          auction.winnerName
+                        )}
                       </strong>
 
                       venceu por
 
                       <strong>
-                        ADM$ ${money(auction.winningBid)}
+                        ADM$ ${money(
+                          auction.winningBid
+                        )}
                       </strong>
                     `
                   : `
@@ -1244,12 +1451,17 @@ function renderAuctionTeacher() {
 }
 
 
+/* ============================================================
+   ENCERRAR LEILÃO
+   ============================================================ */
+
 async function closeAuction() {
 
   if (
     !currentRoom ||
     !roomData?.auction ||
-    roomData.auction.status !== "open"
+    roomData.auction.status !==
+      "open"
   ) {
 
     toast(
@@ -1258,7 +1470,6 @@ async function closeAuction() {
     );
 
     return;
-
   }
 
 
@@ -1279,15 +1490,27 @@ async function closeAuction() {
       )
         .filter(
           bid =>
-            Number(bid.amount || 0) >=
-            Number(auction.minBid || 0)
+            Number(
+              bid.amount || 0
+            ) >=
+            Number(
+              auction.minBid || 0
+            )
         )
         .sort(
           (a, b) =>
-            Number(b.amount || 0) -
-              Number(a.amount || 0) ||
-            Number(a.createdAt || 0) -
-              Number(b.createdAt || 0)
+            Number(
+              b.amount || 0
+            ) -
+              Number(
+                a.amount || 0
+              ) ||
+            Number(
+              a.createdAt || 0
+            ) -
+              Number(
+                b.createdAt || 0
+              )
         );
 
 
@@ -1324,18 +1547,14 @@ async function closeAuction() {
       );
 
       return;
-
     }
 
 
-    /*
-      Percorre os lances do maior para o menor
-      até encontrar empresa que ainda possua
-      caixa suficiente.
-    */
+    let winner =
+      null;
 
-    let winner = null;
-    let winnerCompany = null;
+    let winnerCompany =
+      null;
 
 
     for (
@@ -1350,8 +1569,12 @@ async function closeAuction() {
 
       if (
         candidate &&
-        Number(candidate.caixa || 0) >=
-        Number(bid.amount || 0)
+        Number(
+          candidate.caixa || 0
+        ) >=
+        Number(
+          bid.amount || 0
+        )
       ) {
 
         winner =
@@ -1395,6 +1618,7 @@ async function closeAuction() {
       roomData =
         latest;
 
+
       await saveRoom();
 
 
@@ -1404,7 +1628,6 @@ async function closeAuction() {
       );
 
       return;
-
     }
 
 
@@ -1434,14 +1657,9 @@ async function closeAuction() {
       );
 
 
-    /*
-      Campanha Viral:
-      vencedor recebe o recurso,
-      mas NÃO recebe bônus automaticamente.
-    */
-
     if (
-      auction.field === "campanha"
+      auction.field ===
+      "campanha"
     ) {
 
       winnerCompany.campaignActive =
@@ -1512,7 +1730,9 @@ async function closeAuction() {
    NEGOCIAÇÕES
    ============================================================ */
 
-function negotiationStatusLabel(status) {
+function negotiationStatusLabel(
+  status
+) {
 
   const map = {
 
@@ -1525,7 +1745,13 @@ function negotiationStatusLabel(status) {
     refused:
       "❌ RECUSADA",
 
+    rejected:
+      "❌ RECUSADA",
+
     countered:
+      "↩️ CONTRAPROPOSTA",
+
+    counteroffer:
       "↩️ CONTRAPROPOSTA"
 
   };
@@ -1555,9 +1781,7 @@ function renderNegotiationsTeacher() {
     !box ||
     !counter
   ) {
-
     return;
-
   }
 
 
@@ -1595,7 +1819,6 @@ function renderNegotiationsTeacher() {
       "Nenhuma negociação registrada.";
 
     return;
-
   }
 
 
@@ -1607,76 +1830,86 @@ function renderNegotiationsTeacher() {
   box.innerHTML =
     entries
       .slice(0, 30)
-      .map(([id, negotiation]) => {
+      .map(
+        ([id, negotiation]) => {
 
-        const type =
-          negotiation.type ===
-            "venda-campanha"
-            ? "📣 Venda de Campanha Viral"
-            : "🤝 Acordo / parceria";
-
-
-        const detail =
-          negotiation.type ===
-            "venda-campanha"
-            ? `ADM$ ${money(negotiation.value)}`
-            : escapeHtml(
-                negotiation.message ||
-                "Sem descrição"
-              );
+          const type =
+            negotiation.type ===
+              "venda-campanha"
+              ? "📣 Venda de Campanha Viral"
+              : "🤝 Acordo / parceria";
 
 
-        return `
+          const detail =
+            negotiation.type ===
+              "venda-campanha"
+              ? `ADM$ ${money(
+                  negotiation.value
+                )}`
+              : escapeHtml(
+                  negotiation.message ||
+                  "Sem descrição"
+                );
 
-          <div class="teacher-negotiation-item">
 
-            <div>
+          return `
 
-              <strong>
-                ${type}
-              </strong>
+            <div
+              class="teacher-negotiation-item"
+            >
 
-              <small>
-                ${escapeHtml(
-                  negotiation.from || "?"
+              <div>
+
+                <strong>
+                  ${type}
+                </strong>
+
+                <small>
+                  ${escapeHtml(
+                    negotiation.from ||
+                    "?"
+                  )}
+                  →
+                  ${escapeHtml(
+                    negotiation.to ||
+                    "?"
+                  )}
+                </small>
+
+                <p>
+                  ${detail}
+                </p>
+
+                ${
+                  negotiation.counterMessage
+                    ? `
+                        <small>
+                          ↩️ Contraproposta:
+                          ${escapeHtml(
+                            negotiation.counterMessage
+                          )}
+                        </small>
+                      `
+                    : ""
+                }
+
+              </div>
+
+
+              <span
+                class="negotiation-status"
+              >
+                ${negotiationStatusLabel(
+                  negotiation.status
                 )}
-                →
-                ${escapeHtml(
-                  negotiation.to || "?"
-                )}
-              </small>
-
-              <p>
-                ${detail}
-              </p>
-
-              ${
-                negotiation.counterMessage
-                  ? `
-                      <small>
-                        ↩️ Contraproposta:
-                        ${escapeHtml(
-                          negotiation.counterMessage
-                        )}
-                      </small>
-                    `
-                  : ""
-              }
+              </span>
 
             </div>
 
+          `;
 
-            <span class="negotiation-status">
-              ${negotiationStatusLabel(
-                negotiation.status
-              )}
-            </span>
-
-          </div>
-
-        `;
-
-      })
+        }
+      )
       .join("");
 
 }
@@ -1711,20 +1944,26 @@ function renderMobileCompaniesSelect() {
       </option>
     ` +
     companies
-      .map(company => `
+      .map(
+        company => `
 
-        <option value="${escapeHtml(company.id)}">
-          🏢 ${escapeHtml(company.name)}
-        </option>
+          <option
+            value="${escapeHtml(company.id)}"
+          >
+            🏢 ${escapeHtml(company.name)}
+          </option>
 
-      `)
+        `
+      )
       .join("");
 
 
   if (
     [
       "all",
-      ...companies.map(c => c.id)
+      ...companies.map(
+        c => c.id
+      )
     ].includes(previous)
   ) {
 
@@ -1749,15 +1988,14 @@ function renderMobileConnections() {
     !box ||
     !counter
   ) {
-
     return;
-
   }
 
 
   const connections =
     Object.values(
-      roomData?.mobileConnections || {}
+      roomData?.mobileConnections ||
+      {}
     )
       .filter(
         connection =>
@@ -1780,7 +2018,6 @@ function renderMobileConnections() {
       "Nenhum celular estratégico conectado.";
 
     return;
-
   }
 
 
@@ -1791,34 +2028,46 @@ function renderMobileConnections() {
 
   box.innerHTML =
     connections
-      .map(connection => `
+      .map(
+        connection => `
 
-        <div class="mobile-connected-item">
+          <div
+            class="mobile-connected-item"
+          >
 
-          <div>
+            <div>
 
-            <strong>
-              📱 ${escapeHtml(connection.companyName)}
-            </strong>
+              <strong>
+                📱 ${escapeHtml(
+                  connection.companyName
+                )}
+              </strong>
 
-            <small>
-              Código:
-              ${escapeHtml(connection.code)}
-            </small>
+              <small>
+                Código:
+                ${escapeHtml(
+                  connection.code
+                )}
+              </small>
+
+            </div>
+
+            <span>
+              🟢 ATIVO
+            </span>
 
           </div>
 
-          <span>
-            🟢 ATIVO
-          </span>
-
-        </div>
-
-      `)
+        `
+      )
       .join("");
 
 }
 
+
+/* ============================================================
+   ENVIAR MENSAGEM MOBILE
+   ============================================================ */
 
 async function sendMobileMessage() {
 
@@ -1833,18 +2082,19 @@ async function sendMobileMessage() {
     );
 
     return;
-
   }
 
 
   const destination =
     $("#mobileDestino")
-      ?.value || "all";
+      ?.value ||
+    "all";
 
 
   const type =
     $("#mobileTipo")
-      ?.value || "alerta";
+      ?.value ||
+    "alerta";
 
 
   const text =
@@ -1864,7 +2114,6 @@ async function sendMobileMessage() {
       ?.focus();
 
     return;
-
   }
 
 
@@ -1873,7 +2122,8 @@ async function sendMobileMessage() {
 
 
   latest.mobileMessages =
-    latest.mobileMessages || {};
+    latest.mobileMessages ||
+    {};
 
 
   const id =
@@ -1887,7 +2137,8 @@ async function sendMobileMessage() {
 
 
   if (
-    destination !== "all"
+    destination !==
+    "all"
   ) {
 
     companyName =
@@ -1980,10 +2231,14 @@ async function sendMobileMessage() {
 
 function render() {
 
-  if (!roomData) return;
+  if (!roomData) {
+    return;
+  }
 
 
-  if ($("#rodada")) {
+  if (
+    $("#rodada")
+  ) {
 
     $("#rodada").textContent =
       `${Number(
@@ -1993,7 +2248,9 @@ function render() {
   }
 
 
-  if ($("#status")) {
+  if (
+    $("#status")
+  ) {
 
     $("#status").textContent =
       roomData.status ||
@@ -2026,6 +2283,7 @@ function render() {
 $("#criarSala")
   ?.addEventListener(
     "click",
+
     async () => {
 
       const turma =
@@ -2051,7 +2309,6 @@ $("#criarSala")
           ?.focus();
 
         return;
-
       }
 
 
@@ -2066,7 +2323,6 @@ $("#criarSala")
           ?.focus();
 
         return;
-
       }
 
 
@@ -2180,6 +2436,7 @@ $("#criarSala")
       }
 
     }
+
   );
 
 
@@ -2190,13 +2447,21 @@ $("#criarSala")
 async function acessarSalaExistente() {
 
   const codigo =
-    ($("#codigoExistente")?.value || "")
+    (
+      $("#codigoExistente")
+        ?.value ||
+      ""
+    )
       .trim()
       .toUpperCase();
 
 
   const senha =
-    ($("#senhaExistente")?.value || "")
+    (
+      $("#senhaExistente")
+        ?.value ||
+      ""
+    )
       .trim();
 
 
@@ -2211,7 +2476,6 @@ async function acessarSalaExistente() {
       ?.focus();
 
     return;
-
   }
 
 
@@ -2226,7 +2490,6 @@ async function acessarSalaExistente() {
       ?.focus();
 
     return;
-
   }
 
 
@@ -2275,13 +2538,13 @@ async function acessarSalaExistente() {
       );
 
       return;
-
     }
 
 
     if (
       String(
-        data.teacherPassword || ""
+        data.teacherPassword ||
+        ""
       ) !== senha
     ) {
 
@@ -2291,7 +2554,6 @@ async function acessarSalaExistente() {
       );
 
       return;
-
     }
 
 
@@ -2302,34 +2564,30 @@ async function acessarSalaExistente() {
       data;
 
 
-    /*
-      Mantém compatibilidade com salas
-      criadas em versões anteriores.
-    */
-
     roomData.usedEvents =
-      roomData.usedEvents || {};
+      roomData.usedEvents ||
+      {};
 
     roomData.companies =
-      roomData.companies || {};
+      roomData.companies ||
+      {};
 
     roomData.negotiations =
-      roomData.negotiations || {};
+      roomData.negotiations ||
+      {};
 
     roomData.accessRequests =
-      roomData.accessRequests || {};
+      roomData.accessRequests ||
+      {};
 
     roomData.mobileConnections =
-      roomData.mobileConnections || {};
+      roomData.mobileConnections ||
+      {};
 
     roomData.mobileMessages =
-      roomData.mobileMessages || {};
+      roomData.mobileMessages ||
+      {};
 
-
-    /*
-      Também recupera eventos usados
-      pelo histórico antigo.
-    */
 
     roomData.usedEvents =
       getUsedEvents();
@@ -2351,10 +2609,13 @@ async function acessarSalaExistente() {
       );
 
 
-    if ($("#turma")) {
+    if (
+      $("#turma")
+    ) {
 
       $("#turma").value =
-        roomData.className || "";
+        roomData.className ||
+        "";
 
     }
 
@@ -2397,15 +2658,20 @@ $("#acessarSala")
 
 $("#copiarCodigo")
   ?.addEventListener(
+
     "click",
+
     async () => {
 
-      if (!currentRoom) return;
+      if (!currentRoom) {
+        return;
+      }
 
 
       try {
 
-        await navigator.clipboard
+        await navigator
+          .clipboard
           .writeText(
             currentRoom
           );
@@ -2424,6 +2690,7 @@ $("#copiarCodigo")
       }
 
     }
+
   );
 
 
@@ -2433,7 +2700,9 @@ $("#copiarCodigo")
 
 $("#iniciar")
   ?.addEventListener(
+
     "click",
+
     async () => {
 
       if (!roomData) {
@@ -2444,21 +2713,12 @@ $("#iniciar")
         );
 
         return;
-
       }
 
 
       roomData.status =
         "Em andamento";
 
-
-      /*
-        Se a partida ainda não começou,
-        inicia na Rodada 1.
-
-        Se já estava em rodada superior,
-        mantém a rodada atual.
-      */
 
       if (
         Number(
@@ -2495,6 +2755,7 @@ $("#iniciar")
       }
 
     }
+
   );
 
 
@@ -2504,7 +2765,9 @@ $("#iniciar")
 
 $("#proxima")
   ?.addEventListener(
+
     "click",
+
     async () => {
 
       if (!roomData) {
@@ -2515,7 +2778,6 @@ $("#proxima")
         );
 
         return;
-
       }
 
 
@@ -2558,16 +2820,19 @@ $("#proxima")
       }
 
     }
+
   );
 
 
 /* ============================================================
-   PAUSAR
+   PAUSAR / RETOMAR
    ============================================================ */
 
 $("#pausar")
   ?.addEventListener(
+
     "click",
+
     async () => {
 
       if (!roomData) {
@@ -2578,14 +2843,36 @@ $("#pausar")
         );
 
         return;
-
       }
 
 
-      roomData.status =
-        roomData.status === "Pausado"
-          ? "Em andamento"
-          : "Pausado";
+      const willPause =
+        roomData.status !==
+        "Pausado";
+
+
+      if (willPause) {
+
+        roomData.status =
+          "Pausado";
+
+
+        /*
+          Todas as autorizações concedidas
+          deixam de ser válidas.
+        */
+
+        invalidateApprovedAccesses(
+          roomData
+        );
+
+
+      } else {
+
+        roomData.status =
+          "Em andamento";
+
+      }
 
 
       try {
@@ -2595,9 +2882,9 @@ $("#pausar")
 
         toast(
 
-          roomData.status === "Pausado"
-            ? "⏸ Arena pausada."
-            : "▶ Arena retomada."
+          willPause
+            ? "⏸ Arena pausada. Autorizações anteriores foram encerradas."
+            : "▶ Arena retomada. Cada empresa deverá solicitar nova autorização para entrar novamente."
 
         );
 
@@ -2611,6 +2898,7 @@ $("#pausar")
       }
 
     }
+
   );
 
 
@@ -2620,7 +2908,9 @@ $("#pausar")
 
 $("#crise")
   ?.addEventListener(
+
     "click",
+
     async () => {
 
       if (!roomData) {
@@ -2631,7 +2921,6 @@ $("#crise")
         );
 
         return;
-
       }
 
 
@@ -2640,14 +2929,18 @@ $("#crise")
 
 
       const available =
-        Object.keys(events)
+        Object.keys(
+          events
+        )
           .filter(
             eventId =>
               !used[eventId]
           );
 
 
-      if (!available.length) {
+      if (
+        !available.length
+      ) {
 
         toast(
           "Todos os eventos desta partida já foram utilizados.",
@@ -2655,7 +2948,6 @@ $("#crise")
         );
 
         return;
-
       }
 
 
@@ -2673,6 +2965,7 @@ $("#crise")
       );
 
     }
+
   );
 
 
@@ -2692,11 +2985,12 @@ async function dispararEvento(
     );
 
     return;
-
   }
 
 
-  if (!events[eventId]) {
+  if (
+    !events[eventId]
+  ) {
 
     toast(
       "Evento não encontrado.",
@@ -2704,7 +2998,6 @@ async function dispararEvento(
     );
 
     return;
-
   }
 
 
@@ -2712,7 +3005,9 @@ async function dispararEvento(
     getUsedEvents();
 
 
-  if (used[eventId]) {
+  if (
+    used[eventId]
+  ) {
 
     const round =
       used[eventId].round;
@@ -2732,7 +3027,6 @@ async function dispararEvento(
     renderEventButtons();
 
     return;
-
   }
 
 
@@ -2741,7 +3035,8 @@ async function dispararEvento(
 
 
   roomData.usedEvents =
-    roomData.usedEvents || {};
+    roomData.usedEvents ||
+    {};
 
 
   roomData.usedEvents[
@@ -2812,19 +3107,21 @@ async function dispararEvento(
 
 
 document
-  .querySelectorAll(".event")
+  .querySelectorAll(
+    ".event"
+  )
   .forEach(button => {
 
     button.addEventListener(
+
       "click",
+
       async () => {
 
         if (
           button.disabled
         ) {
-
           return;
-
         }
 
 
@@ -2833,6 +3130,7 @@ document
         );
 
       }
+
     );
 
   });
@@ -2844,7 +3142,9 @@ document
 
 $("#leilao")
   ?.addEventListener(
+
     "click",
+
     async () => {
 
       if (!roomData) {
@@ -2855,7 +3155,6 @@ $("#leilao")
         );
 
         return;
-
       }
 
 
@@ -2871,7 +3170,6 @@ $("#leilao")
         );
 
         return;
-
       }
 
 
@@ -2948,6 +3246,7 @@ $("#leilao")
       }
 
     }
+
   );
 
 
@@ -2957,7 +3256,9 @@ $("#leilao")
 
 $("#mercado")
   ?.addEventListener(
+
     "click",
+
     async () => {
 
       if (!roomData) {
@@ -2968,7 +3269,6 @@ $("#mercado")
         );
 
         return;
-
       }
 
 
@@ -3004,6 +3304,7 @@ $("#mercado")
       }
 
     }
+
   );
 
 
@@ -3013,7 +3314,9 @@ $("#mercado")
 
 $("#enviarMobile")
   ?.addEventListener(
+
     "click",
+
     async () => {
 
       try {
@@ -3033,12 +3336,15 @@ $("#enviarMobile")
       }
 
     }
+
   );
 
 
 $("#fecharProfessorMobile")
   ?.addEventListener(
+
     "click",
+
     () => {
 
       $("#modalProfessorMobile")
@@ -3047,20 +3353,24 @@ $("#fecharProfessorMobile")
         );
 
     }
+
   );
 
 
 /* ============================================================
-   ENTER NOS CAMPOS DE ACESSO
+   ENTER — ACESSAR SALA
    ============================================================ */
 
 $("#senhaExistente")
   ?.addEventListener(
+
     "keydown",
+
     event => {
 
       if (
-        event.key === "Enter"
+        event.key ===
+        "Enter"
       ) {
 
         acessarSalaExistente();
@@ -3068,6 +3378,7 @@ $("#senhaExistente")
       }
 
     }
+
   );
 
 
@@ -3080,5 +3391,5 @@ console.log(
 );
 
 console.log(
-  "Painel do Professor carregado com controle de empresas, componentes, autorizações, eventos, leilão, negociações e Central Estratégica Mobile."
+  "Painel do Professor carregado: toda entrada exige autorização do professor."
 );
