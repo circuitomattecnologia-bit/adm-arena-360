@@ -1,4 +1,5 @@
 import { FIREBASE } from "./firebase-config.js";
+
 import {
   getFirebase,
   demoGet,
@@ -6,564 +7,1271 @@ import {
   roomCode
 } from "./firebase-service.js";
 
-import { rounds, events } from "./game.js";
+import {
+  rounds,
+  events
+} from "./game.js";
+
+
+/* ============================================================
+   ADM ARENA 360
+   PROJETO EMPREENDEDOR
+   PROF. LEOPOLDO
+
+   PAINEL DO PROFESSOR — VERSÃO CONSOLIDADA
+   ============================================================ */
+
 
 let currentRoom = null;
 let roomData = null;
 let unsubscribe = null;
 
+
+/* ============================================================
+   LEILÕES
+   ============================================================ */
+
 const AUCTION_ITEMS = [
+
   {
     id: "pesquisa",
     title: "🔍 Pesquisa de Mercado Premium",
-    description: "Entrega 1 Pesquisa de Mercado ao inventário da empresa vencedora.",
+    description:
+      "Entrega 1 Pesquisa de Mercado ao inventário da empresa vencedora.",
     field: "pesquisa",
     qty: 1,
     minBid: 5000
   },
+
   {
     id: "escudo",
     title: "🛡️ Escudo Financeiro",
-    description: "Entrega 1 Escudo Financeiro ao inventário da empresa vencedora.",
+    description:
+      "Entrega 1 Escudo Financeiro ao inventário da empresa vencedora.",
     field: "escudo",
     qty: 1,
     minBid: 6000
   },
+
   {
     id: "campanha",
     title: "📣 Campanha Viral",
-    description: "Entrega 1 Campanha Viral ao inventário da empresa vencedora. Os bônus só são aplicados quando a empresa ativar a campanha.",
+    description:
+      "Entrega 1 Campanha Viral. Os benefícios são recebidos somente quando a empresa ativar a campanha.",
     field: "campanha",
     qty: 1,
     minBid: 7000
   }
+
 ];
 
-const $ = s => document.querySelector(s);
 
-function toast(text, type = "ok") {
-  const x = $("#toast");
-  if (!x) return;
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
 
-  x.textContent = text;
-  x.style.borderColor = type === "error" ? "#ff5b6e" : "";
-  x.classList.remove("hidden");
+const $ = selector =>
+  document.querySelector(selector);
 
-  setTimeout(() => x.classList.add("hidden"), 3500);
+
+function escapeHtml(text) {
+
+  return String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
 }
 
-function setBusy(busy) {
-  const b = $("#criarSala");
-  if (!b) return;
 
-  b.disabled = busy;
-  b.textContent = busy ? "CRIANDO SALA..." : "CRIAR SALA";
-}
+function normalizeName(text) {
 
-function normalizeName(s) {
-  return String(s || "")
+  return String(text || "")
     .trim()
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ");
+
 }
 
-function getUsedEvents() {
-  const used = {
-    ...(roomData?.usedEvents || {})
-  };
 
-  Object.values(roomData?.companies || {}).forEach(company => {
-    Object.values(company?.eventResponses || {}).forEach(response => {
-      if (!response?.eventId) return;
+function money(value) {
 
-      const eventId = response.eventId;
+  return Number(value || 0)
+    .toLocaleString("pt-BR");
 
-      if (!used[eventId]) {
-        used[eventId] = {
-          eventId,
-          title: response.eventTitle || events[eventId]?.title || eventId,
-          round: Number(response.round || 0),
-          usedAt: Number(response.answeredAt || 0),
-          recoveredFromHistory: true
-        };
-      }
-    });
-  });
-
-  return used;
 }
 
-function renderEventButtons() {
-  const usedEvents = getUsedEvents();
 
-  document.querySelectorAll(".event").forEach(button => {
-    const eventId = button.dataset.event;
-    if (!eventId) return;
+function toast(text, type = "ok") {
 
-    if (!button.dataset.originalLabel) {
-      button.dataset.originalLabel = button.textContent.trim();
-    }
+  const box = $("#toast");
 
-    const originalLabel = button.dataset.originalLabel;
-    const used = usedEvents[eventId];
+  if (!box) return;
 
-    if (used) {
-      const roundText = used.round ? ` • R${used.round}` : "";
+  box.textContent = text;
 
-      button.disabled = true;
-      button.textContent = `✅ ${originalLabel} — UTILIZADO${roundText}`;
-      button.style.opacity = "0.58";
-      button.style.cursor = "not-allowed";
-      button.style.filter = "grayscale(0.55)";
-      button.setAttribute(
-        "title",
-        used.round
-          ? `Evento utilizado na Rodada ${used.round}`
-          : "Evento já utilizado nesta partida"
-      );
-    } else {
-      button.disabled = false;
-      button.textContent = originalLabel;
-      button.style.opacity = "";
-      button.style.cursor = "";
-      button.style.filter = "";
-      button.removeAttribute("title");
-    }
-  });
+  box.style.borderColor =
+    type === "error"
+      ? "#ff5b6e"
+      : "";
+
+  box.classList.remove("hidden");
+
+  clearTimeout(box._timer);
+
+  box._timer =
+    setTimeout(
+      () => box.classList.add("hidden"),
+      3500
+    );
+
 }
+
+
+function setBusy(busy) {
+
+  const button = $("#criarSala");
+
+  if (!button) return;
+
+  button.disabled = busy;
+
+  button.textContent =
+    busy
+      ? "CRIANDO SALA..."
+      : "🚀 CRIAR SALA";
+
+}
+
+
+function componentsText(company) {
+
+  if (!company) return "Não informados";
+
+  if (
+    Array.isArray(company.components)
+  ) {
+
+    return company.components.length
+      ? company.components.join(" • ")
+      : "Não informados";
+
+  }
+
+  if (
+    Array.isArray(company.componentes)
+  ) {
+
+    return company.componentes.length
+      ? company.componentes.join(" • ")
+      : "Não informados";
+
+  }
+
+  return String(
+    company.components ||
+    company.componentes ||
+    company.members ||
+    "Não informados"
+  );
+
+}
+
+
+/* ============================================================
+   FIREBASE / SALA
+   ============================================================ */
 
 async function saveRoom() {
-  if (!currentRoom || !roomData) return;
 
-  const f = await getFirebase();
+  if (
+    !currentRoom ||
+    !roomData
+  ) {
+
+    return;
+
+  }
+
+  const f =
+    await getFirebase();
+
 
   if (f) {
+
     await f.set(
-      f.ref(f.db, `rooms/${currentRoom}`),
+
+      f.ref(
+        f.db,
+        `rooms/${currentRoom}`
+      ),
+
+      roomData
+
+    );
+
+  } else {
+
+    demoSet(
+      `room:${currentRoom}`,
       roomData
     );
-  } else {
-    demoSet(`room:${currentRoom}`, roomData);
+
   }
 
   render();
+
 }
+
 
 async function getLatestRoom() {
-  if (!currentRoom) return roomData;
 
-  const f = await getFirebase();
+  if (!currentRoom) {
 
-  if (f) {
-    const snapshot = await f.get(
-      f.ref(f.db, `rooms/${currentRoom}`)
-    );
-    return snapshot.val() || roomData;
+    return roomData;
+
   }
 
-  return demoGet(`room:${currentRoom}`, roomData);
+  const f =
+    await getFirebase();
+
+
+  if (f) {
+
+    const snapshot =
+      await f.get(
+
+        f.ref(
+          f.db,
+          `rooms/${currentRoom}`
+        )
+
+      );
+
+    return (
+      snapshot.val() ||
+      roomData
+    );
+
+  }
+
+  return demoGet(
+    `room:${currentRoom}`,
+    roomData
+  );
+
 }
+
 
 async function listen() {
-  const f = await getFirebase();
+
+  const f =
+    await getFirebase();
+
 
   if (unsubscribe) {
+
     unsubscribe();
+
     unsubscribe = null;
+
   }
+
 
   if (f) {
-    const r = f.ref(f.db, `rooms/${currentRoom}`);
 
-    unsubscribe = f.onValue(r, snapshot => {
-      roomData = snapshot.val() || roomData;
-      render();
-    });
+    const reference =
+      f.ref(
+        f.db,
+        `rooms/${currentRoom}`
+      );
+
+
+    unsubscribe =
+      f.onValue(
+
+        reference,
+
+        snapshot => {
+
+          roomData =
+            snapshot.val() ||
+            roomData;
+
+          render();
+
+        }
+
+      );
+
   } else {
-    const timer = setInterval(() => {
-      roomData = demoGet(`room:${currentRoom}`, roomData);
-      render();
-    }, 900);
 
-    unsubscribe = () => clearInterval(timer);
+    const timer =
+      setInterval(
+
+        () => {
+
+          roomData =
+            demoGet(
+              `room:${currentRoom}`,
+              roomData
+            );
+
+          render();
+
+        },
+
+        900
+
+      );
+
+
+    unsubscribe =
+      () =>
+        clearInterval(timer);
+
   }
+
 }
 
-function ensureAuctionPanel() {
-  let panel = $("#auctionTeacherPanel");
-  if (panel) return panel;
 
-  panel = document.createElement("section");
-  panel.id = "auctionTeacherPanel";
-  panel.className = "card glass hidden";
+/* ============================================================
+   EVENTOS JÁ UTILIZADOS
+   ============================================================ */
 
-  panel.innerHTML = `
-    <div class="section-title">
-      <h2>🔨 Central do Leilão</h2>
-      <span id="auctionBidCount">0 lances</span>
-    </div>
+function getUsedEvents() {
 
-    <div id="auctionTeacherInfo"></div>
+  const used = {
 
-    <div id="auctionTeacherBids" class="company-list"></div>
+    ...(roomData?.usedEvents || {})
 
-    <div style="margin-top:16px">
-      <button id="encerrarLeilao" class="primary">
-        ENCERRAR LEILÃO E DEFINIR VENCEDOR
-      </button>
-    </div>
-  `;
-
-  const companiesSection =
-    $("#empresas")?.closest("section");
-
-  if (companiesSection) {
-    companiesSection.before(panel);
-  } else {
-    document.querySelector("main")?.appendChild(panel);
-  }
-
-  $("#encerrarLeilao")
-    ?.addEventListener("click", closeAuction);
-
-  return panel;
-}
-
-function renderAuctionTeacher() {
-  const panel = ensureAuctionPanel();
-  const auction = roomData?.auction;
-
-  if (!auction) {
-    panel.classList.add("hidden");
-    return;
-  }
-
-  panel.classList.remove("hidden");
-
-  const bids = Object.values(auction.bids || {});
-
-  $("#auctionBidCount").textContent =
-    `${bids.length} lance${bids.length === 1 ? "" : "s"}`;
-
-  $("#auctionTeacherInfo").innerHTML = `
-    <p><strong>${auction.title || "Item em disputa"}</strong></p>
-
-    <p class="muted">${auction.description || ""}</p>
-
-    <p>
-      <strong>Lance mínimo:</strong>
-      ADM$ ${Number(auction.minBid || 0).toLocaleString("pt-BR")}
-      •
-      <strong>Status:</strong>
-      ${auction.status === "open" ? "ABERTO" : "ENCERRADO"}
-    </p>
-
-    ${
-      auction.status === "closed"
-        ? (
-            auction.winnerName
-              ? `
-                <p>
-                  <strong>🏆 Vencedora:</strong>
-                  ${auction.winnerName}
-                  —
-                  ADM$ ${Number(auction.winningBid || 0).toLocaleString("pt-BR")}
-                </p>
-              `
-              : `
-                <p><strong>Leilão encerrado sem lances válidos.</strong></p>
-              `
-          )
-        : ""
-    }
-  `;
-
-  $("#auctionTeacherBids").innerHTML =
-    bids.length
-      ? bids
-          .sort(
-            (a, b) =>
-              Number(b.amount || 0) -
-              Number(a.amount || 0)
-          )
-          .map(
-            bid => `
-              <div class="company-item">
-                <div>
-                  <strong>${bid.companyName}</strong>
-                  <br>
-                  <small>Lance secreto recebido</small>
-                </div>
-
-                <span>
-                  💰 ADM$ ${Number(bid.amount || 0).toLocaleString("pt-BR")}
-                </span>
-              </div>
-            `
-          )
-          .join("")
-      : `<p class="muted">Nenhum lance recebido ainda.</p>`;
-
-  const btn = $("#encerrarLeilao");
-
-  if (btn) {
-    btn.disabled = auction.status !== "open";
-    btn.textContent =
-      auction.status === "open"
-        ? "ENCERRAR LEILÃO E DEFINIR VENCEDOR"
-        : "LEILÃO ENCERRADO";
-  }
-}
-
-function ensureNegotiationPanel() {
-  let panel = $("#teacherNegotiationPanel");
-  if (panel) return panel;
-
-  panel = document.createElement("section");
-  panel.id = "teacherNegotiationPanel";
-  panel.className = "card glass hidden";
-
-  panel.innerHTML = `
-    <div class="section-title">
-      <h2>🤝 Central de Negociações</h2>
-      <span id="teacherNegotiationCount">0 propostas</span>
-    </div>
-
-    <p class="muted">
-      O professor acompanha as propostas e seus status.
-      As decisões de aceitar, recusar ou fazer contraproposta são das empresas.
-    </p>
-
-    <div id="teacherNegotiationList" class="company-list"></div>
-  `;
-
-  const companiesSection =
-    $("#empresas")?.closest("section");
-
-  if (companiesSection) {
-    companiesSection.after(panel);
-  } else {
-    document.querySelector("main")?.appendChild(panel);
-  }
-
-  return panel;
-}
-
-function negotiationStatusLabel(status) {
-  const map = {
-    pending: "🟡 PENDENTE",
-    accepted: "✅ ACEITA",
-    refused: "❌ RECUSADA",
-    countered: "↩️ CONTRAPROPOSTA"
   };
 
-  return map[status] || String(status || "PENDENTE").toUpperCase();
+
+  /*
+    Recuperação de segurança:
+    se uma versão anterior não salvou usedEvents,
+    procuramos no histórico das empresas.
+  */
+
+  Object.values(
+    roomData?.companies || {}
+  )
+    .forEach(company => {
+
+      Object.values(
+        company?.eventResponses || {}
+      )
+        .forEach(response => {
+
+          if (!response?.eventId) {
+
+            return;
+
+          }
+
+          const eventId =
+            response.eventId;
+
+
+          if (!used[eventId]) {
+
+            used[eventId] = {
+
+              eventId,
+
+              title:
+                response.eventTitle ||
+                events[eventId]?.title ||
+                eventId,
+
+              round:
+                Number(
+                  response.round || 0
+                ),
+
+              usedAt:
+                Number(
+                  response.answeredAt || 0
+                ),
+
+              recoveredFromHistory:
+                true
+
+            };
+
+          }
+
+        });
+
+    });
+
+
+  return used;
+
 }
 
-function renderNegotiationsTeacher() {
-  const panel = ensureNegotiationPanel();
-  const entries = Object.entries(roomData?.negotiations || {})
-    .sort(
-      (a, b) =>
-        Number(b[1]?.createdAt || 0) -
-        Number(a[1]?.createdAt || 0)
-    );
 
-  if (!entries.length) {
-    panel.classList.add("hidden");
+function renderEventButtons() {
+
+  const usedEvents =
+    getUsedEvents();
+
+
+  document
+    .querySelectorAll(".event")
+    .forEach(button => {
+
+      const eventId =
+        button.dataset.event;
+
+      if (!eventId) return;
+
+
+      if (
+        !button.dataset.originalLabel
+      ) {
+
+        button.dataset.originalLabel =
+          button.textContent
+            .trim();
+
+      }
+
+
+      const original =
+        button.dataset.originalLabel;
+
+      const used =
+        usedEvents[eventId];
+
+
+      if (used) {
+
+        const roundText =
+          used.round
+            ? ` • R${used.round}`
+            : "";
+
+
+        button.disabled = true;
+
+        button.innerHTML =
+          `✅ ${escapeHtml(original)}<br>` +
+          `<small>UTILIZADO${roundText}</small>`;
+
+        button.classList.add(
+          "event-used"
+        );
+
+        button.setAttribute(
+
+          "title",
+
+          used.round
+            ? `Evento utilizado na Rodada ${used.round}`
+            : "Evento já utilizado nesta Arena"
+
+        );
+
+      } else {
+
+        button.disabled = false;
+
+        button.textContent =
+          original;
+
+        button.classList.remove(
+          "event-used"
+        );
+
+        button.removeAttribute(
+          "title"
+        );
+
+      }
+
+    });
+
+}
+
+
+/* ============================================================
+   SOLICITAÇÕES DE REENTRADA
+   ============================================================ */
+
+function renderAccessRequests() {
+
+  const box =
+    $("#solicitacoesAcesso");
+
+  const counter =
+    $("#qtdSolicitacoes");
+
+  if (
+    !box ||
+    !counter
+  ) {
+
     return;
+
   }
 
-  panel.classList.remove("hidden");
 
-  $("#teacherNegotiationCount").textContent =
-    `${entries.length} proposta${entries.length === 1 ? "" : "s"}`;
+  const entries =
+    Object.entries(
+      roomData?.accessRequests || {}
+    )
+      .filter(
+        ([, request]) =>
+          request?.status === "pending"
+      )
+      .sort(
+        (a, b) =>
+          Number(
+            a[1]?.requestedAt || 0
+          ) -
+          Number(
+            b[1]?.requestedAt || 0
+          )
+      );
 
-  $("#teacherNegotiationList").innerHTML =
+
+  counter.textContent =
+    `${entries.length} solicitaç` +
+    `${entries.length === 1 ? "ão" : "ões"}`;
+
+
+  if (!entries.length) {
+
+    box.classList.add(
+      "empty"
+    );
+
+    box.innerHTML =
+      `
+        <div class="access-empty">
+          ✅ Nenhuma solicitação de acesso pendente.
+        </div>
+      `;
+
+    return;
+
+  }
+
+
+  box.classList.remove(
+    "empty"
+  );
+
+
+  box.innerHTML =
     entries
-      .slice(0, 20)
-      .map(([id, n]) => {
-        const type =
-          n.type === "venda-campanha"
-            ? "📣 Venda de Campanha Viral"
-            : "🤝 Acordo / parceria";
+      .map(([companyId, request]) => {
 
-        const detail =
-          n.type === "venda-campanha"
-            ? `ADM$ ${Number(n.value || 0).toLocaleString("pt-BR")}`
-            : (n.message || "Sem descrição");
+        const source =
+          request.source === "mobile"
+            ? "📱 Celular"
+            : "💻 Empresa";
 
         return `
-          <div class="company-item">
-            <div>
-              <strong>${type}</strong><br>
+
+          <div class="access-request-item">
+
+            <div class="access-request-info">
+
+              <strong>
+                🔐 ${escapeHtml(
+                  request.companyName ||
+                  companyId
+                )}
+              </strong>
+
+              <span>
+                ${source}
+              </span>
+
               <small>
-                ${n.from || "?"} → ${n.to || "?"}
-              </small><br>
-              <small>${detail}</small>
-              ${
-                n.counterMessage
-                  ? `<br><small>Contraproposta: ${n.counterMessage}</small>`
-                  : ""
-              }
+                👥 ${
+                  escapeHtml(
+                    request.components ||
+                    componentsText(
+                      roomData?.companies?.[
+                        companyId
+                      ]
+                    )
+                  )
+                }
+              </small>
+
+              <small>
+                Rodada:
+                ${Number(
+                  request.round || 0
+                )}
+              </small>
+
             </div>
 
-            <span>${negotiationStatusLabel(n.status)}</span>
+
+            <div class="access-request-actions">
+
+              <button
+                type="button"
+                class="approve-access"
+                data-company-id="${escapeHtml(companyId)}"
+              >
+                ✅ AUTORIZAR
+              </button>
+
+
+              <button
+                type="button"
+                class="deny-access"
+                data-company-id="${escapeHtml(companyId)}"
+              >
+                ❌ NEGAR
+              </button>
+
+            </div>
+
           </div>
+
         `;
+
       })
       .join("");
+
+
+  document
+    .querySelectorAll(
+      ".approve-access"
+    )
+    .forEach(button => {
+
+      button.onclick =
+        () =>
+          respondAccessRequest(
+            button.dataset.companyId,
+            "approved"
+          );
+
+    });
+
+
+  document
+    .querySelectorAll(
+      ".deny-access"
+    )
+    .forEach(button => {
+
+      button.onclick =
+        () =>
+          respondAccessRequest(
+            button.dataset.companyId,
+            "denied"
+          );
+
+    });
+
 }
 
-async function excluirEmpresa(companyId, companyName) {
-  if (!currentRoom || !roomData) return;
 
-  const confirmar = confirm(
-    `Excluir a empresa "${companyName}" desta sala?`
-  );
+async function respondAccessRequest(
+  companyId,
+  status
+) {
+
+  if (
+    !currentRoom ||
+    !roomData
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    const latest =
+      await getLatestRoom();
+
+
+    latest.accessRequests =
+      latest.accessRequests || {};
+
+
+    const request =
+      latest.accessRequests[
+        companyId
+      ];
+
+
+    if (!request) {
+
+      toast(
+        "Solicitação não encontrada.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    request.status =
+      status;
+
+    request.updatedAt =
+      Date.now();
+
+
+    if (
+      status === "approved"
+    ) {
+
+      request.approvedAt =
+        Date.now();
+
+      request.approvedBy =
+        "Prof. Leopoldo";
+
+    } else {
+
+      request.deniedAt =
+        Date.now();
+
+      request.deniedBy =
+        "Prof. Leopoldo";
+
+    }
+
+
+    latest.accessRequests[
+      companyId
+    ] = request;
+
+
+    roomData =
+      latest;
+
+
+    await saveRoom();
+
+
+    toast(
+
+      status === "approved"
+        ? `✅ ${request.companyName} autorizada a entrar.`
+        : `❌ Entrada de ${request.companyName} negada.`
+
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    toast(
+      `Erro ao responder solicitação: ${error.message}`,
+      "error"
+    );
+
+  }
+
+}
+
+
+/* ============================================================
+   EMPRESAS
+   ============================================================ */
+
+async function excluirEmpresa(
+  companyId,
+  companyName
+) {
+
+  if (
+    !currentRoom ||
+    !roomData
+  ) {
+
+    return;
+
+  }
+
+
+  const confirmar =
+    confirm(
+      `Excluir a empresa "${companyName}" desta sala?`
+    );
+
 
   if (!confirmar) return;
 
+
   try {
-    const f = await getFirebase();
+
+    const f =
+      await getFirebase();
+
 
     if (f) {
+
       await f.remove(
+
         f.ref(
           f.db,
           `rooms/${currentRoom}/companies/${companyId}`
         )
+
       );
+
+
+      /*
+        Remove também solicitações
+        e vínculo mobile desta empresa.
+      */
+
+      await f.remove(
+
+        f.ref(
+          f.db,
+          `rooms/${currentRoom}/accessRequests/${companyId}`
+        )
+
+      );
+
+
+      await f.remove(
+
+        f.ref(
+          f.db,
+          `rooms/${currentRoom}/mobileConnections/${companyId}`
+        )
+
+      );
+
     } else {
-      if (roomData.companies?.[companyId]) {
-        delete roomData.companies[companyId];
-        demoSet(`room:${currentRoom}`, roomData);
-        render();
+
+      if (
+        roomData.companies?.[
+          companyId
+        ]
+      ) {
+
+        delete roomData.companies[
+          companyId
+        ];
+
       }
+
+
+      if (
+        roomData.accessRequests?.[
+          companyId
+        ]
+      ) {
+
+        delete roomData.accessRequests[
+          companyId
+        ];
+
+      }
+
+
+      if (
+        roomData.mobileConnections?.[
+          companyId
+        ]
+      ) {
+
+        delete roomData.mobileConnections[
+          companyId
+        ];
+
+      }
+
+
+      demoSet(
+        `room:${currentRoom}`,
+        roomData
+      );
+
+      render();
+
     }
 
-    toast(`Empresa "${companyName}" excluída.`);
-  } catch (e) {
-    console.error(e);
 
     toast(
-      `Erro ao excluir empresa: ${e.message}`,
+      `Empresa "${companyName}" excluída.`
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    toast(
+      `Erro ao excluir empresa: ${error.message}`,
       "error"
     );
+
   }
+
 }
 
-function render() {
-  if (!roomData) return;
 
-  $("#rodada").textContent =
-    `${roomData.round || 0}/8`;
+function renderCompanies() {
 
-  $("#status").textContent =
-    roomData.status || "Aguardando";
+  const box =
+    $("#empresas");
+
+  const counter =
+    $("#qtdEmpresas");
+
+  if (
+    !box ||
+    !counter
+  ) {
+
+    return;
+
+  }
+
 
   const companies =
-    Object.values(roomData.companies || {});
+    Object.values(
+      roomData?.companies || {}
+    );
 
-  $("#qtdEmpresas").textContent =
-    `${companies.length} empresa${
-      companies.length === 1 ? "" : "s"
-    }`;
 
-  $("#empresas")
-    ?.classList.remove("empty");
+  counter.textContent =
+    `${companies.length} empresa${companies.length === 1 ? "" : "s"}`;
 
-  $("#empresas").innerHTML =
-    companies.length
-      ? companies
-          .sort(
-            (a, b) =>
-              (b.xp || 0) -
-              (a.xp || 0)
-          )
-          .map(
-            company => `
-              <div class="company-item">
-                <div>
-                  <strong>${company.name}</strong>
-                  <br>
-                  <small>${company.segment}</small>
-                </div>
 
-                <span>
-                  💰 ${Number(company.caixa || 0).toLocaleString("pt-BR")}
-                </span>
+  if (!companies.length) {
 
-                <span>
-                  🏆 ${company.xp || 0} XP
-                </span>
+    box.classList.add(
+      "empty"
+    );
 
-                <span class="hide-sm">
-                  ⭐ ${company.reputacao || 0}
-                </span>
+    box.innerHTML =
+      "Nenhuma empresa conectada.";
 
-                <span class="hide-sm">
-                  👥 ${company.clientes || 0}
-                </span>
+    return;
 
-                <span class="hide-sm">
-                  📣 ${company.campanha || 0}
-                  ${company.campaignActive ? " • ATIVA" : ""}
-                </span>
+  }
 
-                <button
-                  type="button"
-                  class="delete-company"
-                  data-company-id="${company.id}"
-                  data-company-name="${company.name}">
-                  🗑️ Excluir
-                </button>
-              </div>
-            `
-          )
-          .join("")
-      : "Nenhuma empresa conectada.";
+
+  box.classList.remove(
+    "empty"
+  );
+
+
+  box.innerHTML =
+    companies
+      .sort(
+        (a, b) =>
+          Number(b.xp || 0) -
+          Number(a.xp || 0)
+      )
+      .map(company => {
+
+        const components =
+          componentsText(company);
+
+        return `
+
+          <div class="company-item professor-company-item">
+
+            <div class="company-main-info">
+
+              <strong>
+                🏢 ${escapeHtml(company.name)}
+              </strong>
+
+              <small>
+                ${escapeHtml(company.segment || "Segmento não informado")}
+              </small>
+
+              <small class="company-components">
+                👥 ${escapeHtml(components)}
+              </small>
+
+            </div>
+
+
+            <span>
+              💰 ADM$ ${money(company.caixa)}
+            </span>
+
+
+            <span>
+              👥 ${Number(company.clientes || 0)}
+            </span>
+
+
+            <span>
+              ⭐ ${Number(company.reputacao || 0)}
+            </span>
+
+
+            <span>
+              🏆 ${Number(company.xp || 0)} XP
+            </span>
+
+
+            <span class="resource-summary">
+
+              🛡️ ${Number(company.escudo || 0)}
+
+              • 🔍 ${Number(company.pesquisa || 0)}
+
+              • 📣 ${Number(company.campanha || 0)}
+
+              ${
+                company.campaignActive
+                  ? " • ATIVA"
+                  : ""
+              }
+
+            </span>
+
+
+            <button
+              type="button"
+              class="delete-company"
+              data-company-id="${escapeHtml(company.id)}"
+              data-company-name="${escapeHtml(company.name)}"
+            >
+              🗑️ Excluir
+            </button>
+
+          </div>
+
+        `;
+
+      })
+      .join("");
+
 
   document
-    .querySelectorAll(".delete-company")
-    .forEach(btn => {
-      btn.addEventListener(
-        "click",
-        () => {
+    .querySelectorAll(
+      ".delete-company"
+    )
+    .forEach(button => {
+
+      button.onclick =
+        () =>
           excluirEmpresa(
-            btn.dataset.companyId,
-            btn.dataset.companyName
+            button.dataset.companyId,
+            button.dataset.companyName
           );
-        }
-      );
+
     });
 
-  renderAuctionTeacher();
-  renderNegotiationsTeacher();
-  renderEventButtons();
 }
 
+
+/* ============================================================
+   LEILÃO
+   ============================================================ */
+
+function renderAuctionTeacher() {
+
+  const panel =
+    $("#painelLeilao");
+
+  const content =
+    $("#conteudoLeilao");
+
+  const status =
+    $("#statusLeilao");
+
+
+  if (
+    !panel ||
+    !content ||
+    !status
+  ) {
+
+    return;
+
+  }
+
+
+  const auction =
+    roomData?.auction;
+
+
+  if (!auction) {
+
+    status.textContent =
+      "Aguardando";
+
+    content.innerHTML =
+      `
+        <p class="muted">
+          O painel será ativado quando um leilão for aberto.
+        </p>
+      `;
+
+    return;
+
+  }
+
+
+  const bids =
+    Object.values(
+      auction.bids || {}
+    )
+      .sort(
+        (a, b) =>
+          Number(b.amount || 0) -
+          Number(a.amount || 0)
+      );
+
+
+  status.textContent =
+    auction.status === "open"
+      ? `🟡 ABERTO • ${bids.length} lance${bids.length === 1 ? "" : "s"}`
+      : "✅ ENCERRADO";
+
+
+  content.innerHTML = `
+
+    <div class="auction-summary">
+
+      <h3>
+        ${escapeHtml(
+          auction.title ||
+          "Item em disputa"
+        )}
+      </h3>
+
+      <p>
+        ${escapeHtml(
+          auction.description || ""
+        )}
+      </p>
+
+      <strong>
+        Lance mínimo:
+        ADM$ ${money(auction.minBid)}
+      </strong>
+
+    </div>
+
+
+    <div class="auction-bids">
+
+      ${
+        bids.length
+          ? bids.map(bid => `
+
+              <div class="auction-bid-item">
+
+                <strong>
+                  🏢 ${escapeHtml(bid.companyName)}
+                </strong>
+
+                <span>
+                  🔒 ADM$ ${money(bid.amount)}
+                </span>
+
+              </div>
+
+            `).join("")
+          : `
+              <p class="muted">
+                Nenhum lance recebido.
+              </p>
+            `
+      }
+
+    </div>
+
+
+    ${
+      auction.status === "open"
+        ? `
+            <button
+              id="encerrarLeilao"
+              class="primary auction-close-btn"
+            >
+              🏆 ENCERRAR LEILÃO E DEFINIR VENCEDOR
+            </button>
+          `
+        : `
+            <div class="auction-result">
+
+              ${
+                auction.winnerName
+                  ? `
+                      🏆
+                      <strong>
+                        ${escapeHtml(auction.winnerName)}
+                      </strong>
+
+                      venceu por
+
+                      <strong>
+                        ADM$ ${money(auction.winningBid)}
+                      </strong>
+                    `
+                  : `
+                      Leilão encerrado sem vencedor.
+                    `
+              }
+
+            </div>
+          `
+    }
+
+  `;
+
+
+  $("#encerrarLeilao")
+    ?.addEventListener(
+      "click",
+      closeAuction
+    );
+
+}
+
+
 async function closeAuction() {
+
   if (
     !currentRoom ||
     !roomData?.auction ||
     roomData.auction.status !== "open"
   ) {
-    return toast(
+
+    toast(
       "Não há leilão aberto.",
       "error"
     );
+
+    return;
+
   }
 
+
   try {
+
     const latest =
       await getLatestRoom();
+
 
     const auction =
       latest.auction ||
       roomData.auction;
+
 
     const bids =
       Object.values(
@@ -582,206 +1290,1099 @@ async function closeAuction() {
               Number(b.createdAt || 0)
         );
 
+
     if (!bids.length) {
-      auction.status = "closed";
-      auction.closedAt = Date.now();
-      auction.winnerName = null;
-      auction.winningBid = 0;
+
+      auction.status =
+        "closed";
+
+      auction.closedAt =
+        Date.now();
+
+      auction.winnerName =
+        null;
+
+      auction.winningBid =
+        0;
+
 
       latest.status =
         "Leilão encerrado — sem lances";
 
-      latest.auction = auction;
-      roomData = latest;
+      latest.auction =
+        auction;
+
+      roomData =
+        latest;
+
 
       await saveRoom();
 
-      return toast(
+
+      toast(
         "Leilão encerrado sem lances."
       );
+
+      return;
+
     }
 
-    const winner = bids[0];
 
-    const company =
-      latest.companies?.[
-        winner.companyId
-      ];
+    /*
+      Percorre os lances do maior para o menor
+      até encontrar empresa que ainda possua
+      caixa suficiente.
+    */
 
-    if (!company) {
-      return toast(
-        "Empresa vencedora não encontrada.",
-        "error"
-      );
+    let winner = null;
+    let winnerCompany = null;
+
+
+    for (
+      const bid of bids
+    ) {
+
+      const candidate =
+        latest.companies?.[
+          bid.companyId
+        ];
+
+
+      if (
+        candidate &&
+        Number(candidate.caixa || 0) >=
+        Number(bid.amount || 0)
+      ) {
+
+        winner =
+          bid;
+
+        winnerCompany =
+          candidate;
+
+        break;
+
+      }
+
     }
 
-    const value =
-      Number(winner.amount || 0);
 
     if (
-      Number(company.caixa || 0) <
-      value
+      !winner ||
+      !winnerCompany
     ) {
-      return toast(
-        "O maior lance ultrapassa o caixa atual da empresa.",
+
+      auction.status =
+        "closed";
+
+      auction.closedAt =
+        Date.now();
+
+      auction.winnerName =
+        null;
+
+      auction.winningBid =
+        0;
+
+
+      latest.auction =
+        auction;
+
+      latest.status =
+        "Leilão encerrado — nenhum lance com saldo suficiente";
+
+
+      roomData =
+        latest;
+
+      await saveRoom();
+
+
+      toast(
+        "Nenhuma empresa possuía caixa suficiente para concluir o lance.",
         "error"
       );
+
+      return;
+
     }
 
-    company.caixa =
-      Number(company.caixa || 0) -
+
+    const value =
+      Number(
+        winner.amount || 0
+      );
+
+
+    winnerCompany.caixa =
+      Number(
+        winnerCompany.caixa || 0
+      ) -
       value;
 
-    company[auction.field] =
-      Number(
-        company[auction.field] || 0
-      ) +
-      Number(auction.qty || 1);
 
-    if (auction.field === "campanha") {
-      company.campaignActive = false;
-      company.campaignReceivedAt = Date.now();
+    winnerCompany[
+      auction.field
+    ] =
+      Number(
+        winnerCompany[
+          auction.field
+        ] || 0
+      ) +
+      Number(
+        auction.qty || 1
+      );
+
+
+    /*
+      Campanha Viral:
+      vencedor recebe o recurso,
+      mas NÃO recebe bônus automaticamente.
+    */
+
+    if (
+      auction.field === "campanha"
+    ) {
+
+      winnerCompany.campaignActive =
+        false;
+
+      winnerCompany.campaignReceivedAt =
+        Date.now();
+
     }
 
-    auction.status = "closed";
-    auction.closedAt = Date.now();
+
+    auction.status =
+      "closed";
+
+    auction.closedAt =
+      Date.now();
+
     auction.winnerId =
       winner.companyId;
+
     auction.winnerName =
       winner.companyName;
+
     auction.winningBid =
       value;
 
+
     latest.companies[
       winner.companyId
-    ] = company;
+    ] =
+      winnerCompany;
 
-    latest.auction = auction;
+
+    latest.auction =
+      auction;
+
 
     latest.status =
       `Leilão encerrado — ${winner.companyName} venceu`;
 
-    roomData = latest;
+
+    roomData =
+      latest;
+
 
     await saveRoom();
 
-    toast(
-      `🏆 ${winner.companyName} venceu por ` +
-      `ADM$ ${value.toLocaleString("pt-BR")}!`
-    );
-  } catch (e) {
-    console.error(e);
 
     toast(
-      `Erro ao encerrar leilão: ${e.message}`,
+      `🏆 ${winner.companyName} venceu por ADM$ ${money(value)}!`
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    toast(
+      `Erro ao encerrar leilão: ${error.message}`,
       "error"
     );
+
   }
+
 }
 
+
+/* ============================================================
+   NEGOCIAÇÕES
+   ============================================================ */
+
+function negotiationStatusLabel(status) {
+
+  const map = {
+
+    pending:
+      "🟡 PENDENTE",
+
+    accepted:
+      "✅ ACEITA",
+
+    refused:
+      "❌ RECUSADA",
+
+    countered:
+      "↩️ CONTRAPROPOSTA"
+
+  };
+
+
+  return (
+    map[status] ||
+    String(
+      status ||
+      "PENDENTE"
+    ).toUpperCase()
+  );
+
+}
+
+
+function renderNegotiationsTeacher() {
+
+  const box =
+    $("#listaNegociacoes");
+
+  const counter =
+    $("#qtdNegociacoes");
+
+
+  if (
+    !box ||
+    !counter
+  ) {
+
+    return;
+
+  }
+
+
+  const entries =
+    Object.entries(
+      roomData?.negotiations || {}
+    )
+      .sort(
+        (a, b) =>
+          Number(
+            b[1]?.updatedAt ||
+            b[1]?.createdAt ||
+            0
+          ) -
+          Number(
+            a[1]?.updatedAt ||
+            a[1]?.createdAt ||
+            0
+          )
+      );
+
+
+  counter.textContent =
+    `${entries.length} negociaç` +
+    `${entries.length === 1 ? "ão" : "ões"}`;
+
+
+  if (!entries.length) {
+
+    box.classList.add(
+      "empty"
+    );
+
+    box.innerHTML =
+      "Nenhuma negociação registrada.";
+
+    return;
+
+  }
+
+
+  box.classList.remove(
+    "empty"
+  );
+
+
+  box.innerHTML =
+    entries
+      .slice(0, 30)
+      .map(([id, negotiation]) => {
+
+        const type =
+          negotiation.type ===
+            "venda-campanha"
+            ? "📣 Venda de Campanha Viral"
+            : "🤝 Acordo / parceria";
+
+
+        const detail =
+          negotiation.type ===
+            "venda-campanha"
+            ? `ADM$ ${money(negotiation.value)}`
+            : escapeHtml(
+                negotiation.message ||
+                "Sem descrição"
+              );
+
+
+        return `
+
+          <div class="teacher-negotiation-item">
+
+            <div>
+
+              <strong>
+                ${type}
+              </strong>
+
+              <small>
+                ${escapeHtml(
+                  negotiation.from || "?"
+                )}
+                →
+                ${escapeHtml(
+                  negotiation.to || "?"
+                )}
+              </small>
+
+              <p>
+                ${detail}
+              </p>
+
+              ${
+                negotiation.counterMessage
+                  ? `
+                      <small>
+                        ↩️ Contraproposta:
+                        ${escapeHtml(
+                          negotiation.counterMessage
+                        )}
+                      </small>
+                    `
+                  : ""
+              }
+
+            </div>
+
+
+            <span class="negotiation-status">
+              ${negotiationStatusLabel(
+                negotiation.status
+              )}
+            </span>
+
+          </div>
+
+        `;
+
+      })
+      .join("");
+
+}
+
+
+/* ============================================================
+   CENTRAL ESTRATÉGICA MOBILE
+   ============================================================ */
+
+function renderMobileCompaniesSelect() {
+
+  const select =
+    $("#mobileDestino");
+
+  if (!select) return;
+
+
+  const previous =
+    select.value;
+
+
+  const companies =
+    Object.values(
+      roomData?.companies || {}
+    );
+
+
+  select.innerHTML =
+    `
+      <option value="all">
+        📢 Todas as empresas
+      </option>
+    ` +
+    companies
+      .map(company => `
+
+        <option value="${escapeHtml(company.id)}">
+          🏢 ${escapeHtml(company.name)}
+        </option>
+
+      `)
+      .join("");
+
+
+  if (
+    [
+      "all",
+      ...companies.map(c => c.id)
+    ].includes(previous)
+  ) {
+
+    select.value =
+      previous;
+
+  }
+
+}
+
+
+function renderMobileConnections() {
+
+  const box =
+    $("#celularesConectados");
+
+  const counter =
+    $("#qtdCelulares");
+
+
+  if (
+    !box ||
+    !counter
+  ) {
+
+    return;
+
+  }
+
+
+  const connections =
+    Object.values(
+      roomData?.mobileConnections || {}
+    )
+      .filter(
+        connection =>
+          connection?.status ===
+          "active"
+      );
+
+
+  counter.textContent =
+    `${connections.length} celular${connections.length === 1 ? "" : "es"}`;
+
+
+  if (!connections.length) {
+
+    box.classList.add(
+      "empty"
+    );
+
+    box.innerHTML =
+      "Nenhum celular estratégico conectado.";
+
+    return;
+
+  }
+
+
+  box.classList.remove(
+    "empty"
+  );
+
+
+  box.innerHTML =
+    connections
+      .map(connection => `
+
+        <div class="mobile-connected-item">
+
+          <div>
+
+            <strong>
+              📱 ${escapeHtml(connection.companyName)}
+            </strong>
+
+            <small>
+              Código:
+              ${escapeHtml(connection.code)}
+            </small>
+
+          </div>
+
+          <span>
+            🟢 ATIVO
+          </span>
+
+        </div>
+
+      `)
+      .join("");
+
+}
+
+
+async function sendMobileMessage() {
+
+  if (
+    !currentRoom ||
+    !roomData
+  ) {
+
+    toast(
+      "Crie ou acesse uma sala primeiro.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const destination =
+    $("#mobileDestino")
+      ?.value || "all";
+
+
+  const type =
+    $("#mobileTipo")
+      ?.value || "alerta";
+
+
+  const text =
+    $("#mobileMensagem")
+      ?.value
+      .trim();
+
+
+  if (!text) {
+
+    toast(
+      "Digite a informação estratégica.",
+      "error"
+    );
+
+    $("#mobileMensagem")
+      ?.focus();
+
+    return;
+
+  }
+
+
+  const latest =
+    await getLatestRoom();
+
+
+  latest.mobileMessages =
+    latest.mobileMessages || {};
+
+
+  const id =
+    `m-${Date.now()}-${Math.floor(
+      Math.random() * 9999
+    )}`;
+
+
+  let companyName =
+    "Todas as empresas";
+
+
+  if (
+    destination !== "all"
+  ) {
+
+    companyName =
+      latest.companies?.[
+        destination
+      ]?.name ||
+      destination;
+
+  }
+
+
+  latest.mobileMessages[
+    id
+  ] = {
+
+    id,
+
+    target:
+      destination === "all"
+        ? "all"
+        : "company",
+
+    companyId:
+      destination === "all"
+        ? null
+        : destination,
+
+    companyName,
+
+    type,
+
+    text,
+
+    createdAt:
+      Date.now(),
+
+    createdBy:
+      "Prof. Leopoldo"
+
+  };
+
+
+  roomData =
+    latest;
+
+
+  await saveRoom();
+
+
+  if (
+    $("#mobileMensagem")
+  ) {
+
+    $("#mobileMensagem").value =
+      "";
+
+  }
+
+
+  if (
+    $("#mobileProfessorConfirmacao")
+  ) {
+
+    $("#mobileProfessorConfirmacao").textContent =
+      destination === "all"
+        ? "A informação estratégica foi enviada para todas as empresas."
+        : `A informação estratégica foi enviada para ${companyName}.`;
+
+  }
+
+
+  $("#modalProfessorMobile")
+    ?.classList.remove(
+      "hidden"
+    );
+
+
+  toast(
+    destination === "all"
+      ? "📲 Informação enviada para todas as empresas."
+      : `📲 Informação enviada para ${companyName}.`
+  );
+
+}
+
+
+/* ============================================================
+   RENDER GERAL
+   ============================================================ */
+
+function render() {
+
+  if (!roomData) return;
+
+
+  if ($("#rodada")) {
+
+    $("#rodada").textContent =
+      `${Number(
+        roomData.round || 0
+      )}/8`;
+
+  }
+
+
+  if ($("#status")) {
+
+    $("#status").textContent =
+      roomData.status ||
+      "Aguardando";
+
+  }
+
+
+  renderCompanies();
+
+  renderAccessRequests();
+
+  renderAuctionTeacher();
+
+  renderNegotiationsTeacher();
+
+  renderEventButtons();
+
+  renderMobileCompaniesSelect();
+
+  renderMobileConnections();
+
+}
+
+
+/* ============================================================
+   CRIAR SALA
+   ============================================================ */
+
+$("#criarSala")
+  ?.addEventListener(
+    "click",
+    async () => {
+
+      const turma =
+        $("#turma")
+          ?.value
+          .trim();
+
+
+      const senha =
+        $("#senha")
+          ?.value
+          .trim();
+
+
+      if (!turma) {
+
+        toast(
+          "Digite o nome da turma.",
+          "error"
+        );
+
+        $("#turma")
+          ?.focus();
+
+        return;
+
+      }
+
+
+      if (!senha) {
+
+        toast(
+          "Crie uma senha para o professor.",
+          "error"
+        );
+
+        $("#senha")
+          ?.focus();
+
+        return;
+
+      }
+
+
+      setBusy(true);
+
+
+      try {
+
+        currentRoom =
+          roomCode();
+
+
+        roomData = {
+
+          code:
+            currentRoom,
+
+          className:
+            turma,
+
+          teacherPassword:
+            senha,
+
+          createdAt:
+            Date.now(),
+
+          status:
+            "Aguardando empresas",
+
+          round:
+            0,
+
+          currentEvent:
+            null,
+
+          usedEvents:
+            {},
+
+          companies:
+            {},
+
+          negotiations:
+            {},
+
+          auction:
+            null,
+
+          accessRequests:
+            {},
+
+          mobileConnections:
+            {},
+
+          mobileMessages:
+            {}
+
+        };
+
+
+        await saveRoom();
+
+
+        if (
+          $("#codigoSala")
+        ) {
+
+          $("#codigoSala").textContent =
+            currentRoom;
+
+        }
+
+
+        $("#codigoWrap")
+          ?.classList.remove(
+            "hidden"
+          );
+
+
+        await listen();
+
+
+        toast(
+
+          FIREBASE.enabled
+            ? `Sala ${currentRoom} criada e conectada ao Firebase!`
+            : `Sala ${currentRoom} criada em modo demonstração.`
+
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+
+        currentRoom =
+          null;
+
+        roomData =
+          null;
+
+
+        toast(
+          `Não foi possível criar a sala: ${error.message}`,
+          "error"
+        );
+
+      } finally {
+
+        setBusy(false);
+
+      }
+
+    }
+  );
+
+
+/* ============================================================
+   ACESSAR SALA EXISTENTE
+   ============================================================ */
+
 async function acessarSalaExistente() {
+
   const codigo =
     ($("#codigoExistente")?.value || "")
       .trim()
       .toUpperCase();
 
+
   const senha =
     ($("#senhaExistente")?.value || "")
       .trim();
 
+
   if (!codigo) {
+
     toast(
       "Digite o código da sala.",
       "error"
     );
 
-    $("#codigoExistente")?.focus();
+    $("#codigoExistente")
+      ?.focus();
+
     return;
+
   }
 
+
   if (!senha) {
+
     toast(
       "Digite a senha do professor.",
       "error"
     );
 
-    $("#senhaExistente")?.focus();
+    $("#senhaExistente")
+      ?.focus();
+
     return;
+
   }
 
-  try {
-    const f = await getFirebase();
 
-    let data = null;
+  try {
+
+    const f =
+      await getFirebase();
+
+
+    let data =
+      null;
+
 
     if (f) {
-      const snapshot = await f.get(
-        f.ref(
-          f.db,
-          `rooms/${codigo}`
-        )
-      );
 
-      data = snapshot.val();
+      const snapshot =
+        await f.get(
+
+          f.ref(
+            f.db,
+            `rooms/${codigo}`
+          )
+
+        );
+
+
+      data =
+        snapshot.val();
+
     } else {
-      data = demoGet(
-        `room:${codigo}`,
-        null
-      );
+
+      data =
+        demoGet(
+          `room:${codigo}`,
+          null
+        );
+
     }
 
+
     if (!data) {
+
       toast(
         "Sala não encontrada.",
         "error"
       );
+
       return;
+
     }
 
+
     if (
-      String(data.teacherPassword || "") !==
-      senha
+      String(
+        data.teacherPassword || ""
+      ) !== senha
     ) {
+
       toast(
         "Senha do professor incorreta.",
         "error"
       );
+
       return;
+
     }
 
-    currentRoom = codigo;
-    roomData = data;
+
+    currentRoom =
+      codigo;
+
+    roomData =
+      data;
+
+
+    /*
+      Mantém compatibilidade com salas
+      criadas em versões anteriores.
+    */
+
+    roomData.usedEvents =
+      roomData.usedEvents || {};
+
+    roomData.companies =
+      roomData.companies || {};
+
+    roomData.negotiations =
+      roomData.negotiations || {};
+
+    roomData.accessRequests =
+      roomData.accessRequests || {};
+
+    roomData.mobileConnections =
+      roomData.mobileConnections || {};
+
+    roomData.mobileMessages =
+      roomData.mobileMessages || {};
+
+
+    /*
+      Também recupera eventos usados
+      pelo histórico antigo.
+    */
 
     roomData.usedEvents =
       getUsedEvents();
 
-    $("#codigoSala").textContent =
-      currentRoom;
+
+    if (
+      $("#codigoSala")
+    ) {
+
+      $("#codigoSala").textContent =
+        currentRoom;
+
+    }
+
 
     $("#codigoWrap")
-      ?.classList.remove("hidden");
+      ?.classList.remove(
+        "hidden"
+      );
+
 
     if ($("#turma")) {
+
       $("#turma").value =
         roomData.className || "";
+
     }
+
 
     await listen();
 
+
     render();
+
 
     toast(
       `Sala ${currentRoom} recuperada com sucesso.`
     );
-  } catch (e) {
-    console.error(e);
+
+  } catch (error) {
+
+    console.error(error);
+
 
     toast(
-      `Não foi possível acessar a sala: ${e.message}`,
+      `Não foi possível acessar a sala: ${error.message}`,
       "error"
     );
+
   }
+
 }
+
 
 $("#acessarSala")
   ?.addEventListener(
@@ -789,212 +2390,254 @@ $("#acessarSala")
     acessarSalaExistente
   );
 
-$("#criarSala")
-  ?.addEventListener(
-    "click",
-    async () => {
-      const turma =
-        $("#turma")?.value.trim();
 
-      const senha =
-        $("#senha")?.value.trim();
-
-      if (!turma) {
-        toast(
-          "Digite o nome da turma.",
-          "error"
-        );
-
-        $("#turma")?.focus();
-        return;
-      }
-
-      if (!senha) {
-        toast(
-          "Crie uma senha para o professor.",
-          "error"
-        );
-
-        $("#senha")?.focus();
-        return;
-      }
-
-      setBusy(true);
-
-      try {
-        currentRoom =
-          roomCode();
-
-        roomData = {
-          code: currentRoom,
-          className: turma,
-          teacherPassword: senha,
-          createdAt: Date.now(),
-          status: "Aguardando empresas",
-          round: 0,
-          currentEvent: null,
-          usedEvents: {},
-          companies: {},
-          negotiations: {},
-          auction: null
-        };
-
-        await saveRoom();
-
-        $("#codigoSala")
-          .textContent =
-          currentRoom;
-
-        $("#codigoWrap")
-          ?.classList.remove("hidden");
-
-        await listen();
-
-        toast(
-          FIREBASE.enabled
-            ? `Sala ${currentRoom} criada e conectada ao Firebase!`
-            : `Sala ${currentRoom} criada em modo demonstração.`
-        );
-      } catch (err) {
-        console.error(err);
-
-        currentRoom = null;
-        roomData = null;
-
-        toast(
-          `Não foi possível criar a sala: ${err.message}`,
-          "error"
-        );
-      } finally {
-        setBusy(false);
-      }
-    }
-  );
+/* ============================================================
+   COPIAR CÓDIGO
+   ============================================================ */
 
 $("#copiarCodigo")
   ?.addEventListener(
     "click",
     async () => {
+
       if (!currentRoom) return;
 
+
       try {
+
         await navigator.clipboard
-          .writeText(currentRoom);
+          .writeText(
+            currentRoom
+          );
+
 
         toast(
           "Código copiado."
         );
+
       } catch {
+
         toast(
           `Código da sala: ${currentRoom}`
         );
+
       }
+
     }
   );
+
+
+/* ============================================================
+   INICIAR
+   ============================================================ */
 
 $("#iniciar")
   ?.addEventListener(
     "click",
     async () => {
+
       if (!roomData) {
-        return toast(
+
+        toast(
           "Crie ou acesse uma sala primeiro.",
           "error"
         );
+
+        return;
+
       }
+
 
       roomData.status =
         "Em andamento";
 
-      roomData.round = 1;
-      roomData.currentEvent = null;
+
+      /*
+        Se a partida ainda não começou,
+        inicia na Rodada 1.
+
+        Se já estava em rodada superior,
+        mantém a rodada atual.
+      */
+
+      if (
+        Number(
+          roomData.round || 0
+        ) < 1
+      ) {
+
+        roomData.round =
+          1;
+
+      }
+
+
+      roomData.currentEvent =
+        null;
+
 
       try {
+
         await saveRoom();
-      } catch (e) {
+
+
         toast(
-          e.message,
+          `▶ Arena em andamento — Rodada ${roomData.round}.`
+        );
+
+      } catch (error) {
+
+        toast(
+          error.message,
           "error"
         );
+
       }
+
     }
   );
+
+
+/* ============================================================
+   PRÓXIMA RODADA
+   ============================================================ */
 
 $("#proxima")
   ?.addEventListener(
     "click",
     async () => {
+
       if (!roomData) {
-        return toast(
+
+        toast(
           "Crie ou acesse uma sala primeiro.",
           "error"
         );
+
+        return;
+
       }
+
 
       roomData.round =
         Math.min(
           8,
-          (roomData.round || 0) + 1
+          Number(
+            roomData.round || 0
+          ) + 1
         );
+
 
       roomData.status =
         rounds[
           roomData.round - 1
-        ]?.name || "Final";
+        ]?.name ||
+        "Final";
 
-      roomData.currentEvent = null;
+
+      roomData.currentEvent =
+        null;
+
 
       try {
+
         await saveRoom();
-      } catch (e) {
+
+
         toast(
-          e.message,
+          `⏭ Rodada ${roomData.round}: ${roomData.status}`
+        );
+
+      } catch (error) {
+
+        toast(
+          error.message,
           "error"
         );
+
       }
+
     }
   );
+
+
+/* ============================================================
+   PAUSAR
+   ============================================================ */
 
 $("#pausar")
   ?.addEventListener(
     "click",
     async () => {
+
       if (!roomData) {
-        return toast(
+
+        toast(
           "Crie ou acesse uma sala primeiro.",
           "error"
         );
+
+        return;
+
       }
+
 
       roomData.status =
         roomData.status === "Pausado"
           ? "Em andamento"
           : "Pausado";
 
+
       try {
+
         await saveRoom();
-      } catch (e) {
+
+
         toast(
-          e.message,
+
+          roomData.status === "Pausado"
+            ? "⏸ Arena pausada."
+            : "▶ Arena retomada."
+
+        );
+
+      } catch (error) {
+
+        toast(
+          error.message,
           "error"
         );
+
       }
+
     }
   );
+
+
+/* ============================================================
+   EVENTO ALEATÓRIO
+   ============================================================ */
 
 $("#crise")
   ?.addEventListener(
     "click",
     async () => {
+
       if (!roomData) {
-        return toast(
+
+        toast(
           "Crie ou acesse uma sala primeiro.",
           "error"
         );
+
+        return;
+
       }
+
 
       const used =
         getUsedEvents();
+
 
       const available =
         Object.keys(events)
@@ -1003,13 +2646,18 @@ $("#crise")
               !used[eventId]
           );
 
+
       if (!available.length) {
+
         toast(
           "Todos os eventos desta partida já foram utilizados.",
           "error"
         );
+
         return;
+
       }
+
 
       const eventId =
         available[
@@ -1019,32 +2667,213 @@ $("#crise")
           )
         ];
 
+
       await dispararEvento(
         eventId
       );
+
     }
   );
+
+
+/* ============================================================
+   DISPARAR EVENTO
+   ============================================================ */
+
+async function dispararEvento(
+  eventId
+) {
+
+  if (!roomData) {
+
+    toast(
+      "Crie ou acesse uma sala primeiro.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  if (!events[eventId]) {
+
+    toast(
+      "Evento não encontrado.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const used =
+    getUsedEvents();
+
+
+  if (used[eventId]) {
+
+    const round =
+      used[eventId].round;
+
+
+    toast(
+
+      round
+        ? `Este evento já foi utilizado na Rodada ${round}.`
+        : "Este evento já foi utilizado nesta partida.",
+
+      "error"
+
+    );
+
+
+    renderEventButtons();
+
+    return;
+
+  }
+
+
+  const timestamp =
+    Date.now();
+
+
+  roomData.usedEvents =
+    roomData.usedEvents || {};
+
+
+  roomData.usedEvents[
+    eventId
+  ] = {
+
+    eventId,
+
+    title:
+      events[eventId]?.title ||
+      eventId,
+
+    round:
+      Number(
+        roomData.round || 0
+      ),
+
+    usedAt:
+      timestamp
+
+  };
+
+
+  roomData.currentEvent = {
+
+    id:
+      eventId,
+
+    nonce:
+      timestamp,
+
+    round:
+      Number(
+        roomData.round || 0
+      )
+
+  };
+
+
+  roomData.status =
+    "Evento de mercado";
+
+
+  try {
+
+    await saveRoom();
+
+
+    toast(
+      `🚨 Evento disparado: ${events[eventId].title}`
+    );
+
+  } catch (error) {
+
+    delete roomData.usedEvents[
+      eventId
+    ];
+
+
+    toast(
+      error.message,
+      "error"
+    );
+
+  }
+
+}
+
+
+document
+  .querySelectorAll(".event")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      async () => {
+
+        if (
+          button.disabled
+        ) {
+
+          return;
+
+        }
+
+
+        await dispararEvento(
+          button.dataset.event
+        );
+
+      }
+    );
+
+  });
+
+
+/* ============================================================
+   ABRIR LEILÃO
+   ============================================================ */
 
 $("#leilao")
   ?.addEventListener(
     "click",
     async () => {
+
       if (!roomData) {
-        return toast(
+
+        toast(
           "Crie ou acesse uma sala primeiro.",
           "error"
         );
+
+        return;
+
       }
+
 
       if (
         roomData.auction &&
-        roomData.auction.status === "open"
+        roomData.auction.status ===
+          "open"
       ) {
-        return toast(
+
+        toast(
           "Já existe um leilão aberto.",
           "error"
         );
+
+        return;
+
       }
+
 
       const item =
         AUCTION_ITEMS[
@@ -1054,171 +2883,202 @@ $("#leilao")
           )
         ];
 
+
       roomData.round =
         Math.max(
           3,
-          roomData.round || 0
+          Number(
+            roomData.round || 0
+          )
         );
+
 
       roomData.status =
         "Leilão aberto";
 
+
       roomData.auction = {
-        status: "open",
-        itemId: item.id,
-        title: item.title,
-        description: item.description,
-        field: item.field,
-        qty: item.qty,
-        minBid: item.minBid,
-        openedAt: Date.now(),
-        bids: {}
+
+        status:
+          "open",
+
+        itemId:
+          item.id,
+
+        title:
+          item.title,
+
+        description:
+          item.description,
+
+        field:
+          item.field,
+
+        qty:
+          item.qty,
+
+        minBid:
+          item.minBid,
+
+        openedAt:
+          Date.now(),
+
+        bids:
+          {}
+
       };
 
+
       try {
+
         await saveRoom();
 
+
         toast(
-          `Leilão aberto: ${item.title}`
+          `🔨 Leilão aberto: ${item.title}`
         );
-      } catch (e) {
+
+      } catch (error) {
+
         toast(
-          e.message,
+          error.message,
           "error"
         );
+
       }
+
     }
   );
+
+
+/* ============================================================
+   MERCADO LIVRE
+   ============================================================ */
 
 $("#mercado")
   ?.addEventListener(
     "click",
     async () => {
+
       if (!roomData) {
-        return toast(
+
+        toast(
           "Crie ou acesse uma sala primeiro.",
           "error"
         );
+
+        return;
+
       }
+
 
       roomData.status =
         "Mercado de negociações aberto";
 
+
       roomData.round =
         Math.max(
           6,
-          roomData.round || 0
+          Number(
+            roomData.round || 0
+          )
         );
+
 
       try {
+
         await saveRoom();
 
+
         toast(
-          "Mercado livre aberto."
+          "🤝 Mercado livre aberto."
         );
-      } catch (e) {
+
+      } catch (error) {
+
         toast(
-          e.message,
+          error.message,
           "error"
         );
+
       }
+
     }
   );
 
-async function dispararEvento(eventId) {
-  if (!roomData) {
-    return toast(
-      "Crie ou acesse uma sala primeiro.",
-      "error"
-    );
-  }
 
-  if (!events[eventId]) {
-    return toast(
-      "Evento não encontrado.",
-      "error"
-    );
-  }
+/* ============================================================
+   CENTRAL MOBILE
+   ============================================================ */
 
-  const used =
-    getUsedEvents();
+$("#enviarMobile")
+  ?.addEventListener(
+    "click",
+    async () => {
 
-  if (used[eventId]) {
-    const round =
-      used[eventId].round;
+      try {
 
-    toast(
-      round
-        ? `Este evento já foi utilizado na Rodada ${round}.`
-        : "Este evento já foi utilizado nesta partida.",
-      "error"
-    );
+        await sendMobileMessage();
 
-    renderEventButtons();
-    return;
-  }
+      } catch (error) {
 
-  const now = Date.now();
+        console.error(error);
 
-  roomData.usedEvents =
-    roomData.usedEvents || {};
 
-  roomData.usedEvents[eventId] = {
-    eventId,
-    title:
-      events[eventId]?.title ||
-      eventId,
-    round:
-      Number(
-        roomData.round || 0
-      ),
-    usedAt: now
-  };
-
-  roomData.currentEvent = {
-    id: eventId,
-    nonce: now,
-    round:
-      Number(
-        roomData.round || 0
-      )
-  };
-
-  roomData.status =
-    "Evento de mercado";
-
-  try {
-    await saveRoom();
-
-    toast(
-      `✅ Evento disparado e marcado como utilizado: ${events[eventId].title}`
-    );
-  } catch (e) {
-    delete roomData.usedEvents[eventId];
-
-    toast(
-      e.message,
-      "error"
-    );
-  }
-}
-
-document
-  .querySelectorAll(".event")
-  .forEach(button => {
-    button.addEventListener(
-      "click",
-      async () => {
-        const eventId =
-          button.dataset.event;
-
-        await dispararEvento(
-          eventId
+        toast(
+          `Não foi possível enviar a informação: ${error.message}`,
+          "error"
         );
+
       }
-    );
-  });
+
+    }
+  );
+
+
+$("#fecharProfessorMobile")
+  ?.addEventListener(
+    "click",
+    () => {
+
+      $("#modalProfessorMobile")
+        ?.classList.add(
+          "hidden"
+        );
+
+    }
+  );
+
+
+/* ============================================================
+   ENTER NOS CAMPOS DE ACESSO
+   ============================================================ */
+
+$("#senhaExistente")
+  ?.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Enter"
+      ) {
+
+        acessarSalaExistente();
+
+      }
+
+    }
+  );
+
+
+/* ============================================================
+   INICIALIZAÇÃO
+   ============================================================ */
 
 console.log(
-  "ADM Arena 360 — Painel do Professor carregado com leilão, eventos e monitor de negociações."
+  "ADM Arena 360 — Projeto Empreendedor — Prof. Leopoldo"
+);
+
+console.log(
+  "Painel do Professor carregado com controle de empresas, componentes, autorizações, eventos, leilão, negociações e Central Estratégica Mobile."
 );
