@@ -1,95 +1,793 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ADM Arena 360 — Empresa</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#071122">
+
+  <title>ADM Arena 360 — Empresa | Projeto Empreendedor</title>
+
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+
+<body class="empresa-page">
+
 <div class="bg-grid"></div>
+
 <main class="shell wide">
-  <header class="topbar">
-    <div><div class="eyebrow">CENTRAL DA EMPRESA</div><h1>🏢 ADM ARENA 360</h1></div>
-    <a class="ghost" href="index.html">← Início</a>
+
+  <!-- =========================================================
+       CABEÇALHO PRINCIPAL
+  ========================================================== -->
+  <header class="topbar arena-topbar">
+
+    <div class="brand-block">
+      <div class="eyebrow">
+        CENTRAL DA EMPRESA • SIMULAÇÃO EMPRESARIAL
+      </div>
+
+      <h1 class="arena-title">
+        🏢 ADM ARENA 360
+      </h1>
+
+      <div class="school-identification">
+        <span>📘 DISCIPLINA: <strong>PROJETO EMPREENDEDOR</strong></span>
+        <span>👨‍🏫 PROF. <strong>LEOPOLDO</strong></span>
+      </div>
+    </div>
+
+    <a class="ghost btn-home" href="index.html">
+      ← Início
+    </a>
+
   </header>
 
-  <section id="entrada" class="card glass entry-card">
-    <h2>Entrar na disputa</h2>
+
+  <!-- =========================================================
+       ENTRADA DA EMPRESA
+  ========================================================== -->
+  <section id="entrada" class="card glass entry-card arena-entry">
+
+    <div class="entry-heading">
+      <div class="entry-icon">🚀</div>
+
+      <div>
+        <div class="eyebrow">ACESSO À COMPETIÇÃO</div>
+
+        <h2>Entrar na ADM Arena 360</h2>
+
+        <p class="entry-description">
+          Cadastre sua empresa, organize sua equipe e prepare-se para
+          tomar decisões estratégicas em uma verdadeira simulação empresarial.
+        </p>
+      </div>
+    </div>
+
+
     <div class="grid-2">
-      <div><label>Código da sala</label><input id="codigo" placeholder="ADM-1234" maxlength="8"></div>
-      <div><label>Nome da empresa</label><input id="nomeEmpresa" placeholder="Ex.: Infinity Business"></div>
+
+      <div>
+        <label for="codigo">
+          🔑 Código da sala
+        </label>
+
+        <input
+          id="codigo"
+          placeholder="Ex.: ADM-1234"
+          maxlength="8"
+          autocomplete="off"
+        >
+      </div>
+
+
+      <div>
+        <label for="nomeEmpresa">
+          🏢 Nome da empresa
+        </label>
+
+        <input
+          id="nomeEmpresa"
+          placeholder="Ex.: Infinity Business"
+          autocomplete="off"
+        >
+      </div>
+
     </div>
-    <label>Segmento</label>
+
+
+    <!-- NOVO: COMPONENTES DA EMPRESA -->
+    <div class="team-register">
+
+      <label for="componentes">
+        👥 Componentes da empresa
+      </label>
+
+      <textarea
+        id="componentes"
+        class="componentes-input"
+        placeholder="Digite os nomes dos estudantes integrantes da empresa. Ex.: Ana, Carlos, João, Mariana e Pedro."
+      ></textarea>
+
+      <p class="muted">
+        Informe os nomes dos estudantes que fazem parte deste grupo/empresa.
+      </p>
+
+    </div>
+
+
+    <label for="segmento">
+      🎯 Segmento de atuação
+    </label>
+
     <select id="segmento">
-      <option>Cafeteria</option><option>Moda</option><option>Alimentação</option>
-      <option>Turismo</option><option>Tecnologia</option><option>Academia</option>
-      <option>Pet Shop</option><option>Eventos</option>
+      <option value="Cafeteria">☕ Cafeteria</option>
+      <option value="Moda">👕 Moda</option>
+      <option value="Alimentação">🍔 Alimentação</option>
+      <option value="Turismo">✈️ Turismo</option>
+      <option value="Tecnologia">💻 Tecnologia</option>
+      <option value="Academia">🏋️ Academia</option>
+      <option value="Pet Shop">🐾 Pet Shop</option>
+      <option value="Eventos">🎉 Eventos</option>
     </select>
-    <button class="primary" id="entrar">ENTRAR NA ARENA</button>
-    <p class="muted">Modo demonstração funciona sem Firebase. Para multiplayer entre Chromebooks, conecte o Firebase.</p>
+
+
+    <div class="entry-security-info">
+
+      <div class="security-icon">
+        🔐
+      </div>
+
+      <div>
+        <strong>Acesso controlado pelo professor</strong>
+
+        <p>
+          Empresas que retornarem posteriormente à mesma Arena deverão
+          solicitar autorização ao professor antes de continuar a partida.
+        </p>
+      </div>
+
+    </div>
+
+
+    <button class="primary btn-enter-arena" id="entrar">
+      🚀 ENTRAR NA ARENA
+    </button>
+
+
+    <p class="muted entry-footer-note">
+      Seus dados, decisões e progresso permanecem vinculados à sua empresa
+      durante a competição.
+    </p>
+
   </section>
 
+
+  <!-- =========================================================
+       TELA PRINCIPAL DA EMPRESA
+  ========================================================== -->
   <section id="jogo" class="hidden">
-    <div class="company-header card glass">
-      <div><div class="eyebrow">EMPRESA</div><h2 id="empresaNome">—</h2><small id="empresaSegmento">—</small></div>
-      <div class="pill" id="salaPill">Sala —</div>
-      <div class="pill danger" id="fasePill">Aguardando</div>
+
+
+    <!-- =======================================================
+         CABEÇALHO DA EMPRESA
+    ======================================================== -->
+    <div class="company-header card glass company-hero">
+
+      <div class="company-identity">
+
+        <div class="eyebrow">
+          EMPRESA PARTICIPANTE
+        </div>
+
+        <h2 id="empresaNome">
+          —
+        </h2>
+
+        <small id="empresaSegmento">
+          —
+        </small>
+
+
+        <!-- NOVO: COMPONENTES -->
+        <div class="company-members">
+          <span class="members-label">
+            👥 COMPONENTES
+          </span>
+
+          <span id="empresaComponentes">
+            Equipe da empresa
+          </span>
+        </div>
+
+      </div>
+
+
+      <div class="company-header-status">
+
+        <div class="pill room-pill" id="salaPill">
+          Sala —
+        </div>
+
+        <div class="pill danger phase-pill" id="fasePill">
+          Aguardando
+        </div>
+
+      </div>
+
     </div>
 
+
+    <!-- =======================================================
+         IDENTIFICAÇÃO DA DISCIPLINA
+    ======================================================== -->
+    <section class="arena-course-banner">
+
+      <div class="course-banner-icon">
+        🎓
+      </div>
+
+      <div>
+        <strong>PROJETO EMPREENDEDOR</strong>
+
+        <span>
+          Gestão • Estratégia • Negociação • Inovação • Trabalho em Equipe
+        </span>
+      </div>
+
+      <div class="course-professor">
+        PROF. LEOPOLDO
+      </div>
+
+    </section>
+
+
+    <!-- =======================================================
+         INDICADORES DA EMPRESA
+    ======================================================== -->
     <section class="metrics">
-      <div class="metric"><span>💰 Caixa</span><strong id="caixa">ADM$ 100.000</strong></div>
-      <div class="metric"><span>👥 Clientes</span><strong id="clientes">50</strong></div>
-      <div class="metric"><span>⭐ Reputação</span><strong id="reputacao">50</strong></div>
-      <div class="metric"><span>😊 Equipe</span><strong id="equipe">100%</strong></div>
-      <div class="metric"><span>💡 Inovação</span><strong id="inovacao">0</strong></div>
-      <div class="metric"><span>🏆 XP</span><strong id="xp">0</strong></div>
+
+      <div class="metric metric-money">
+        <span>💰 Caixa</span>
+        <strong id="caixa">ADM$ 100.000</strong>
+      </div>
+
+      <div class="metric metric-clients">
+        <span>👥 Clientes</span>
+        <strong id="clientes">50</strong>
+      </div>
+
+      <div class="metric metric-reputation">
+        <span>⭐ Reputação</span>
+        <strong id="reputacao">50</strong>
+      </div>
+
+      <div class="metric metric-team">
+        <span>😊 Equipe</span>
+        <strong id="equipe">100%</strong>
+      </div>
+
+      <div class="metric metric-innovation">
+        <span>💡 Inovação</span>
+        <strong id="inovacao">0</strong>
+      </div>
+
+      <div class="metric metric-xp">
+        <span>🏆 XP</span>
+        <strong id="xp">0</strong>
+      </div>
+
     </section>
 
-    <section class="grid-2">
-      <div class="card glass">
-        <h2>🎯 Decisão da rodada</h2>
-        <p id="missaoTexto">Aguarde o professor iniciar a partida.</p>
+
+    <!-- =======================================================
+         MISSÃO + NOTIFICAÇÕES
+    ======================================================== -->
+    <section class="grid-2 main-action-grid">
+
+      <!-- DECISÃO DA RODADA -->
+      <div class="card glass mission-card">
+
+        <div class="card-heading">
+
+          <div class="card-heading-icon">
+            🎯
+          </div>
+
+          <div>
+            <div class="eyebrow">
+              DESAFIO EMPRESARIAL
+            </div>
+
+            <h2>
+              Decisão da rodada
+            </h2>
+          </div>
+
+        </div>
+
+
+        <div class="mission-box">
+          <p id="missaoTexto">
+            Aguarde o professor iniciar a partida.
+          </p>
+        </div>
+
+
         <div id="decisaoArea"></div>
+
       </div>
-      <div class="card glass">
-        <h2>🔔 Central de notificações</h2>
-        <div id="notificacoes" class="notifications">
-          <div class="notification">Bem-vindos à arena. Preparem a estratégia.</div>
+
+
+      <!-- CENTRAL DE NOTIFICAÇÕES -->
+      <div class="card glass notifications-card">
+
+        <div class="card-heading">
+
+          <div class="card-heading-icon">
+            🔔
+          </div>
+
+          <div>
+            <div class="eyebrow">
+              INFORMAÇÕES EM TEMPO REAL
+            </div>
+
+            <h2>
+              Central de notificações
+            </h2>
+          </div>
+
         </div>
+
+
+        <div id="notificacoes" class="notifications">
+
+          <div class="notification welcome-notification">
+            🚀 Bem-vindos à Arena. Organizem a equipe e preparem a estratégia.
+          </div>
+
+        </div>
+
       </div>
+
     </section>
 
-    <section class="grid-2">
-      <div class="card glass">
-        <h2>🤝 Negociar</h2>
-        <label>Empresa destinatária</label>
-        <input id="destino" placeholder="Nome da empresa">
-        <label>Proposta</label>
-        <textarea id="proposta" placeholder="Ex.: Oferecemos ADM$ 8.000 por acesso à tecnologia."></textarea>
-        <button id="enviarProposta">ENVIAR PROPOSTA</button>
-      </div>
-      <div class="card glass">
-        <h2>🛡️ Inventário estratégico</h2>
-        <div class="inventory">
-          <div>🛡️ Escudo financeiro <b id="escudo">0</b></div>
-          <div>🔍 Pesquisa de mercado <b id="pesquisa">0</b></div>
-          <div>📣 Campanha viral <b id="campanha">0</b></div>
+
+    <!-- =======================================================
+         CENTRAL ESTRATÉGICA MOBILE
+    ======================================================== -->
+    <section
+      id="centralMobile"
+      class="card glass mobile-strategy-card"
+    >
+
+      <div class="mobile-strategy-layout">
+
+        <div class="mobile-strategy-icon">
+          📱
         </div>
+
+
+        <div class="mobile-strategy-info">
+
+          <div class="eyebrow">
+            INTELIGÊNCIA EMPRESARIAL
+          </div>
+
+          <h2>
+            Central Estratégica Mobile
+          </h2>
+
+          <p>
+            Utilize um celular da equipe como canal estratégico da empresa.
+            Ele poderá receber alertas, oportunidades, informações exclusivas,
+            propostas comerciais e consequências das decisões.
+          </p>
+
+
+          <div class="mobile-features">
+
+            <span>
+              ⚠️ Alertas
+            </span>
+
+            <span>
+              💡 Estratégias
+            </span>
+
+            <span>
+              🤝 Negociações
+            </span>
+
+            <span>
+              🔨 Leilões
+            </span>
+
+            <span>
+              📊 Resultados
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="mobile-strategy-actions">
+
+          <button
+            id="conectarCelular"
+            class="btn-mobile-connect"
+            type="button"
+          >
+            📲 CONECTAR CELULAR
+          </button>
+
+
+          <div
+            id="statusCelular"
+            class="mobile-status"
+          >
+            🔒 Nenhum celular conectado
+          </div>
+
+        </div>
+
       </div>
+
+
+      <div
+        id="mobileStrategicFeed"
+        class="mobile-feed hidden"
+      >
+
+        <div class="mobile-feed-title">
+          📡 CANAL ESTRATÉGICO ATIVO
+        </div>
+
+        <div id="mobileMessages">
+          Aguardando informações estratégicas...
+        </div>
+
+      </div>
+
     </section>
+
+
+    <!-- =======================================================
+         NEGOCIAÇÕES + INVENTÁRIO
+    ======================================================== -->
+    <section class="grid-2 business-grid">
+
+      <!-- NEGOCIAR -->
+      <div class="card glass negotiation-card">
+
+        <div class="card-heading">
+
+          <div class="card-heading-icon">
+            🤝
+          </div>
+
+          <div>
+            <div class="eyebrow">
+              MERCADO ENTRE EMPRESAS
+            </div>
+
+            <h2>
+              Negociar
+            </h2>
+          </div>
+
+        </div>
+
+
+        <label for="destino">
+          🏢 Empresa destinatária
+        </label>
+
+        <input
+          id="destino"
+          placeholder="Nome da empresa"
+          autocomplete="off"
+        >
+
+
+        <label for="proposta">
+          💬 Proposta
+        </label>
+
+        <textarea
+          id="proposta"
+          placeholder="Ex.: Oferecemos ADM$ 8.000 pela Campanha Viral."
+        ></textarea>
+
+
+        <button
+          id="enviarProposta"
+          class="btn-negotiation"
+        >
+          🤝 ENVIAR PROPOSTA
+        </button>
+
+      </div>
+
+
+      <!-- INVENTÁRIO -->
+      <div class="card glass inventory-card">
+
+        <div class="card-heading">
+
+          <div class="card-heading-icon">
+            🎒
+          </div>
+
+          <div>
+            <div class="eyebrow">
+              RECURSOS DA EMPRESA
+            </div>
+
+            <h2>
+              Inventário estratégico
+            </h2>
+          </div>
+
+        </div>
+
+
+        <div class="inventory">
+
+          <div class="inventory-item inventory-shield">
+            <span>
+              🛡️ Escudo financeiro
+            </span>
+
+            <b id="escudo">
+              0
+            </b>
+          </div>
+
+
+          <div class="inventory-item inventory-research">
+            <span>
+              🔍 Pesquisa de mercado
+            </span>
+
+            <b id="pesquisa">
+              0
+            </b>
+          </div>
+
+
+          <div class="inventory-item inventory-campaign">
+            <span>
+              📣 Campanha viral
+            </span>
+
+            <b id="campanha">
+              0
+            </b>
+          </div>
+
+        </div>
+
+
+        <div class="inventory-help">
+          💡 Recursos estratégicos podem ser utilizados em momentos decisivos
+          da competição.
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =======================================================
+         PAINEL DE SEGURANÇA / ACESSO
+    ======================================================== -->
+    <section class="card glass access-security-card">
+
+      <div class="security-panel-icon">
+        🔐
+      </div>
+
+      <div>
+
+        <div class="eyebrow">
+          SEGURANÇA DA ARENA
+        </div>
+
+        <h3>
+          Acesso supervisionado pelo professor
+        </h3>
+
+        <p>
+          O retorno à Arena em outro momento dependerá de autorização do
+          professor. Isso preserva a dinâmica da competição e evita acesso
+          antecipado às estratégias.
+        </p>
+
+      </div>
+
+
+      <div
+        id="statusAutorizacao"
+        class="authorization-status"
+      >
+        ✅ Sessão atual autorizada
+      </div>
+
+    </section>
+
+
   </section>
 
+
+  <!-- =========================================================
+       MODAL DE EVENTO
+  ========================================================== -->
   <div id="modalEvento" class="modal hidden">
-    <div class="modal-card">
-      <div class="eyebrow">🚨 EVENTO DE MERCADO</div>
-      <h2 id="eventoTitulo">Crise!</h2>
+
+    <div class="modal-card event-modal-card">
+
+      <div class="event-alert-icon">
+        🚨
+      </div>
+
+
+      <div class="eyebrow">
+        EVENTO DE MERCADO
+      </div>
+
+
+      <h2 id="eventoTitulo">
+        Crise!
+      </h2>
+
+
       <p id="eventoTexto"></p>
-      <div id="eventoOpcoes" class="stack"></div>
+
+
+      <div
+        id="eventoOpcoes"
+        class="stack"
+      ></div>
+
     </div>
+
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+
+  <!-- =========================================================
+       MODAL CENTRAL MOBILE
+       A lógica será ativada no empresa.js
+  ========================================================== -->
+  <div id="modalMobile" class="modal hidden">
+
+    <div class="modal-card mobile-modal-card">
+
+      <div class="mobile-modal-icon">
+        📱
+      </div>
+
+      <div class="eyebrow">
+        CENTRAL ESTRATÉGICA MOBILE
+      </div>
+
+      <h2>
+        Conectar celular da empresa
+      </h2>
+
+
+      <p>
+        Abra a ADM Arena 360 no celular da equipe e utilize o código
+        apresentado para vincular o aparelho à empresa.
+      </p>
+
+
+      <div class="mobile-code-box">
+
+        <span>
+          CÓDIGO DE CONEXÃO
+        </span>
+
+        <strong id="codigoMobile">
+          ------
+        </strong>
+
+      </div>
+
+
+      <p class="muted">
+        O celular terá acesso apenas às informações estratégicas liberadas
+        para esta empresa.
+      </p>
+
+
+      <button
+        id="fecharMobile"
+        class="ghost"
+        type="button"
+      >
+        FECHAR
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================================
+       TELA DE AGUARDO DE AUTORIZAÇÃO
+  ========================================================== -->
+  <div
+    id="bloqueioAutorizacao"
+    class="authorization-overlay hidden"
+  >
+
+    <div class="authorization-card">
+
+      <div class="authorization-lock">
+        🔒
+      </div>
+
+      <div class="eyebrow">
+        ACESSO CONTROLADO
+      </div>
+
+      <h2>
+        Aguardando autorização do professor
+      </h2>
+
+      <p>
+        Sua empresa já está cadastrada nesta Arena.
+        Aguarde o professor liberar a entrada para continuar a competição.
+      </p>
+
+
+      <div class="authorization-company">
+
+        <span>
+          🏢 Empresa
+        </span>
+
+        <strong id="empresaAguardando">
+          —
+        </strong>
+
+      </div>
+
+
+      <div class="waiting-animation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+
+      <p class="muted">
+        Não feche esta tela. A entrada será liberada automaticamente após
+        a autorização.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================================================
+       TOAST
+  ========================================================== -->
+  <div
+    id="toast"
+    class="toast hidden"
+  ></div>
+
 </main>
-<script type="module" src="js/empresa.js"></script>
+
+
+<script
+  type="module"
+  src="js/empresa.js"
+></script>
+
 </body>
 </html>
