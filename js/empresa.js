@@ -1,136 +1,271 @@
-import { getFirebase, demoGet, demoSet } from "./firebase-service.js";
-import { rounds, events, clampCompany } from "./game.js";
+import {
+  getFirebase,
+  demoGet,
+  demoSet
+} from "./firebase-service.js";
+
+import {
+  rounds,
+  events,
+  clampCompany
+} from "./game.js";
 
 /* ============================================================
-   ADM ARENA 360 — PROJETO EMPREENDEDOR — PROF. LEOPOLDO
+   ADM ARENA 360
+   PROJETO EMPREENDEDOR
+   PROF. LEOPOLDO
+
    EMPRESA.JS — VERSÃO COMPLETA CONSOLIDADA
 
-   REGRA CENTRAL DE ACESSO
+   REGRAS PRINCIPAIS
+   ------------------------------------------------------------
    • Primeiro acesso exige autorização do professor.
    • Toda nova entrada exige nova autorização.
-   • Acesso Mobile também exige autorização própria.
-   • Nenhum progresso é perdido ao sair.
+   • Central Mobile exige autorização própria.
+   • Progresso da empresa é preservado.
+   • Decisão de rodada não pode ser repetida.
+   • Eventos são respondidos uma única vez.
+   • Leilões funcionam por empresa.
+   • Negociações funcionam entre empresas da mesma Arena.
+   • Empresa destinatária é escolhida em lista automática.
+   ============================================================ */
+
+
+/* ============================================================
+   ESTADO
    ============================================================ */
 
 let roomCode = null;
 let companyId = null;
 let room = null;
 let company = null;
+
 let mobileMode = false;
 let currentRequestKey = null;
+
 let lastEventNonce = null;
-let lastNegotiationSignature = "";
+
 let listenerStarted = false;
 
-const $ = (s) => document.querySelector(s);
-const now = () => Date.now();
-const money = (v) => Number(v || 0).toLocaleString("pt-BR");
 
-const normalizeName = (text) =>
-  String(text || "")
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+
+const $ = (selector) =>
+  document.querySelector(selector);
+
+const now = () =>
+  Date.now();
+
+const money = (value) =>
+  Number(value || 0)
+    .toLocaleString("pt-BR");
+
+
+function normalizeName(text) {
+  return String(text || "")
     .trim()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ");
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .replace(
+      /\s+/g,
+      " "
+    );
+}
 
-const safeId = (text) =>
-  String(text || "")
+
+function safeId(text) {
+  return String(text || "")
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .replace(
+      /[^a-z0-9]+/g,
+      "-"
+    )
+    .replace(
+      /^-+|-+$/g,
+      ""
+    );
+}
+
 
 function escapeHtml(text) {
-  return String(text ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return String(
+    text ?? ""
+  )
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 }
+
 
 function parseComponents(text) {
   return String(text || "")
-    .split(/[,;\n]+/)
-    .map((x) => x.trim())
+    .split(
+      /[,;\n]+/
+    )
+    .map(
+      item =>
+        item.trim()
+    )
     .filter(Boolean);
 }
 
-function getComponentsText(c = company) {
-  if (!c) return "";
 
-  const value =
-    c.components ??
-    c.componentes ??
-    c.members ??
-    [];
-
-  if (Array.isArray(value)) {
-    return value.join(" • ");
+function getComponentsText(
+  targetCompany = company
+) {
+  if (!targetCompany) {
+    return "";
   }
 
-  return String(value || "");
+  const value =
+    targetCompany.components ??
+    targetCompany.componentes ??
+    targetCompany.members ??
+    [];
+
+  if (
+    Array.isArray(value)
+  ) {
+    return value.join(
+      " • "
+    );
+  }
+
+  return String(
+    value || ""
+  );
 }
 
+
 function toast(text) {
-  const el = $("#toast");
+  const el =
+    $("#toast");
 
   if (!el) {
     console.log(text);
     return;
   }
 
-  el.textContent = text;
-  el.classList.remove("hidden");
+  el.textContent =
+    text;
 
-  clearTimeout(el._timer);
+  el.classList.remove(
+    "hidden"
+  );
 
-  el._timer = setTimeout(() => {
-    el.classList.add("hidden");
-  }, 3500);
+  clearTimeout(
+    el._timer
+  );
+
+  el._timer =
+    setTimeout(
+      () => {
+        el.classList.add(
+          "hidden"
+        );
+      },
+      3500
+    );
 }
+
 
 /* ============================================================
    FIREBASE
    ============================================================ */
 
 async function getRoom() {
-  const f = await getFirebase();
+  const f =
+    await getFirebase();
 
   if (f) {
-    const snap = await f.get(
-      f.ref(f.db, `rooms/${roomCode}`)
-    );
+    const snap =
+      await f.get(
+        f.ref(
+          f.db,
+          `rooms/${roomCode}`
+        )
+      );
 
     return snap.val();
   }
 
-  return demoGet(`room:${roomCode}`, null);
+  return demoGet(
+    `room:${roomCode}`,
+    null
+  );
 }
 
-async function saveWholeRoom(data) {
-  const f = await getFirebase();
+
+async function saveWholeRoom(
+  data
+) {
+  const f =
+    await getFirebase();
 
   if (f) {
     await f.set(
-      f.ref(f.db, `rooms/${roomCode}`),
+      f.ref(
+        f.db,
+        `rooms/${roomCode}`
+      ),
       data
     );
   } else {
-    demoSet(`room:${roomCode}`, data);
+    demoSet(
+      `room:${roomCode}`,
+      data
+    );
   }
 
-  room = data;
+  room =
+    data;
 }
 
+
 async function saveCompany() {
-  if (!roomCode || !companyId || !company) return;
+  if (
+    !roomCode ||
+    !companyId ||
+    !company
+  ) {
+    return;
+  }
 
-  company = clampCompany(company);
+  company =
+    clampCompany(
+      company
+    );
 
-  const f = await getFirebase();
+  const f =
+    await getFirebase();
 
   if (f) {
     await f.set(
@@ -141,31 +276,54 @@ async function saveCompany() {
       company
     );
   } else {
-    const latest = await getRoom();
+    const latest =
+      await getRoom();
 
-    if (!latest) return;
+    if (!latest) {
+      return;
+    }
 
-    latest.companies = latest.companies || {};
-    latest.companies[companyId] = company;
+    latest.companies =
+      latest.companies ||
+      {};
 
-    await saveWholeRoom(latest);
+    latest.companies[
+      companyId
+    ] =
+      company;
+
+    await saveWholeRoom(
+      latest
+    );
   }
 }
 
+
 /* ============================================================
-   CAMPO DE SENHA
+   SENHA DA EMPRESA
    ============================================================ */
 
 function ensureCompanyPasswordField() {
-  if ($("#senhaEmpresa")) return;
+  if (
+    $("#senhaEmpresa")
+  ) {
+    return;
+  }
 
-  const entrar = $("#entrar");
+  const entrar =
+    $("#entrar");
 
-  if (!entrar) return;
+  if (!entrar) {
+    return;
+  }
 
-  const wrapper = document.createElement("div");
+  const wrapper =
+    document.createElement(
+      "div"
+    );
 
-  wrapper.className = "company-password-box";
+  wrapper.className =
+    "company-password-box";
 
   wrapper.innerHTML = `
     <label for="senhaEmpresa">
@@ -187,69 +345,109 @@ function ensureCompanyPasswordField() {
     </p>
   `;
 
-  entrar.parentNode.insertBefore(
-    wrapper,
-    entrar
-  );
+  entrar.parentNode
+    .insertBefore(
+      wrapper,
+      entrar
+    );
 }
+
 
 /* ============================================================
    EMPRESA EXISTENTE
    ============================================================ */
 
-function findExistingCompany(name) {
-  const target = normalizeName(name);
+function findExistingCompany(
+  name
+) {
+  const target =
+    normalizeName(name);
 
   return (
-    Object.values(room?.companies || {}).find(
-      (c) =>
-        normalizeName(c?.name) === target
-    ) || null
+    Object.values(
+      room?.companies ||
+      {}
+    ).find(
+      item =>
+        normalizeName(
+          item?.name
+        ) ===
+        target
+    ) ||
+    null
   );
 }
 
+
 /* ============================================================
-   TELA DE AUTORIZAÇÃO
+   AUTORIZAÇÃO
    ============================================================ */
 
-function showAuthorizationWaiting(message) {
-  $("#jogo")?.classList.add("hidden");
+function showAuthorizationWaiting(
+  message
+) {
+  $("#jogo")
+    ?.classList.add(
+      "hidden"
+    );
 
   $("#bloqueioAutorizacao")
-    ?.classList.remove("hidden");
+    ?.classList.remove(
+      "hidden"
+    );
 
-  if ($("#empresaAguardando")) {
-    $("#empresaAguardando").textContent =
+  if (
+    $("#empresaAguardando")
+  ) {
+    $("#empresaAguardando")
+      .textContent =
       company?.name ||
       "Empresa";
   }
 
-  if ($("#statusAutorizacao")) {
-    $("#statusAutorizacao").textContent =
+  if (
+    $("#statusAutorizacao")
+  ) {
+    $("#statusAutorizacao")
+      .textContent =
       message ||
       "🔒 Aguardando autorização do professor...";
   }
 }
 
+
 function hideAuthorizationWaiting() {
   $("#bloqueioAutorizacao")
-    ?.classList.add("hidden");
+    ?.classList.add(
+      "hidden"
+    );
 
-  $("#entrada")?.classList.add("hidden");
-  $("#jogo")?.classList.remove("hidden");
+  $("#entrada")
+    ?.classList.add(
+      "hidden"
+    );
+
+  $("#jogo")
+    ?.classList.remove(
+      "hidden"
+    );
 }
 
-/* ============================================================
-   SOLICITAÇÃO DE ACESSO
-   ============================================================ */
 
-function buildRequestKey(source = "empresa") {
-  if (source === "mobile") {
-    return `${companyId}__mobile`;
+function buildRequestKey(
+  source = "empresa"
+) {
+  if (
+    source === "mobile"
+  ) {
+    return (
+      `${companyId}__mobile`
+    );
   }
 
   return companyId;
 }
+
 
 async function createAccessRequest({
   source = "empresa",
@@ -257,36 +455,62 @@ async function createAccessRequest({
   passwordMismatch = false,
   requestedPassword = null
 } = {}) {
-  const latest = await getRoom();
+
+  const latest =
+    await getRoom();
 
   if (!latest) {
-    toast("Sala não encontrada.");
+    toast(
+      "Sala não encontrada."
+    );
     return false;
   }
 
   latest.accessRequests =
-    latest.accessRequests || {};
+    latest.accessRequests ||
+    {};
 
   const requestKey =
-    buildRequestKey(source);
+    buildRequestKey(
+      source
+    );
 
   const requestId =
     `req-${companyId}-${source}-${now()}-${Math.floor(
-      Math.random() * 99999
+      Math.random() *
+      99999
     )}`;
 
   const request = {
     requestId,
     companyId,
-    companyName: company.name,
-    components: getComponentsText(company),
-    segment: company.segment || "",
-    requestedAt: now(),
-    status: "pending",
+    companyName:
+      company.name,
+    components:
+      getComponentsText(
+        company
+      ),
+    segment:
+      company.segment ||
+      "",
+    requestedAt:
+      now(),
+    status:
+      "pending",
     source,
-    firstAccess: Boolean(firstAccess),
-    passwordMismatch: Boolean(passwordMismatch),
-    round: Number(latest.round || 0)
+    firstAccess:
+      Boolean(
+        firstAccess
+      ),
+    passwordMismatch:
+      Boolean(
+        passwordMismatch
+      ),
+    round:
+      Number(
+        latest.round ||
+        0
+      )
   };
 
   if (
@@ -299,12 +523,15 @@ async function createAccessRequest({
 
   latest.accessRequests[
     requestKey
-  ] = request;
+  ] =
+    request;
 
   currentRequestKey =
     requestKey;
 
-  await saveWholeRoom(latest);
+  await saveWholeRoom(
+    latest
+  );
 
   showAuthorizationWaiting(
     source === "mobile"
@@ -315,9 +542,6 @@ async function createAccessRequest({
   return true;
 }
 
-/* ============================================================
-   VERIFICAR AUTORIZAÇÃO
-   ============================================================ */
 
 async function checkAccessAuthorization() {
   if (
@@ -377,7 +601,8 @@ async function checkAccessAuthorization() {
   }
 
   if (
-    room.status === "Pausado"
+    room.status ===
+    "Pausado"
   ) {
     showAuthorizationWaiting(
       "⏸️ A Arena está pausada pelo professor."
@@ -395,7 +620,8 @@ async function checkAccessAuthorization() {
       ];
 
     if (updated) {
-      company = updated;
+      company =
+        updated;
     }
   }
 
@@ -406,11 +632,13 @@ async function checkAccessAuthorization() {
   return true;
 }
 
+
 /* ============================================================
-   ENTRAR NA EMPRESA
+   ENTRADA NA EMPRESA
    ============================================================ */
 
 async function enterCompany() {
+
   roomCode =
     $("#codigo")
       ?.value
@@ -430,7 +658,8 @@ async function enterCompany() {
   const components =
     parseComponents(
       $("#componentes")
-        ?.value || ""
+        ?.value ||
+      ""
     );
 
   if (
@@ -446,7 +675,8 @@ async function enterCompany() {
   }
 
   if (
-    password.length < 4
+    password.length <
+    4
   ) {
     toast(
       "A senha deve ter pelo menos 4 caracteres."
@@ -455,7 +685,8 @@ async function enterCompany() {
     return;
   }
 
-  room = await getRoom();
+  room =
+    await getRoom();
 
   if (!room) {
     toast(
@@ -466,7 +697,8 @@ async function enterCompany() {
   }
 
   if (
-    room.status === "Pausado"
+    room.status ===
+    "Pausado"
   ) {
     toast(
       "A Arena está pausada pelo professor."
@@ -476,22 +708,31 @@ async function enterCompany() {
   }
 
   const existing =
-    findExistingCompany(name);
+    findExistingCompany(
+      name
+    );
 
-  /* ----------------------------------------------------------
+  /* ========================================================
      EMPRESA EXISTENTE
-     ---------------------------------------------------------- */
+     ======================================================== */
 
   if (existing) {
-    companyId = existing.id;
-    company = existing;
+
+    companyId =
+      existing.id;
+
+    company =
+      existing;
 
     company.eventResponses =
-      company.eventResponses || {};
+      company.eventResponses ||
+      {};
 
     if (
       components.length &&
-      !getComponentsText(company)
+      !getComponentsText(
+        company
+      )
     ) {
       company.components =
         components;
@@ -499,25 +740,21 @@ async function enterCompany() {
 
     const storedPassword =
       String(
-        existing.accessPassword || ""
+        existing.accessPassword ||
+        ""
       );
 
     const passwordMismatch =
       Boolean(
         storedPassword &&
-        storedPassword !== password
+        storedPassword !==
+          password
       );
-
-    /*
-      Empresa antiga/legada:
-      se ainda não possui passwordVersion 2,
-      o professor poderá validar a atualização
-      da senha mediante autorização.
-    */
 
     const legacyPassword =
       Number(
-        existing.passwordVersion || 0
+        existing.passwordVersion ||
+        0
       ) < 2;
 
     if (
@@ -534,8 +771,10 @@ async function enterCompany() {
     await saveCompany();
 
     await createAccessRequest({
-      source: "empresa",
-      firstAccess: false,
+      source:
+        "empresa",
+      firstAccess:
+        false,
       passwordMismatch:
         passwordMismatch ||
         legacyPassword,
@@ -552,50 +791,81 @@ async function enterCompany() {
     return;
   }
 
-  /* ----------------------------------------------------------
-     PRIMEIRO CADASTRO
-     ---------------------------------------------------------- */
+
+  /* ========================================================
+     NOVA EMPRESA
+     ======================================================== */
 
   companyId =
-    safeId(name);
+    safeId(
+      name
+    );
 
   const createdAt =
     now();
 
   company = {
-    id: companyId,
+    id:
+      companyId,
+
     name,
+
     segment:
       $("#segmento")
-        ?.value || "",
+        ?.value ||
+      "",
+
     components,
+
     accessPassword:
       password,
+
     passwordVersion:
       2,
+
     passwordCreatedAt:
       createdAt,
 
-    caixa: 100000,
-    clientes: 50,
-    reputacao: 50,
-    equipe: 100,
-    inovacao: 0,
-    xp: 0,
+    caixa:
+      100000,
 
-    escudo: 0,
-    pesquisa: 0,
-    campanha: 0,
-    campaignActive: false,
+    clientes:
+      50,
 
-    eventResponses: {},
+    reputacao:
+      50,
+
+    equipe:
+      100,
+
+    inovacao:
+      0,
+
+    xp:
+      0,
+
+    escudo:
+      0,
+
+    pesquisa:
+      0,
+
+    campanha:
+      0,
+
+    campaignActive:
+      false,
+
+    eventResponses:
+      {},
 
     joinedAt:
       createdAt,
 
     ignoreEventsBefore:
       Number(
-        room?.currentEvent?.nonce ||
+        room?.currentEvent
+          ?.nonce ||
         createdAt
       )
   };
@@ -603,9 +873,12 @@ async function enterCompany() {
   await saveCompany();
 
   await createAccessRequest({
-    source: "empresa",
-    firstAccess: true,
-    passwordMismatch: false
+    source:
+      "empresa",
+    firstAccess:
+      true,
+    passwordMismatch:
+      false
   });
 
   await listen();
@@ -615,42 +888,64 @@ async function enterCompany() {
   );
 }
 
+
 /* ============================================================
-   ESCUTA EM TEMPO REAL
+   TEMPO REAL
    ============================================================ */
 
 async function listen() {
-  if (listenerStarted) return;
+  if (
+    listenerStarted
+  ) {
+    return;
+  }
 
-  listenerStarted = true;
+  listenerStarted =
+    true;
 
-  const f = await getFirebase();
+  const f =
+    await getFirebase();
 
   if (f) {
+
     f.onValue(
       f.ref(
         f.db,
         `rooms/${roomCode}`
       ),
-      (snapshot) => {
+
+      snapshot => {
+
         room =
           snapshot.val();
 
         onRoomChange();
+
       }
     );
-  } else {
-    setInterval(async () => {
-      room =
-        await getRoom();
 
-      onRoomChange();
-    }, 900);
+  } else {
+
+    setInterval(
+      async () => {
+
+        room =
+          await getRoom();
+
+        onRoomChange();
+
+      },
+      900
+    );
+
   }
 }
 
+
 async function onRoomChange() {
-  if (!room) return;
+  if (!room) {
+    return;
+  }
 
   if (
     companyId &&
@@ -679,45 +974,75 @@ async function onRoomChange() {
   renderMobileStrategicFeed();
 }
 
+
 /* ============================================================
    EVENTOS
    ============================================================ */
 
-function eventResponse(nonce) {
-  if (!nonce) return null;
+function eventResponse(
+  nonce
+) {
+  if (!nonce) {
+    return null;
+  }
 
   return (
-    company?.eventResponses?.[
-      String(nonce)
-    ] || null
+    company
+      ?.eventResponses
+      ?.[
+        String(nonce)
+      ] ||
+    null
   );
 }
 
-function closeEventModal() {
-  $("#modalEvento")
-    ?.classList.add("hidden");
 
-  if ($("#eventoOpcoes")) {
-    $("#eventoOpcoes").innerHTML = "";
+function closeEventModal() {
+
+  $("#modalEvento")
+    ?.classList.add(
+      "hidden"
+    );
+
+  if (
+    $("#eventoOpcoes")
+  ) {
+    $("#eventoOpcoes")
+      .innerHTML =
+      "";
   }
 }
 
-function shouldReceiveCurrentEvent(currentEvent) {
-  if (!currentEvent?.nonce) {
+
+function shouldReceiveCurrentEvent(
+  currentEvent
+) {
+
+  if (
+    !currentEvent
+      ?.nonce
+  ) {
     return false;
   }
 
   const nonce =
-    Number(currentEvent.nonce || 0);
+    Number(
+      currentEvent.nonce ||
+      0
+    );
 
   const joinedAt =
-    Number(company?.joinedAt || 0);
+    Number(
+      company?.joinedAt ||
+      0
+    );
 
   if (
     company?.ignoreEventsBefore &&
     nonce <=
       Number(
-        company.ignoreEventsBefore
+        company
+          .ignoreEventsBefore
       )
   ) {
     return false;
@@ -725,7 +1050,8 @@ function shouldReceiveCurrentEvent(currentEvent) {
 
   if (
     joinedAt &&
-    nonce < joinedAt
+    nonce <
+      joinedAt
   ) {
     return false;
   }
@@ -733,17 +1059,30 @@ function shouldReceiveCurrentEvent(currentEvent) {
   return true;
 }
 
-function showEvent(id, nonce) {
-  const ev = events[id];
 
-  if (!ev) return;
+function showEvent(
+  id,
+  nonce
+) {
+
+  const ev =
+    events[id];
+
+  if (!ev) {
+    return;
+  }
 
   const key =
-    String(nonce || "");
+    String(
+      nonce ||
+      ""
+    );
 
   if (
     !key ||
-    eventResponse(key)
+    eventResponse(
+      key
+    )
   ) {
     closeEventModal();
     return;
@@ -758,115 +1097,168 @@ function showEvent(id, nonce) {
     return;
   }
 
-  if ($("#eventoTitulo")) {
-    $("#eventoTitulo").textContent =
+  if (
+    $("#eventoTitulo")
+  ) {
+    $("#eventoTitulo")
+      .textContent =
       ev.title;
   }
 
-  if ($("#eventoTexto")) {
-    $("#eventoTexto").textContent =
+  if (
+    $("#eventoTexto")
+  ) {
+    $("#eventoTexto")
+      .textContent =
       ev.text;
   }
 
-  if (!$("#eventoOpcoes")) {
+  if (
+    !$("#eventoOpcoes")
+  ) {
     return;
   }
 
-  $("#eventoOpcoes").innerHTML =
+  $("#eventoOpcoes")
+    .innerHTML =
     ev.options
       .map(
-        (option, index) => `
+        (
+          option,
+          index
+        ) => `
           <button
             type="button"
             data-event-option="${index}"
           >
-            ${escapeHtml(option.label)}
+            ${escapeHtml(
+              option.label
+            )}
           </button>
         `
       )
       .join("");
 
   $("#modalEvento")
-    ?.classList.remove("hidden");
+    ?.classList.remove(
+      "hidden"
+    );
 
   document
     .querySelectorAll(
       "[data-event-option]"
     )
-    .forEach((button) => {
-      button.onclick =
-        async () => {
-          if (
-            eventResponse(key)
-          ) {
-            closeEventModal();
-            return;
-          }
+    .forEach(
+      button => {
 
-          const option =
-            ev.options[
-              Number(
-                button.dataset
-                  .eventOption
+        button.onclick =
+          async () => {
+
+            if (
+              eventResponse(
+                key
               )
-            ];
-
-          if (!option) return;
-
-          Object.entries(
-            option.delta || {}
-          ).forEach(
-            ([field, value]) => {
-              company[field] =
-                Number(
-                  company[field] || 0
-                ) +
-                Number(value || 0);
+            ) {
+              closeEventModal();
+              return;
             }
-          );
 
-          company.eventResponses =
-            company.eventResponses ||
-            {};
+            const option =
+              ev.options[
+                Number(
+                  button
+                    .dataset
+                    .eventOption
+                )
+              ];
 
-          company.eventResponses[
-            key
-          ] = {
-            eventId: id,
-            eventTitle:
-              ev.title,
-            optionLabel:
-              option.label,
-            round:
-              Number(
-                room.round || 0
-              ),
-            answeredAt:
-              now()
+            if (!option) {
+              return;
+            }
+
+            Object.entries(
+              option.delta ||
+              {}
+            )
+              .forEach(
+                (
+                  [
+                    field,
+                    value
+                  ]
+                ) => {
+
+                  company[field] =
+                    Number(
+                      company[field] ||
+                      0
+                    ) +
+                    Number(
+                      value ||
+                      0
+                    );
+
+                }
+              );
+
+            company.eventResponses =
+              company.eventResponses ||
+              {};
+
+            company.eventResponses[
+              key
+            ] = {
+              eventId:
+                id,
+
+              eventTitle:
+                ev.title,
+
+              optionLabel:
+                option.label,
+
+              round:
+                Number(
+                  room.round ||
+                  0
+                ),
+
+              answeredAt:
+                now()
+            };
+
+            await saveCompany();
+
+            closeEventModal();
+
+            toast(
+              "✅ Evento respondido e consequências aplicadas."
+            );
+
+            render();
+
           };
 
-          await saveCompany();
-
-          closeEventModal();
-
-          toast(
-            "✅ Evento respondido e consequências aplicadas."
-          );
-
-          render();
-        };
-    });
+      }
+    );
 }
 
+
 function handleCurrentEvent() {
+
   const currentEvent =
     room?.currentEvent;
 
   if (
-    !currentEvent?.nonce
+    !currentEvent
+      ?.nonce
   ) {
-    lastEventNonce = null;
+
+    lastEventNonce =
+      null;
+
     closeEventModal();
+
     return;
   }
 
@@ -880,20 +1272,26 @@ function handleCurrentEvent() {
       currentEvent
     )
   ) {
+
     lastEventNonce =
       currentEvent.nonce;
 
     closeEventModal();
+
     return;
   }
 
   if (
-    eventResponse(nonce)
+    eventResponse(
+      nonce
+    )
   ) {
+
     lastEventNonce =
       currentEvent.nonce;
 
     closeEventModal();
+
     return;
   }
 
@@ -901,6 +1299,7 @@ function handleCurrentEvent() {
     currentEvent.nonce !==
     lastEventNonce
   ) {
+
     lastEventNonce =
       currentEvent.nonce;
 
@@ -908,14 +1307,17 @@ function handleCurrentEvent() {
       currentEvent.id,
       currentEvent.nonce
     );
+
   }
 }
 
+
 /* ============================================================
-   DECISÕES
+   LABELS DE DECISÃO
    ============================================================ */
 
 const DECISION_LABELS = {
+
   crescimento:
     "🚀 Foco em crescimento",
 
@@ -953,9 +1355,16 @@ const DECISION_LABELS = {
     "🏦 Tomar crédito"
 };
 
+
+/* ============================================================
+   DECISÃO CONFIRMADA
+   ============================================================ */
+
 function confirmedDecisionHtml() {
+
   return `
     <div class="notification">
+
       <strong>
         ✅ Decisão confirmada
       </strong>
@@ -972,11 +1381,18 @@ function confirmedDecisionHtml() {
       <span class="muted">
         Aguarde o professor avançar.
       </span>
+
     </div>
   `;
 }
 
+
+/* ============================================================
+   RODADA 2 — INVESTIMENTOS
+   ============================================================ */
+
 function investmentHtml() {
+
   if (
     company.lastDecisionRound ===
     room.round
@@ -985,9 +1401,11 @@ function investmentHtml() {
   }
 
   const saved =
-    company.investmentPlan || {};
+    company.investmentPlan ||
+    {};
 
   return `
+
     <div class="stack">
 
       <label>
@@ -1002,6 +1420,7 @@ function investmentHtml() {
         value="${saved.estrutura || 0}"
       >
 
+
       <label>
         👥 Pessoas
       </label>
@@ -1013,6 +1432,7 @@ function investmentHtml() {
         step="1000"
         value="${saved.pessoas || 0}"
       >
+
 
       <label>
         📣 Marketing
@@ -1026,6 +1446,7 @@ function investmentHtml() {
         value="${saved.marketing || 0}"
       >
 
+
       <label>
         💻 Tecnologia
       </label>
@@ -1037,6 +1458,7 @@ function investmentHtml() {
         step="1000"
         value="${saved.tecnologia || 0}"
       >
+
 
       <label>
         📦 Estoque
@@ -1050,6 +1472,7 @@ function investmentHtml() {
         value="${saved.estoque || 0}"
       >
 
+
       <label>
         🛟 Reserva
       </label>
@@ -1062,12 +1485,14 @@ function investmentHtml() {
         value="${saved.reserva || 0}"
       >
 
+
       <div
         id="investmentSummary"
         class="notification"
       >
         Total alocado: ADM$ 0
       </div>
+
 
       <button
         id="confirmarPlanoInvest"
@@ -1081,76 +1506,96 @@ function investmentHtml() {
   `;
 }
 
+
 function bindInvestmentPlan() {
+
   const button =
     $("#confirmarPlanoInvest");
 
-  if (!button) return;
+  if (!button) {
+    return;
+  }
 
-  const values = () => ({
-    estrutura:
-      Math.max(
-        0,
-        Number(
-          $("#invEstrutura")
-            ?.value || 0
-        )
-      ),
+  const values =
+    () => ({
 
-    pessoas:
-      Math.max(
-        0,
-        Number(
-          $("#invPessoas")
-            ?.value || 0
-        )
-      ),
+      estrutura:
+        Math.max(
+          0,
+          Number(
+            $("#invEstrutura")
+              ?.value ||
+            0
+          )
+        ),
 
-    marketing:
-      Math.max(
-        0,
-        Number(
-          $("#invMarketing")
-            ?.value || 0
-        )
-      ),
+      pessoas:
+        Math.max(
+          0,
+          Number(
+            $("#invPessoas")
+              ?.value ||
+            0
+          )
+        ),
 
-    tecnologia:
-      Math.max(
-        0,
-        Number(
-          $("#invTecnologia")
-            ?.value || 0
-        )
-      ),
+      marketing:
+        Math.max(
+          0,
+          Number(
+            $("#invMarketing")
+              ?.value ||
+            0
+          )
+        ),
 
-    estoque:
-      Math.max(
-        0,
-        Number(
-          $("#invEstoque")
-            ?.value || 0
-        )
-      ),
+      tecnologia:
+        Math.max(
+          0,
+          Number(
+            $("#invTecnologia")
+              ?.value ||
+            0
+          )
+        ),
 
-    reserva:
-      Math.max(
-        0,
-        Number(
-          $("#invReserva")
-            ?.value || 0
+      estoque:
+        Math.max(
+          0,
+          Number(
+            $("#invEstoque")
+              ?.value ||
+            0
+          )
+        ),
+
+      reserva:
+        Math.max(
+          0,
+          Number(
+            $("#invReserva")
+              ?.value ||
+            0
+          )
         )
-      )
-  });
+
+    });
 
   const updateSummary =
     () => {
-      const v = values();
+
+      const v =
+        values();
 
       const total =
-        Object.values(v)
+        Object
+          .values(v)
           .reduce(
-            (a, b) => a + b,
+            (
+              a,
+              b
+            ) =>
+              a + b,
             0
           );
 
@@ -1164,11 +1609,14 @@ function bindInvestmentPlan() {
       if (
         $("#investmentSummary")
       ) {
+
         $("#investmentSummary")
           .textContent =
           `Total alocado: ADM$ ${money(total)} • ` +
           `Saída real: ADM$ ${money(gasto)}`;
+
       }
+
     };
 
   [
@@ -1178,34 +1626,48 @@ function bindInvestmentPlan() {
     "#invTecnologia",
     "#invEstoque",
     "#invReserva"
-  ].forEach((selector) => {
-    $(selector)
-      ?.addEventListener(
-        "input",
-        updateSummary
-      );
-  });
+  ]
+    .forEach(
+      selector => {
+
+        $(selector)
+          ?.addEventListener(
+            "input",
+            updateSummary
+          );
+
+      }
+    );
 
   updateSummary();
 
   button.onclick =
     async () => {
+
       if (
         company.lastDecisionRound ===
         room.round
       ) {
+
         toast(
           "Esta rodada já foi respondida."
         );
+
         return;
       }
 
-      const v = values();
+      const v =
+        values();
 
       const total =
-        Object.values(v)
+        Object
+          .values(v)
           .reduce(
-            (a, b) => a + b,
+            (
+              a,
+              b
+            ) =>
+              a + b,
             0
           );
 
@@ -1218,20 +1680,31 @@ function bindInvestmentPlan() {
 
       const caixaAtual =
         Number(
-          company.caixa || 0
+          company.caixa ||
+          0
         );
 
-      if (total <= 0) {
+      if (
+        total <=
+        0
+      ) {
+
         toast(
           "Distribua algum valor."
         );
+
         return;
       }
 
-      if (total > caixaAtual) {
+      if (
+        total >
+        caixaAtual
+      ) {
+
         toast(
           "O total não pode ultrapassar o caixa disponível."
         );
+
         return;
       }
 
@@ -1247,43 +1720,53 @@ function bindInvestmentPlan() {
 
       company.reputacao +=
         Math.floor(
-          v.estrutura / 10000
+          v.estrutura /
+          10000
         ) * 2;
 
       company.equipe +=
         Math.floor(
-          v.pessoas / 10000
+          v.pessoas /
+          10000
         ) * 5;
 
       company.clientes +=
         Math.floor(
-          v.marketing / 5000
+          v.marketing /
+          5000
         ) * 2;
 
       company.inovacao +=
         Math.floor(
-          v.tecnologia / 5000
+          v.tecnologia /
+          5000
         ) * 3;
 
       company.clientes +=
         Math.floor(
-          v.estoque / 10000
+          v.estoque /
+          10000
         );
 
       company.escudo =
         Number(
-          company.escudo || 0
+          company.escudo ||
+          0
         ) +
         Math.floor(
-          v.reserva / 20000
+          v.reserva /
+          20000
         );
 
       company.xp +=
         6 +
-        Object.values(v)
+        Object
+          .values(v)
           .filter(
-            (x) => x > 0
-          ).length;
+            value =>
+              value > 0
+          )
+          .length;
 
       company.lastDecisionRound =
         room.round;
@@ -1301,23 +1784,28 @@ function bindInvestmentPlan() {
       );
 
       render();
+
     };
 }
+
 
 /* ============================================================
    LEILÃO
    ============================================================ */
 
 function auctionHtml() {
+
   const auction =
     room?.auction;
 
   if (!auction) {
+
     return `
       <p class="muted">
         Aguarde o professor abrir o leilão.
       </p>
     `;
+
   }
 
   const myBid =
@@ -1329,52 +1817,68 @@ function auctionHtml() {
     auction.status ===
     "open"
   ) {
+
     return `
+
       <div class="stack">
 
         <div class="notification">
 
           <strong>
-            ${escapeHtml(
-              auction.title ||
-              "🔨 Leilão"
-            )}
+            ${
+              escapeHtml(
+                auction.title ||
+                "🔨 Leilão"
+              )
+            }
           </strong>
 
           <br>
 
-          ${escapeHtml(
-            auction.description ||
-            ""
-          )}
+          ${
+            escapeHtml(
+              auction.description ||
+              ""
+            )
+          }
 
           <br><br>
 
           Lance mínimo:
+
           <strong>
-            ADM$ ${money(
-              auction.minBid
-            )}
+            ADM$ ${
+              money(
+                auction.minBid
+              )
+            }
           </strong>
 
         </div>
 
+
         <input
           id="valorLance"
           type="number"
-          min="${Number(
-            auction.minBid || 0
-          )}"
+          min="${
+            Number(
+              auction.minBid ||
+              0
+            )
+          }"
           value="${
             myBid
               ? Number(
-                  myBid.amount || 0
+                  myBid.amount ||
+                  0
                 )
               : Number(
-                  auction.minBid || 0
+                  auction.minBid ||
+                  0
                 )
           }"
         >
+
 
         <button
           id="enviarLance"
@@ -1384,18 +1888,24 @@ function auctionHtml() {
           🔒 ENVIAR LANCE
         </button>
 
+
         ${
           myBid
             ? `
-                <div class="notification">
-                  ✅ Lance atual:
-                  ADM$ ${money(myBid.amount)}
-                </div>
-              `
+              <div class="notification">
+                ✅ Lance atual:
+                ADM$ ${
+                  money(
+                    myBid.amount
+                  )
+                }
+              </div>
+            `
             : ""
         }
 
       </div>
+
     `;
   }
 
@@ -1403,59 +1913,81 @@ function auctionHtml() {
     auction.status ===
     "closed"
   ) {
+
     if (
       auction.winnerId ===
       companyId
     ) {
+
       return `
+
         <div class="notification">
+
           🏆
+
           <strong>
             SUA EMPRESA VENCEU!
           </strong>
 
           <br>
 
-          ADM$ ${money(
-            auction.winningBid
-          )}
+          ADM$ ${
+            money(
+              auction.winningBid
+            )
+          }
+
         </div>
+
       `;
+
     }
 
     return `
+
       <div class="notification">
+
         Leilão encerrado.
 
         <br>
 
         ${
           auction.winnerName
-            ? `Vencedora: ${escapeHtml(
-                auction.winnerName
-              )}`
+            ? `Vencedora: ${
+                escapeHtml(
+                  auction.winnerName
+                )
+              }`
             : "Sem vencedor."
         }
+
       </div>
+
     `;
   }
 
   return "";
 }
 
+
 function bindAuction() {
+
   const button =
     $("#enviarLance");
 
-  if (!button) return;
+  if (!button) {
+    return;
+  }
 
   button.onclick =
     async () => {
+
       const value =
         Math.floor(
           Number(
             $("#valorLance")
-              ?.value || 0
+              ?.value ||
+            0
           )
         );
 
@@ -1465,37 +1997,47 @@ function bindAuction() {
       if (
         !auction ||
         auction.status !==
-          "open"
+        "open"
       ) {
+
         toast(
           "O leilão não está aberto."
         );
+
         return;
       }
 
       if (
         value <
         Number(
-          auction.minBid || 0
+          auction.minBid ||
+          0
         )
       ) {
+
         toast(
-          `Lance mínimo: ADM$ ${money(
-            auction.minBid
-          )}.`
+          `Lance mínimo: ADM$ ${
+            money(
+              auction.minBid
+            )
+          }.`
         );
+
         return;
       }
 
       if (
         value >
         Number(
-          company.caixa || 0
+          company.caixa ||
+          0
         )
       ) {
+
         toast(
           "Saldo insuficiente."
         );
+
         return;
       }
 
@@ -1503,16 +2045,22 @@ function bindAuction() {
         await getFirebase();
 
       const payload = {
+
         companyId,
+
         companyName:
           company.name,
+
         amount:
           value,
+
         createdAt:
           now()
+
       };
 
       if (f) {
+
         await f.set(
           f.ref(
             f.db,
@@ -1520,7 +2068,9 @@ function bindAuction() {
           ),
           payload
         );
+
       } else {
+
         const latest =
           await getRoom();
 
@@ -1530,34 +2080,42 @@ function bindAuction() {
 
         latest.auction.bids[
           companyId
-        ] = payload;
+        ] =
+          payload;
 
         await saveWholeRoom(
           latest
         );
+
       }
 
       toast(
         "🔒 Lance enviado."
       );
+
     };
 }
+
 
 /* ============================================================
    CAMPANHA VIRAL
    ============================================================ */
 
 function ensureCampaignButton() {
+
   const line =
     $("#campanha")
       ?.parentElement;
 
-  if (!line) return;
+  if (!line) {
+    return;
+  }
 
   let button =
     $("#usarCampanha");
 
   if (!button) {
+
     button =
       document.createElement(
         "button"
@@ -1579,10 +2137,15 @@ function ensureCampaignButton() {
 
   const quantity =
     Number(
-      company.campanha || 0
+      company.campanha ||
+      0
     );
 
-  if (quantity <= 0) {
+  if (
+    quantity <=
+    0
+  ) {
+
     button.textContent =
       "🔒 SEM CAMPANHA";
 
@@ -1595,6 +2158,7 @@ function ensureCampaignButton() {
   if (
     company.campaignActive
   ) {
+
     button.textContent =
       "✅ CAMPANHA ATIVA";
 
@@ -1614,41 +2178,55 @@ function ensureCampaignButton() {
     activateViralCampaign;
 }
 
+
 async function activateViralCampaign() {
+
   if (
     Number(
-      company.campanha || 0
-    ) <= 0
+      company.campanha ||
+      0
+    ) <=
+    0
   ) {
+
     toast(
       "Sua empresa não possui Campanha Viral."
     );
+
     return;
   }
 
   if (
     company.campaignActive
   ) {
+
     toast(
       "A Campanha Viral já está ativa."
     );
+
     return;
   }
 
   company.clientes =
     Number(
-      company.clientes || 0
-    ) + 15;
+      company.clientes ||
+      0
+    ) +
+    15;
 
   company.reputacao =
     Number(
-      company.reputacao || 0
-    ) + 10;
+      company.reputacao ||
+      0
+    ) +
+    10;
 
   company.xp =
     Number(
-      company.xp || 0
-    ) + 10;
+      company.xp ||
+      0
+    ) +
+    10;
 
   company.campaignActive =
     true;
@@ -1665,6 +2243,7 @@ async function activateViralCampaign() {
   render();
 }
 
+
 /* ============================================================
    RODADAS
    ============================================================ */
@@ -1672,18 +2251,32 @@ async function activateViralCampaign() {
 function decisionHtml(
   roundNumber
 ) {
+
   if (
     company?.lastDecisionRound ===
       roundNumber &&
-    [1, 2, 4, 7, 8]
-      .includes(roundNumber)
+    [
+      1,
+      2,
+      4,
+      7,
+      8
+    ]
+      .includes(
+        roundNumber
+      )
   ) {
+
     return confirmedDecisionHtml();
+
   }
 
+
   if (
-    roundNumber === 1
+    roundNumber ===
+    1
   ) {
+
     return `
       <div class="stack">
 
@@ -1701,24 +2294,37 @@ function decisionHtml(
 
       </div>
     `;
+
   }
 
+
   if (
-    roundNumber === 2
+    roundNumber ===
+    2
   ) {
+
     return investmentHtml();
+
   }
 
+
   if (
-    roundNumber === 3
+    roundNumber ===
+    3
   ) {
+
     return auctionHtml();
+
   }
 
+
   if (
-    roundNumber === 4
+    roundNumber ===
+    4
   ) {
+
     return `
+
       <div class="stack">
 
         <button data-d="preco">
@@ -1738,13 +2344,19 @@ function decisionHtml(
         </button>
 
       </div>
+
     `;
+
   }
 
+
   if (
-    roundNumber === 7
+    roundNumber ===
+    7
   ) {
+
     return `
+
       <p>
         Uma empresa pode aumentar
         as vendas e piorar o caixa?
@@ -1761,13 +2373,19 @@ function decisionHtml(
         </button>
 
       </div>
+
     `;
+
   }
 
+
   if (
-    roundNumber === 8
+    roundNumber ===
+    8
   ) {
+
     return `
+
       <p>
         👾 BOSS FINAL:
         custos +15% e vendas -20%.
@@ -1788,222 +2406,433 @@ function decisionHtml(
         </button>
 
       </div>
+
     `;
+
   }
 
+
   return `
+
     <p class="muted">
       Aguarde a ação do professor.
     </p>
+
   `;
 }
 
+
 function bindDecision() {
+
   document
     .querySelectorAll(
       "[data-d]"
     )
-    .forEach((button) => {
-      button.onclick =
-        async () => {
-          if (
-            company.lastDecisionRound ===
-            room.round
-          ) {
-            toast(
-              "Esta rodada já foi respondida."
-            );
-            return;
-          }
+    .forEach(
+      button => {
 
-          const d =
-            button.dataset.d;
+        button.onclick =
+          async () => {
 
-          if (
-            d === "crescimento"
-          ) {
-            company.caixa -=
-              10000;
+            if (
+              company.lastDecisionRound ===
+              room.round
+            ) {
 
-            company.clientes +=
-              8;
-
-            company.xp +=
-              10;
-          }
-
-          if (
-            d === "equilibrio"
-          ) {
-            company.reputacao +=
-              5;
-
-            company.xp +=
-              10;
-          }
-
-          if (
-            d === "seguranca"
-          ) {
-            company.escudo =
-              Number(
-                company.escudo ||
-                0
-              ) + 1;
-
-            company.xp +=
-              8;
-          }
-
-          if (
-            d === "preco"
-          ) {
-            company.caixa +=
-              8000;
-
-            company.clientes +=
-              8;
-
-            company.reputacao -=
-              2;
-
-            company.xp +=
-              7;
-          }
-
-          if (
-            d === "qualidade"
-          ) {
-            company.caixa -=
-              7000;
-
-            company.reputacao +=
-              8;
-
-            company.xp +=
-              9;
-          }
-
-          if (
-            d === "pessoas"
-          ) {
-            company.caixa -=
-              5000;
-
-            company.equipe +=
-              10;
-
-            company.xp +=
-              9;
-          }
-
-          if (
-            d === "inovacao"
-          ) {
-            company.caixa -=
-              9000;
-
-            company.inovacao +=
-              12;
-
-            company.xp +=
-              11;
-          }
-
-          if (
-            d === "quiz-sim"
-          ) {
-            company.xp +=
-              10;
-          }
-
-          if (
-            d === "quiz-nao"
-          ) {
-            company.xp =
-              Math.max(
-                0,
-                company.xp - 2
+              toast(
+                "Esta rodada já foi respondida."
               );
-          }
 
-          if (
-            d ===
-            "boss-reserva"
-          ) {
-            company.caixa -=
-              5000;
+              return;
+            }
 
-            company.reputacao +=
-              6;
+            const d =
+              button.dataset.d;
 
-            company.xp +=
-              18;
-          }
 
-          if (
-            d ===
-            "boss-corte"
-          ) {
-            company.caixa +=
-              3000;
+            if (
+              d ===
+              "crescimento"
+            ) {
 
-            company.equipe -=
-              7;
+              company.caixa -=
+                10000;
 
-            company.inovacao -=
-              2;
+              company.clientes +=
+                8;
 
-            company.xp +=
-              10;
-          }
+              company.xp +=
+                10;
 
-          if (
-            d ===
-            "boss-credito"
-          ) {
-            company.caixa +=
-              20000;
+            }
 
-            company.xp +=
-              8;
-          }
 
-          company.lastDecisionRound =
-            room.round;
+            if (
+              d ===
+              "equilibrio"
+            ) {
 
-          company.lastDecisionCode =
-            d;
+              company.reputacao +=
+                5;
 
-          company.lastDecisionLabel =
-            DECISION_LABELS[d] ||
-            d;
+              company.xp +=
+                10;
 
-          company.lastDecisionAt =
-            now();
+            }
 
-          await saveCompany();
 
-          toast(
-            "✅ Decisão registrada."
-          );
+            if (
+              d ===
+              "seguranca"
+            ) {
 
-          render();
-        };
-    });
+              company.escudo =
+                Number(
+                  company.escudo ||
+                  0
+                ) +
+                1;
+
+              company.xp +=
+                8;
+
+            }
+
+
+            if (
+              d ===
+              "preco"
+            ) {
+
+              company.caixa +=
+                8000;
+
+              company.clientes +=
+                8;
+
+              company.reputacao -=
+                2;
+
+              company.xp +=
+                7;
+
+            }
+
+
+            if (
+              d ===
+              "qualidade"
+            ) {
+
+              company.caixa -=
+                7000;
+
+              company.reputacao +=
+                8;
+
+              company.xp +=
+                9;
+
+            }
+
+
+            if (
+              d ===
+              "pessoas"
+            ) {
+
+              company.caixa -=
+                5000;
+
+              company.equipe +=
+                10;
+
+              company.xp +=
+                9;
+
+            }
+
+
+            if (
+              d ===
+              "inovacao"
+            ) {
+
+              company.caixa -=
+                9000;
+
+              company.inovacao +=
+                12;
+
+              company.xp +=
+                11;
+
+            }
+
+
+            if (
+              d ===
+              "quiz-sim"
+            ) {
+
+              company.xp +=
+                10;
+
+            }
+
+
+            if (
+              d ===
+              "quiz-nao"
+            ) {
+
+              company.xp =
+                Math.max(
+                  0,
+                  company.xp -
+                  2
+                );
+
+            }
+
+
+            if (
+              d ===
+              "boss-reserva"
+            ) {
+
+              company.caixa -=
+                5000;
+
+              company.reputacao +=
+                6;
+
+              company.xp +=
+                18;
+
+            }
+
+
+            if (
+              d ===
+              "boss-corte"
+            ) {
+
+              company.caixa +=
+                3000;
+
+              company.equipe -=
+                7;
+
+              company.inovacao -=
+                2;
+
+              company.xp +=
+                10;
+
+            }
+
+
+            if (
+              d ===
+              "boss-credito"
+            ) {
+
+              company.caixa +=
+                20000;
+
+              company.xp +=
+                8;
+
+            }
+
+
+            company.lastDecisionRound =
+              room.round;
+
+            company.lastDecisionCode =
+              d;
+
+            company.lastDecisionLabel =
+              DECISION_LABELS[d] ||
+              d;
+
+            company.lastDecisionAt =
+              now();
+
+            await saveCompany();
+
+            toast(
+              "✅ Decisão registrada."
+            );
+
+            render();
+
+          };
+
+      }
+    );
 }
+
 
 /* ============================================================
    NEGOCIAÇÕES
    ============================================================ */
 
+
+/* ============================================================
+   LISTA AUTOMÁTICA DE EMPRESAS
+   ============================================================ */
+
+function renderDestinationCompanies() {
+
+  const oldField =
+    $("#destino");
+
+  if (
+    !oldField ||
+    !room ||
+    !company
+  ) {
+    return;
+  }
+
+  const companies =
+    Object
+      .values(
+        room.companies ||
+        {}
+      )
+      .filter(
+        item =>
+          item &&
+          item.id &&
+          item.id !==
+            companyId
+      )
+      .sort(
+        (
+          a,
+          b
+        ) =>
+          String(
+            a.name ||
+            ""
+          )
+            .localeCompare(
+              String(
+                b.name ||
+                ""
+              ),
+              "pt-BR"
+            )
+      );
+
+  let select =
+    oldField;
+
+  if (
+    oldField.tagName !==
+    "SELECT"
+  ) {
+
+    select =
+      document.createElement(
+        "select"
+      );
+
+    select.id =
+      "destino";
+
+    select.className =
+      oldField.className ||
+      "";
+
+    select.setAttribute(
+      "aria-label",
+      "Empresa destinatária"
+    );
+
+    oldField.replaceWith(
+      select
+    );
+
+  }
+
+  const previousValue =
+    select.value ||
+    "";
+
+  select.innerHTML = `
+
+    <option value="">
+      ${
+        companies.length
+          ? "Selecione uma empresa"
+          : "Nenhuma outra empresa disponível"
+      }
+    </option>
+
+    ${
+      companies
+        .map(
+          item => `
+            <option
+              value="${escapeHtml(
+                item.name
+              )}"
+            >
+              ${escapeHtml(
+                item.name
+              )}
+            </option>
+          `
+        )
+        .join("")
+    }
+
+  `;
+
+  if (
+    companies.some(
+      item =>
+        item.name ===
+        previousValue
+    )
+  ) {
+
+    select.value =
+      previousValue;
+
+  }
+
+  select.disabled =
+    companies.length ===
+    0;
+}
+
+
+/* ============================================================
+   CAMPOS EXTRAS DE NEGOCIAÇÃO
+   ============================================================ */
+
 function ensureNegotiationFields() {
-  if ($("#negTipo")) return;
+
+  if (
+    $("#negTipo")
+  ) {
+
+    renderDestinationCompanies();
+
+    return;
+  }
 
   const proposta =
     $("#proposta");
 
-  if (!proposta) return;
+  if (!proposta) {
+    return;
+  }
 
   const box =
     document.createElement(
@@ -2014,11 +2843,13 @@ function ensureNegotiationFields() {
     "negotiation-extra";
 
   box.innerHTML = `
+
     <label>
       📑 Tipo de proposta
     </label>
 
     <select id="negTipo">
+
       <option value="mensagem">
         🤝 Acordo / parceria
       </option>
@@ -2026,12 +2857,15 @@ function ensureNegotiationFields() {
       <option value="venda-campanha">
         📣 Vender Campanha Viral
       </option>
+
     </select>
+
 
     <div
       id="negVendaCampos"
       class="hidden"
     >
+
       <label>
         💰 Valor pedido
       </label>
@@ -2042,12 +2876,15 @@ function ensureNegotiationFields() {
         min="1"
         step="1000"
       >
+
     </div>
+
 
     <div
       id="negHistorico"
       class="notifications"
     ></div>
+
   `;
 
   proposta.parentNode
@@ -2060,37 +2897,69 @@ function ensureNegotiationFields() {
     ?.addEventListener(
       "change",
       () => {
+
         $("#negVendaCampos")
           ?.classList.toggle(
             "hidden",
-            $("#negTipo").value !==
-              "venda-campanha"
+            $("#negTipo")
+              .value !==
+            "venda-campanha"
           );
+
       }
     );
+
+  renderDestinationCompanies();
 }
 
-function findCompanyByName(name) {
+
+/* ============================================================
+   LOCALIZA EMPRESA
+   ============================================================ */
+
+function findCompanyByName(
+  name
+) {
+
   const target =
-    normalizeName(name);
+    normalizeName(
+      name
+    );
 
   return (
     Object.values(
-      room?.companies || {}
-    ).find(
-      (c) =>
-        normalizeName(
-          c.name
-        ) === target
-    ) || null
+      room?.companies ||
+      {}
+    )
+      .find(
+        item =>
+          normalizeName(
+            item.name
+          ) ===
+          target
+      ) ||
+    null
   );
 }
+
+
+/* ============================================================
+   ENVIA NEGOCIAÇÃO
+   ============================================================ */
 
 async function sendNegotiation(
   payload
 ) {
+
   const latest =
     await getRoom();
+
+  if (!latest) {
+    toast(
+      "Sala não encontrada."
+    );
+    return null;
+  }
 
   latest.negotiations =
     latest.negotiations ||
@@ -2098,17 +2967,27 @@ async function sendNegotiation(
 
   const id =
     `n-${now()}-${Math.floor(
-      Math.random() * 9999
+      Math.random() *
+      9999
     )}`;
 
   latest.negotiations[
     id
   ] = {
+
     id,
-    status: "pending",
-    createdAt: now(),
-    history: [],
+
+    status:
+      "pending",
+
+    createdAt:
+      now(),
+
+    history:
+      [],
+
     ...payload
+
   };
 
   await saveWholeRoom(
@@ -2118,15 +2997,27 @@ async function sendNegotiation(
   return id;
 }
 
+
+/* ============================================================
+   ENVIA PROPOSTA DO FORMULÁRIO
+   ============================================================ */
+
 async function sendProposalFromForm() {
+
   const destination =
-    $("#destino")
-      ?.value
+    String(
+      $("#destino")
+        ?.value ||
+      ""
+    )
       .trim();
 
   const message =
-    $("#proposta")
-      ?.value
+    String(
+      $("#proposta")
+        ?.value ||
+      ""
+    )
       .trim();
 
   const type =
@@ -2135,9 +3026,11 @@ async function sendProposalFromForm() {
     "mensagem";
 
   if (!destination) {
+
     toast(
-      "Informe a empresa destinatária."
+      "Selecione a empresa destinatária."
     );
+
     return;
   }
 
@@ -2147,9 +3040,11 @@ async function sendProposalFromForm() {
     );
 
   if (!target) {
+
     toast(
       "Empresa não encontrada."
     );
+
     return;
   }
 
@@ -2157,24 +3052,36 @@ async function sendProposalFromForm() {
     target.id ===
     companyId
   ) {
+
     toast(
-      "Não negocie com sua própria empresa."
+      "Não é possível negociar com sua própria empresa."
     );
+
     return;
   }
+
+
+  /* ========================================================
+     VENDA DE CAMPANHA
+     ======================================================== */
 
   if (
     type ===
     "venda-campanha"
   ) {
+
     if (
       Number(
-        company.campanha || 0
-      ) <= 0
+        company.campanha ||
+        0
+      ) <=
+      0
     ) {
+
       toast(
         "Sua empresa não possui Campanha Viral."
       );
+
       return;
     }
 
@@ -2182,18 +3089,25 @@ async function sendProposalFromForm() {
       Math.floor(
         Number(
           $("#negValor")
-            ?.value || 0
+            ?.value ||
+          0
         )
       );
 
-    if (value <= 0) {
+    if (
+      value <=
+      0
+    ) {
+
       toast(
         "Informe um valor válido."
       );
+
       return;
     }
 
     await sendNegotiation({
+
       from:
         company.name,
 
@@ -2217,17 +3131,28 @@ async function sendProposalFromForm() {
       message:
         message ||
         `Venda de Campanha Viral por ADM$ ${money(value)}`
+
     });
 
-  } else {
+  }
+
+  /* ========================================================
+     ACORDO / PARCERIA
+     ======================================================== */
+
+  else {
+
     if (!message) {
+
       toast(
         "Digite a proposta."
       );
+
       return;
     }
 
     await sendNegotiation({
+
       from:
         company.name,
 
@@ -2244,43 +3169,79 @@ async function sendProposalFromForm() {
         "mensagem",
 
       message
+
     });
+
   }
 
-  if ($("#proposta")) {
-    $("#proposta").value =
+
+  if (
+    $("#proposta")
+  ) {
+
+    $("#proposta")
+      .value =
       "";
+
   }
 
-  if ($("#negValor")) {
-    $("#negValor").value =
+
+  if (
+    $("#negValor")
+  ) {
+
+    $("#negValor")
+      .value =
       "";
+
   }
+
+
+  if (
+    $("#destino")
+  ) {
+
+    $("#destino")
+      .value =
+      "";
+
+  }
+
 
   toast(
     "🤝 Proposta enviada."
   );
 }
 
+
+/* ============================================================
+   CARD DE NEGOCIAÇÃO
+   ============================================================ */
+
 function negotiationCard(
   id,
-  n
+  negotiation
 ) {
+
   const incoming =
-    n.toId ===
+    negotiation.toId ===
       companyId ||
-    normalizeName(n.to) ===
-      normalizeName(
-        company.name
-      );
+    normalizeName(
+      negotiation.to
+    ) ===
+    normalizeName(
+      company.name
+    );
 
   const outgoing =
-    n.fromId ===
+    negotiation.fromId ===
       companyId ||
-    normalizeName(n.from) ===
-      normalizeName(
-        company.name
-      );
+    normalizeName(
+      negotiation.from
+    ) ===
+    normalizeName(
+      company.name
+    );
 
   if (
     !incoming &&
@@ -2290,6 +3251,7 @@ function negotiationCard(
   }
 
   const statusLabel = {
+
     pending:
       "🟡 PENDENTE",
 
@@ -2301,17 +3263,24 @@ function negotiationCard(
 
     countered:
       "↩️ CONTRAPROPOSTA"
-  }[n.status] ||
-  n.status;
 
-  let actions = "";
+  }[
+    negotiation.status
+  ] ||
+    negotiation.status;
+
+
+  let actions =
+    "";
 
   if (
     incoming &&
-    n.status ===
+    negotiation.status ===
       "pending"
   ) {
+
     actions = `
+
       <div class="negotiation-actions">
 
         <button
@@ -2339,53 +3308,80 @@ function negotiationCard(
         </button>
 
       </div>
+
     `;
   }
 
+
   return `
+
     <div class="notification">
 
       <strong>
+
         ${
           incoming
             ? "📥 Recebida de"
             : "📤 Enviada para"
         }
-        ${escapeHtml(
-          incoming
-            ? n.from
-            : n.to
-        )}
+
+        ${
+          escapeHtml(
+            incoming
+              ? negotiation.from
+              : negotiation.to
+          )
+        }
+
       </strong>
 
       <br><br>
 
+
       ${
-        n.type ===
+        negotiation.type ===
         "venda-campanha"
+
           ? `
-              📣 Campanha Viral
-              <br>
-              💰 ADM$ ${money(
-                n.value
-              )}
-            `
+
+            📣 Campanha Viral
+
+            <br>
+
+            💰 ADM$ ${
+              money(
+                negotiation.value
+              )
+            }
+
+          `
+
           : escapeHtml(
-              n.message ||
+              negotiation.message ||
               ""
             )
       }
 
+
       ${
-        n.counterMessage
+        negotiation.counterMessage
+
           ? `
-              <br><br>
-              ↩️ ${escapeHtml(
-                n.counterMessage
-              )}
-            `
+
+            <br><br>
+
+            ↩️ ${
+              escapeHtml(
+                negotiation
+                  .counterMessage
+              )
+            }
+
+          `
+
           : ""
       }
+
 
       <br><br>
 
@@ -2396,16 +3392,27 @@ function negotiationCard(
       ${actions}
 
     </div>
+
   `;
 }
 
+
+/* ============================================================
+   HISTÓRICO DE NEGOCIAÇÕES
+   ============================================================ */
+
 function handleNegotiations() {
+
   ensureNegotiationFields();
+
+  renderDestinationCompanies();
 
   const box =
     $("#negHistorico");
 
-  if (!box) return;
+  if (!box) {
+    return;
+  }
 
   const entries =
     Object.entries(
@@ -2413,27 +3420,45 @@ function handleNegotiations() {
       {}
     )
       .filter(
-        ([, n]) =>
-          n.toId ===
+        (
+          [
+            ,
+            negotiation
+          ]
+        ) =>
+
+          negotiation.toId ===
             companyId ||
-          n.fromId ===
+
+          negotiation.fromId ===
             companyId ||
-          normalizeName(n.to) ===
+
+          normalizeName(
+            negotiation.to
+          ) ===
             normalizeName(
               company.name
             ) ||
-          normalizeName(n.from) ===
+
+          normalizeName(
+            negotiation.from
+          ) ===
             normalizeName(
               company.name
             )
       )
       .sort(
-        (a, b) =>
+        (
+          a,
+          b
+        ) =>
+
           Number(
             b[1].updatedAt ||
             b[1].createdAt ||
             0
           ) -
+
           Number(
             a[1].updatedAt ||
             a[1].createdAt ||
@@ -2441,63 +3466,94 @@ function handleNegotiations() {
           )
       );
 
+
   box.innerHTML =
     entries
-      .slice(0, 20)
+      .slice(
+        0,
+        20
+      )
       .map(
-        ([id, n]) =>
+        (
+          [
+            id,
+            negotiation
+          ]
+        ) =>
           negotiationCard(
             id,
-            n
+            negotiation
           )
       )
       .join("") ||
+
     `
       <p class="muted">
         Nenhuma negociação registrada.
       </p>
     `;
 
+
   document
     .querySelectorAll(
       "[data-neg-action]"
     )
-    .forEach((button) => {
-      button.onclick =
-        () =>
-          handleNegotiationAction(
-            button.dataset.negId,
-            button.dataset.negAction
-          );
-    });
+    .forEach(
+      button => {
+
+        button.onclick =
+          () =>
+            handleNegotiationAction(
+              button.dataset.negId,
+              button.dataset.negAction
+            );
+
+      }
+    );
 }
+
+
+/* ============================================================
+   AÇÕES DE NEGOCIAÇÃO
+   ============================================================ */
 
 async function handleNegotiationAction(
   id,
   action
 ) {
+
   const latest =
     await getRoom();
 
-  const n =
-    latest?.negotiations?.[
-      id
-    ];
+  const negotiation =
+    latest
+      ?.negotiations
+      ?.[id];
 
-  if (!n) return;
+  if (!negotiation) {
+    return;
+  }
+
+
+  /* ========================================================
+     RECUSAR
+     ======================================================== */
 
   if (
-    action === "refuse"
+    action ===
+    "refuse"
   ) {
-    n.status =
+
+    negotiation.status =
       "refused";
 
-    n.updatedAt =
+    negotiation.updatedAt =
       now();
 
     latest.negotiations[
       id
-    ] = n;
+    ] =
+      negotiation;
 
     await saveWholeRoom(
       latest
@@ -2506,84 +3562,115 @@ async function handleNegotiationAction(
     toast(
       "❌ Proposta recusada."
     );
+
     return;
   }
 
+
+  /* ========================================================
+     CONTRAPROPOSTA
+     ======================================================== */
+
   if (
-    action === "counter"
+    action ===
+    "counter"
   ) {
+
     let counterMessage =
       "";
 
     let newValue =
-      n.value;
+      negotiation.value;
+
 
     if (
-      n.type ===
+      negotiation.type ===
       "venda-campanha"
     ) {
+
       const typed =
         prompt(
-          `Valor atual: ADM$ ${money(
-            n.value
-          )}\nDigite o novo valor:`
+          `Valor atual: ADM$ ${
+            money(
+              negotiation.value
+            )
+          }\nDigite o novo valor:`
         );
 
-      if (typed === null) {
+      if (
+        typed ===
+        null
+      ) {
         return;
       }
 
       newValue =
         Math.floor(
-          Number(typed)
+          Number(
+            typed
+          )
         );
 
       if (
         !Number.isFinite(
           newValue
         ) ||
-        newValue <= 0
+        newValue <=
+        0
       ) {
+
         toast(
           "Valor inválido."
         );
+
         return;
       }
 
       counterMessage =
-        `Contraproposta: ADM$ ${money(
-          newValue
-        )}`;
+        `Contraproposta: ADM$ ${
+          money(
+            newValue
+          )
+        }`;
+
     } else {
+
       const typed =
         prompt(
           "Digite a contraproposta:"
         );
 
-      if (!typed) return;
+      if (!typed) {
+        return;
+      }
 
       counterMessage =
         typed.trim();
+
     }
 
-    n.status =
+
+    negotiation.status =
       "countered";
 
-    n.counterMessage =
+    negotiation.counterMessage =
       counterMessage;
 
-    n.updatedAt =
+    negotiation.updatedAt =
       now();
 
     latest.negotiations[
       id
-    ] = n;
+    ] =
+      negotiation;
 
     await saveWholeRoom(
       latest
     );
 
+
     await sendNegotiation({
+
       from:
         company.name,
 
@@ -2591,28 +3678,30 @@ async function handleNegotiationAction(
         companyId,
 
       to:
-        n.from,
+        negotiation.from,
 
       toId:
-        n.fromId,
+        negotiation.fromId,
 
       type:
-        n.type,
+        negotiation.type,
 
       resource:
-        n.resource,
+        negotiation.resource,
 
       value:
         newValue,
 
       message:
-        n.message,
+        negotiation.message,
 
       counterMessage,
 
       parentId:
         id
+
     });
+
 
     toast(
       "↩️ Contraproposta enviada."
@@ -2621,268 +3710,372 @@ async function handleNegotiationAction(
     return;
   }
 
+
+  /* ========================================================
+     ACEITAR
+     ======================================================== */
+
   if (
-    action === "accept"
+    action ===
+    "accept"
   ) {
+
+
     if (
-      n.type ===
+      negotiation.type ===
       "venda-campanha"
     ) {
+
       const seller =
-        latest.companies?.[
-          n.fromId
-        ];
+        latest
+          .companies
+          ?.[
+            negotiation.fromId
+          ];
 
       const buyer =
-        latest.companies?.[
-          n.toId
-        ];
+        latest
+          .companies
+          ?.[
+            negotiation.toId
+          ];
+
 
       if (
         !seller ||
         !buyer
       ) {
+
         toast(
           "Empresa não encontrada."
         );
+
         return;
       }
+
 
       const value =
         Number(
-          n.value || 0
+          negotiation.value ||
+          0
         );
+
 
       if (
         Number(
-          buyer.caixa || 0
-        ) < value
+          buyer.caixa ||
+          0
+        ) <
+        value
       ) {
+
         toast(
           "A empresa compradora não possui caixa suficiente."
         );
+
         return;
       }
+
 
       if (
         Number(
           seller.campanha ||
           0
-        ) <= 0
+        ) <=
+        0
       ) {
+
         toast(
           "A empresa vendedora não possui mais Campanha Viral."
         );
+
         return;
       }
 
+
       buyer.caixa =
         Number(
-          buyer.caixa || 0
+          buyer.caixa ||
+          0
         ) -
         value;
 
+
       seller.caixa =
         Number(
-          seller.caixa || 0
+          seller.caixa ||
+          0
         ) +
         value;
 
+
       seller.campanha =
         Number(
-          seller.campanha || 0
-        ) - 1;
+          seller.campanha ||
+          0
+        ) -
+        1;
+
 
       buyer.campanha =
         Number(
-          buyer.campanha || 0
-        ) + 1;
+          buyer.campanha ||
+          0
+        ) +
+        1;
+
 
       if (
         seller.campaignActive
       ) {
+
         seller.clientes =
           Math.max(
             0,
             Number(
-              seller.clientes || 0
-            ) - 15
+              seller.clientes ||
+              0
+            ) -
+            15
           );
 
         seller.reputacao =
           Math.max(
             0,
             Number(
-              seller.reputacao || 0
-            ) - 10
+              seller.reputacao ||
+              0
+            ) -
+            10
           );
 
         seller.campaignActive =
           false;
+
       }
+
 
       buyer.campaignActive =
         false;
 
+
       latest.companies[
         seller.id
-      ] = seller;
+      ] =
+        seller;
+
 
       latest.companies[
         buyer.id
-      ] = buyer;
+      ] =
+        buyer;
+
     }
 
-    n.status =
+
+    negotiation.status =
       "accepted";
 
-    n.updatedAt =
+    negotiation.updatedAt =
       now();
 
-    n.completedAt =
+    negotiation.completedAt =
       now();
 
     latest.negotiations[
       id
-    ] = n;
+    ] =
+      negotiation;
+
 
     await saveWholeRoom(
       latest
     );
 
+
     toast(
       "✅ Negociação concluída."
     );
+
   }
 }
+
 
 /* ============================================================
    CENTRAL MOBILE
    ============================================================ */
 
 function generateMobileCode() {
+
   return String(
     Math.floor(
       100000 +
       Math.random() *
-        900000
+      900000
     )
   );
 }
 
+
 function generateMobileToken() {
+
   return (
-    now().toString(36) +
+    now()
+      .toString(36) +
+
     Math.random()
       .toString(36)
-      .slice(2, 12)
+      .slice(
+        2,
+        12
+      )
   );
 }
 
+
 async function connectMobile() {
+
   if (
     !company ||
     !roomCode
   ) {
+
     toast(
       "Entre na empresa primeiro."
     );
+
     return;
   }
+
 
   const latest =
     await getRoom();
 
+
   latest.mobileConnections =
     latest.mobileConnections ||
     {};
+
 
   const existing =
     latest.mobileConnections[
       companyId
     ];
 
+
   const code =
     existing?.code ||
     generateMobileCode();
+
 
   const token =
     existing?.token ||
     generateMobileToken();
 
+
   latest.mobileConnections[
     companyId
   ] = {
+
     companyId,
+
     companyName:
       company.name,
+
     code,
+
     token,
-    status: "active",
+
+    status:
+      "active",
+
     createdAt:
       existing?.createdAt ||
       now(),
+
     updatedAt:
       now()
+
   };
+
 
   await saveWholeRoom(
     latest
   );
 
-  if ($("#codigoMobile")) {
-    $("#codigoMobile").textContent =
+
+  if (
+    $("#codigoMobile")
+  ) {
+
+    $("#codigoMobile")
+      .textContent =
       code;
+
   }
+
 
   $("#modalMobile")
     ?.classList.remove(
       "hidden"
     );
 
+
   const card =
     $(".mobile-modal-card");
+
 
   if (
     card &&
     !$("#mobileDirectLink")
   ) {
+
     const url =
       new URL(
         window.location.href
       );
 
-    url.search = "";
+
+    url.search =
+      "";
+
 
     url.searchParams.set(
       "mode",
       "mobile"
     );
 
+
     url.searchParams.set(
       "room",
       roomCode
     );
+
 
     url.searchParams.set(
       "company",
       companyId
     );
 
+
     url.searchParams.set(
       "token",
       token
     );
+
 
     const div =
       document.createElement(
         "div"
       );
 
+
     div.id =
       "mobileDirectLink";
 
+
     div.innerHTML = `
+
       <p class="muted">
         Abra no celular:
       </p>
@@ -2893,227 +4086,336 @@ async function connectMobile() {
       >
         📱 ABRIR CENTRAL MOBILE
       </a>
+
     `;
+
 
     card.insertBefore(
       div,
       $("#fecharMobile")
     );
+
   }
 }
 
+
 async function bootMobileMode() {
+
   const params =
     new URLSearchParams(
       window.location.search
     );
 
+
   if (
-    params.get("mode") !==
+    params.get(
+      "mode"
+    ) !==
     "mobile"
   ) {
+
     return false;
   }
+
 
   mobileMode =
     true;
 
+
   roomCode =
     String(
-      params.get("room") ||
+      params.get(
+        "room"
+      ) ||
       ""
-    ).toUpperCase();
+    )
+      .toUpperCase();
+
 
   companyId =
-    params.get("company");
+    params.get(
+      "company"
+    );
+
 
   const token =
-    params.get("token");
+    params.get(
+      "token"
+    );
+
 
   if (
     !roomCode ||
     !companyId ||
     !token
   ) {
+
     toast(
       "Conexão Mobile inválida."
     );
+
     return true;
   }
+
 
   room =
     await getRoom();
 
+
   if (!room) {
+
     toast(
       "Sala não encontrada."
     );
+
     return true;
   }
 
+
   const connection =
-    room.mobileConnections?.[
-      companyId
-    ];
+    room.mobileConnections
+      ?.[
+        companyId
+      ];
+
 
   if (
     !connection ||
-    connection.token !== token ||
+    connection.token !==
+      token ||
     connection.status !==
       "active"
   ) {
+
     toast(
       "Central Mobile inválida."
     );
+
     return true;
   }
 
+
   company =
-    room.companies?.[
-      companyId
-    ];
+    room.companies
+      ?.[
+        companyId
+      ];
+
 
   if (!company) {
+
     toast(
       "Empresa não encontrada."
     );
+
     return true;
   }
+
 
   document.body
     .classList.add(
       "mobile-only-mode"
     );
 
+
   await createAccessRequest({
+
     source:
       "mobile",
+
     firstAccess:
       false
+
   });
 
+
   await listen();
+
 
   return true;
 }
 
+
+/* ============================================================
+   FEED MOBILE
+   ============================================================ */
+
 function renderMobileStrategicFeed() {
-  if (!company) return;
+
+  if (!company) {
+    return;
+  }
+
 
   const feed =
     $("#mobileStrategicFeed");
 
+
   const box =
     $("#mobileMessages");
+
 
   if (
     !feed ||
     !box
   ) {
+
     return;
   }
 
-  const items = [];
+
+  const items =
+    [];
+
 
   Object.values(
     room?.mobileMessages ||
     {}
   )
     .filter(
-      (m) =>
-        m.target === "all" ||
-        m.companyId ===
+      message =>
+        message.target ===
+          "all" ||
+        message.companyId ===
           companyId
     )
-    .forEach((m) => {
-      items.push({
-        text:
-          m.text ||
-          "Informação estratégica",
-        at:
-          m.createdAt ||
-          0
-      });
-    });
+    .forEach(
+      message => {
+
+        items.push({
+
+          text:
+            message.text ||
+            "Informação estratégica",
+
+          at:
+            message.createdAt ||
+            0
+
+        });
+
+      }
+    );
+
 
   if (
     room?.auction?.status ===
     "open"
   ) {
+
     items.push({
+
       text:
         `🔨 Leilão aberto: ${
           room.auction.title ||
           ""
         }`,
+
       at:
         room.auction.openedAt ||
         0
+
     });
+
   }
+
 
   Object.values(
     room?.negotiations ||
     {}
   )
     .filter(
-      (n) =>
-        n.toId ===
+      negotiation =>
+        negotiation.toId ===
           companyId &&
-        n.status ===
+        negotiation.status ===
           "pending"
     )
-    .forEach((n) => {
-      items.push({
-        text:
-          `🤝 Nova proposta de ${n.from}.`,
-        at:
-          n.createdAt ||
-          0
-      });
-    });
+    .forEach(
+      negotiation => {
+
+        items.push({
+
+          text:
+            `🤝 Nova proposta de ${negotiation.from}.`,
+
+          at:
+            negotiation.createdAt ||
+            0
+
+        });
+
+      }
+    );
+
 
   items.sort(
-    (a, b) =>
-      Number(b.at) -
-      Number(a.at)
+    (
+      a,
+      b
+    ) =>
+      Number(
+        b.at
+      ) -
+      Number(
+        a.at
+      )
   );
 
-  if (!items.length) {
+
+  if (
+    !items.length
+  ) {
+
     feed.classList.add(
       "hidden"
     );
 
+
     box.textContent =
       "Aguardando informações estratégicas...";
 
+
     return;
   }
+
 
   feed.classList.remove(
     "hidden"
   );
 
+
   box.innerHTML =
     items
-      .slice(0, 12)
+      .slice(
+        0,
+        12
+      )
       .map(
-        (item) => `
+        item => `
+
           <div class="notification">
-            ${escapeHtml(
-              item.text
-            )}
+
+            ${
+              escapeHtml(
+                item.text
+              )
+            }
+
           </div>
+
         `
       )
       .join("");
 }
 
+
 /* ============================================================
-   RENDER
+   RENDER PRINCIPAL
    ============================================================ */
 
 function render() {
+
   if (
     !company ||
     !room
@@ -3121,178 +4423,321 @@ function render() {
     return;
   }
 
-  if ($("#empresaNome")) {
-    $("#empresaNome").textContent =
+
+  if (
+    $("#empresaNome")
+  ) {
+
+    $("#empresaNome")
+      .textContent =
       company.name ||
       "—";
+
   }
+
 
   if (
     $("#empresaSegmento")
   ) {
-    $("#empresaSegmento").textContent =
+
+    $("#empresaSegmento")
+      .textContent =
       company.segment ||
       "—";
+
   }
+
 
   if (
     $("#empresaComponentes")
   ) {
-    $("#empresaComponentes").textContent =
+
+    $("#empresaComponentes")
+      .textContent =
       getComponentsText(
         company
       ) ||
       "Componentes não informados";
+
   }
 
-  if ($("#salaPill")) {
-    $("#salaPill").textContent =
+
+  if (
+    $("#salaPill")
+  ) {
+
+    $("#salaPill")
+      .textContent =
       `Sala ${roomCode}`;
+
   }
 
-  if ($("#fasePill")) {
-    $("#fasePill").textContent =
+
+  if (
+    $("#fasePill")
+  ) {
+
+    $("#fasePill")
+      .textContent =
       room.status ||
       "Aguardando";
+
   }
 
-  if ($("#caixa")) {
-    $("#caixa").textContent =
-      `ADM$ ${money(
-        company.caixa
-      )}`;
+
+  if (
+    $("#caixa")
+  ) {
+
+    $("#caixa")
+      .textContent =
+      `ADM$ ${
+        money(
+          company.caixa
+        )
+      }`;
+
   }
 
-  if ($("#clientes")) {
-    $("#clientes").textContent =
+
+  if (
+    $("#clientes")
+  ) {
+
+    $("#clientes")
+      .textContent =
       Number(
-        company.clientes || 0
+        company.clientes ||
+        0
       );
+
   }
 
-  if ($("#reputacao")) {
-    $("#reputacao").textContent =
+
+  if (
+    $("#reputacao")
+  ) {
+
+    $("#reputacao")
+      .textContent =
       Number(
-        company.reputacao || 0
+        company.reputacao ||
+        0
       );
+
   }
 
-  if ($("#equipe")) {
-    $("#equipe").textContent =
-      `${Number(
-        company.equipe || 0
-      )}%`;
+
+  if (
+    $("#equipe")
+  ) {
+
+    $("#equipe")
+      .textContent =
+      `${
+        Number(
+          company.equipe ||
+          0
+        )
+      }%`;
+
   }
 
-  if ($("#inovacao")) {
-    $("#inovacao").textContent =
+
+  if (
+    $("#inovacao")
+  ) {
+
+    $("#inovacao")
+      .textContent =
       Number(
-        company.inovacao || 0
+        company.inovacao ||
+        0
       );
+
   }
 
-  if ($("#xp")) {
-    $("#xp").textContent =
+
+  if (
+    $("#xp")
+  ) {
+
+    $("#xp")
+      .textContent =
       Number(
-        company.xp || 0
+        company.xp ||
+        0
       );
+
   }
 
-  if ($("#escudo")) {
-    $("#escudo").textContent =
+
+  if (
+    $("#escudo")
+  ) {
+
+    $("#escudo")
+      .textContent =
       Number(
-        company.escudo || 0
+        company.escudo ||
+        0
       );
+
   }
 
-  if ($("#pesquisa")) {
-    $("#pesquisa").textContent =
+
+  if (
+    $("#pesquisa")
+  ) {
+
+    $("#pesquisa")
+      .textContent =
       Number(
-        company.pesquisa || 0
+        company.pesquisa ||
+        0
       );
+
   }
 
-  if ($("#campanha")) {
-    $("#campanha").textContent =
+
+  if (
+    $("#campanha")
+  ) {
+
+    $("#campanha")
+      .textContent =
       Number(
-        company.campanha || 0
+        company.campanha ||
+        0
       );
+
   }
+
 
   const roundNumber =
     Number(
-      room.round || 0
+      room.round ||
+      0
     );
+
 
   const round =
     rounds[
       Math.max(
         0,
-        roundNumber - 1
+        roundNumber -
+        1
       )
     ];
 
-  if ($("#missaoTexto")) {
-    $("#missaoTexto").textContent =
+
+  if (
+    $("#missaoTexto")
+  ) {
+
+    $("#missaoTexto")
+      .textContent =
       round
         ? round.text
         : "Aguarde o professor iniciar a partida.";
+
   }
 
-  if ($("#decisaoArea")) {
-    $("#decisaoArea").innerHTML =
+
+  if (
+    $("#decisaoArea")
+  ) {
+
+    $("#decisaoArea")
+      .innerHTML =
       decisionHtml(
         roundNumber
       );
+
   }
 
+
   bindDecision();
+
   bindInvestmentPlan();
+
   bindAuction();
 
   ensureCampaignButton();
+
   ensureNegotiationFields();
 
+  renderDestinationCompanies();
+
   handleNegotiations();
+
   renderMobileStrategicFeed();
 
-  if (mobileMode) {
+
+  if (
+    mobileMode
+  ) {
+
     document
       .querySelectorAll(
         ".main-action-grid, .business-grid, .access-security-card"
       )
-      .forEach((el) => {
-        el.style.display =
-          "none";
-      });
+      .forEach(
+        element => {
 
-    if ($("#centralMobile")) {
-      $("#centralMobile").style.display =
+          element.style.display =
+            "none";
+
+        }
+      );
+
+
+    if (
+      $("#centralMobile")
+    ) {
+
+      $("#centralMobile")
+        .style.display =
         "block";
+
     }
+
   }
 }
 
+
 /* ============================================================
-   BOTÕES
+   BOTÕES ESTÁTICOS
    ============================================================ */
 
 function bindStaticButtons() {
+
+
   $("#entrar")
     ?.addEventListener(
       "click",
       async () => {
+
         const button =
           $("#entrar");
 
+
         if (button) {
+
           button.disabled =
             true;
+
         }
 
+
         try {
+
           await enterCompany();
-        } catch (error) {
+
+        } catch (
+          error
+        ) {
+
           console.error(
             error
           );
@@ -3300,22 +4745,35 @@ function bindStaticButtons() {
           toast(
             `Não foi possível entrar: ${error.message}`
           );
+
         } finally {
+
           if (button) {
+
             button.disabled =
               false;
+
           }
+
         }
+
       }
     );
+
 
   $("#enviarProposta")
     ?.addEventListener(
       "click",
       async () => {
+
         try {
+
           await sendProposalFromForm();
-        } catch (error) {
+
+        } catch (
+          error
+        ) {
+
           console.error(
             error
           );
@@ -3323,17 +4781,26 @@ function bindStaticButtons() {
           toast(
             "Não foi possível enviar a proposta."
           );
+
         }
+
       }
     );
+
 
   $("#conectarCelular")
     ?.addEventListener(
       "click",
       async () => {
+
         try {
+
           await connectMobile();
-        } catch (error) {
+
+        } catch (
+          error
+        ) {
+
           console.error(
             error
           );
@@ -3341,40 +4808,54 @@ function bindStaticButtons() {
           toast(
             "Não foi possível preparar a Central Mobile."
           );
+
         }
+
       }
     );
+
 
   $("#fecharMobile")
     ?.addEventListener(
       "click",
       () => {
+
         $("#modalMobile")
           ?.classList.add(
             "hidden"
           );
+
       }
     );
+
 }
+
 
 /* ============================================================
    INICIALIZAÇÃO
    ============================================================ */
 
 async function init() {
+
   ensureCompanyPasswordField();
+
   ensureNegotiationFields();
+
   bindStaticButtons();
 
   await bootMobileMode();
+
 
   console.log(
     "ADM Arena 360 — Projeto Empreendedor — Prof. Leopoldo"
   );
 
+
   console.log(
-    "empresa.js completo: toda entrada exige autorização do professor."
+    "empresa.js completo: autorização por entrada + lista automática de empresas na negociação."
   );
+
 }
+
 
 init();
