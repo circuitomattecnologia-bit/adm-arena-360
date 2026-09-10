@@ -28,6 +28,8 @@ import {
    • Leilões funcionam por empresa.
    • Negociações funcionam entre empresas da mesma Arena.
    • Empresa destinatária é escolhida em lista automática.
+   • Empresas repetidas não aparecem duplicadas na lista.
+   • Seleção da empresa permanece mesmo com atualização em tempo real.
    ============================================================ */
 
 
@@ -46,6 +48,15 @@ let currentRequestKey = null;
 let lastEventNonce = null;
 
 let listenerStarted = false;
+
+/*
+   Mantém a empresa selecionada na negociação.
+   Isso evita que o Firebase atualize a tela e
+   faça a seleção voltar para a primeira opção.
+*/
+let selectedDestinationId = "";
+
+let destinationCompaniesSignature = "";
 
 
 /* ============================================================
@@ -440,9 +451,7 @@ function buildRequestKey(
   if (
     source === "mobile"
   ) {
-    return (
-      `${companyId}__mobile`
-    );
+    return `${companyId}__mobile`;
   }
 
   return companyId;
@@ -483,29 +492,39 @@ async function createAccessRequest({
 
   const request = {
     requestId,
+
     companyId,
+
     companyName:
       company.name,
+
     components:
       getComponentsText(
         company
       ),
+
     segment:
       company.segment ||
       "",
+
     requestedAt:
       now(),
+
     status:
       "pending",
+
     source,
+
     firstAccess:
       Boolean(
         firstAccess
       ),
+
     passwordMismatch:
       Boolean(
         passwordMismatch
       ),
+
     round:
       Number(
         latest.round ||
@@ -712,6 +731,7 @@ async function enterCompany() {
       name
     );
 
+
   /* ========================================================
      EMPRESA EXISTENTE
      ======================================================== */
@@ -773,11 +793,14 @@ async function enterCompany() {
     await createAccessRequest({
       source:
         "empresa",
+
       firstAccess:
         false,
+
       passwordMismatch:
         passwordMismatch ||
         legacyPassword,
+
       requestedPassword:
         password
     });
@@ -875,8 +898,10 @@ async function enterCompany() {
   await createAccessRequest({
     source:
       "empresa",
+
     firstAccess:
       true,
+
     passwordMismatch:
       false
   });
@@ -998,7 +1023,6 @@ function eventResponse(
 
 
 function closeEventModal() {
-
   $("#modalEvento")
     ?.classList.add(
       "hidden"
@@ -2681,6 +2705,110 @@ function bindDecision() {
 
 
 /* ============================================================
+   OBTÉM EMPRESAS ÚNICAS PARA NEGOCIAÇÃO
+   ============================================================ */
+
+function getNegotiationCompanies() {
+
+  const all =
+    Object.values(
+      room?.companies ||
+      {}
+    );
+
+  const uniqueMap =
+    new Map();
+
+  all.forEach(
+    item => {
+
+      if (
+        !item ||
+        !item.id ||
+        item.id ===
+          companyId
+      ) {
+        return;
+      }
+
+      const normalized =
+        normalizeName(
+          item.name
+        );
+
+      if (!normalized) {
+        return;
+      }
+
+      /*
+         Havendo dois registros com o mesmo nome,
+         mantém somente um deles no menu.
+
+         Preferimos o ID padrão derivado do nome,
+         quando ele existir.
+      */
+
+      const existing =
+        uniqueMap.get(
+          normalized
+        );
+
+      if (!existing) {
+
+        uniqueMap.set(
+          normalized,
+          item
+        );
+
+        return;
+      }
+
+      const expectedId =
+        safeId(
+          item.name
+        );
+
+      if (
+        item.id ===
+          expectedId &&
+        existing.id !==
+          expectedId
+      ) {
+
+        uniqueMap.set(
+          normalized,
+          item
+        );
+
+      }
+
+    }
+  );
+
+  return Array.from(
+    uniqueMap.values()
+  )
+    .sort(
+      (
+        a,
+        b
+      ) =>
+        String(
+          a.name ||
+          ""
+        )
+          .localeCompare(
+            String(
+              b.name ||
+              ""
+            ),
+            "pt-BR"
+          )
+    );
+}
+
+
+/* ============================================================
    LISTA AUTOMÁTICA DE EMPRESAS
    ============================================================ */
 
@@ -2698,38 +2826,15 @@ function renderDestinationCompanies() {
   }
 
   const companies =
-    Object
-      .values(
-        room.companies ||
-        {}
-      )
-      .filter(
-        item =>
-          item &&
-          item.id &&
-          item.id !==
-            companyId
-      )
-      .sort(
-        (
-          a,
-          b
-        ) =>
-          String(
-            a.name ||
-            ""
-          )
-            .localeCompare(
-              String(
-                b.name ||
-                ""
-              ),
-              "pt-BR"
-            )
-      );
+    getNegotiationCompanies();
 
   let select =
     oldField;
+
+
+  /* ----------------------------------------------------------
+     CONVERTE O CAMPO ANTIGO EM SELECT
+     ---------------------------------------------------------- */
 
   if (
     oldField.tagName !==
@@ -2757,14 +2862,82 @@ function renderDestinationCompanies() {
       select
     );
 
+    destinationCompaniesSignature =
+      "";
+
   }
 
-  const previousValue =
+
+  /* ----------------------------------------------------------
+     GUARDA ESCOLHA ATUAL
+     ---------------------------------------------------------- */
+
+  if (
+    select.value
+  ) {
+    selectedDestinationId =
+      select.value;
+  }
+
+
+  /* ----------------------------------------------------------
+     CRIA ASSINATURA DA LISTA
+     ---------------------------------------------------------- */
+
+  const signature =
+    companies
+      .map(
+        item =>
+          `${item.id}:${normalizeName(item.name)}`
+      )
+      .join("|");
+
+
+  /*
+     Se nenhuma empresa entrou ou saiu da sala,
+     NÃO reconstruímos o SELECT.
+
+     Isso é essencial para impedir que a escolha
+     do estudante seja apagada pelas atualizações
+     em tempo real do Firebase.
+  */
+
+  if (
+    signature ===
+      destinationCompaniesSignature &&
+    select.dataset.ready ===
+      "1"
+  ) {
+
+    if (
+      selectedDestinationId &&
+      companies.some(
+        item =>
+          item.id ===
+          selectedDestinationId
+      )
+    ) {
+
+      select.value =
+        selectedDestinationId;
+
+    }
+
+    return;
+  }
+
+
+  const valueToRestore =
+    selectedDestinationId ||
     select.value ||
     "";
 
-  select.innerHTML = `
 
+  /* ----------------------------------------------------------
+     MONTA MENU
+     ---------------------------------------------------------- */
+
+  select.innerHTML = `
     <option value="">
       ${
         companies.length
@@ -2779,7 +2952,7 @@ function renderDestinationCompanies() {
           item => `
             <option
               value="${escapeHtml(
-                item.name
+                item.id
               )}"
             >
               ${escapeHtml(
@@ -2790,25 +2963,63 @@ function renderDestinationCompanies() {
         )
         .join("")
     }
-
   `;
 
+
+  destinationCompaniesSignature =
+    signature;
+
+  select.dataset.ready =
+    "1";
+
+
+  /* ----------------------------------------------------------
+     RESTAURA EMPRESA SELECIONADA
+     ---------------------------------------------------------- */
+
   if (
+    valueToRestore &&
     companies.some(
       item =>
-        item.name ===
-        previousValue
+        item.id ===
+        valueToRestore
     )
   ) {
 
     select.value =
-      previousValue;
+      valueToRestore;
+
+    selectedDestinationId =
+      valueToRestore;
+
+  } else {
+
+    select.value =
+      "";
+
+    selectedDestinationId =
+      "";
 
   }
+
 
   select.disabled =
     companies.length ===
     0;
+
+
+  /* ----------------------------------------------------------
+     MEMORIZA A SELEÇÃO
+     ---------------------------------------------------------- */
+
+  select.onchange =
+    () => {
+
+      selectedDestinationId =
+        select.value ||
+        "";
+
+    };
 }
 
 
@@ -2914,30 +3125,21 @@ function ensureNegotiationFields() {
 
 
 /* ============================================================
-   LOCALIZA EMPRESA
+   LOCALIZA EMPRESA PELO ID
    ============================================================ */
 
-function findCompanyByName(
-  name
+function findCompanyById(
+  id
 ) {
 
-  const target =
-    normalizeName(
-      name
-    );
+  if (!id) {
+    return null;
+  }
 
   return (
-    Object.values(
-      room?.companies ||
-      {}
-    )
-      .find(
-        item =>
-          normalizeName(
-            item.name
-          ) ===
-          target
-      ) ||
+    room?.companies?.[
+      id
+    ] ||
     null
   );
 }
@@ -3004,13 +3206,17 @@ async function sendNegotiation(
 
 async function sendProposalFromForm() {
 
-  const destination =
+  const destinationId =
     String(
       $("#destino")
         ?.value ||
+      selectedDestinationId ||
       ""
     )
       .trim();
+
+  selectedDestinationId =
+    destinationId;
 
   const message =
     String(
@@ -3025,7 +3231,9 @@ async function sendProposalFromForm() {
       ?.value ||
     "mensagem";
 
-  if (!destination) {
+  if (
+    !destinationId
+  ) {
 
     toast(
       "Selecione a empresa destinatária."
@@ -3035,14 +3243,14 @@ async function sendProposalFromForm() {
   }
 
   const target =
-    findCompanyByName(
-      destination
+    findCompanyById(
+      destinationId
     );
 
   if (!target) {
 
     toast(
-      "Empresa não encontrada."
+      "Empresa destinatária não encontrada."
     );
 
     return;
@@ -3196,6 +3404,14 @@ async function sendProposalFromForm() {
 
   }
 
+
+  /*
+     Depois do envio, aí sim limpamos
+     a empresa escolhida para uma nova proposta.
+  */
+
+  selectedDestinationId =
+    "";
 
   if (
     $("#destino")
@@ -4852,7 +5068,7 @@ async function init() {
 
 
   console.log(
-    "empresa.js completo: autorização por entrada + lista automática de empresas na negociação."
+    "empresa.js: autorização por entrada + negociação por ID + lista sem duplicidade + seleção persistente."
   );
 
 }
