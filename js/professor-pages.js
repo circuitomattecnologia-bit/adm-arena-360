@@ -8,8 +8,21 @@
    OBJETIVO
    ---------------------------------------------------------
    Transformar os núcleos do Painel do Professor em telas
-   internas independentes, evitando a rolagem da página
-   principal para localizar informações.
+   internas independentes.
+
+   ORGANIZAÇÃO
+   ---------------------------------------------------------
+   COMANDO:
+   - Sala
+   - Controle da partida
+   - Solicitações de acesso
+   - Cronômetro
+   - Alertas amarelo/vermelho
+
+   EMPRESAS:
+   - Gestão dos componentes
+   - Empresas
+   - Fichas gerenciais
 
    SEGURANÇA
    ---------------------------------------------------------
@@ -17,30 +30,53 @@
    - NÃO grava Firebase.
    - NÃO altera sala.
    - NÃO altera rodada.
-   - NÃO altera status da Arena.
+   - NÃO altera status.
    - NÃO altera empresas.
-   - NÃO altera caixa, clientes, reputação, XP ou recursos.
+   - NÃO altera caixa.
+   - NÃO altera XP.
+   - NÃO altera clientes.
+   - NÃO altera reputação.
+   - NÃO altera recursos.
    - NÃO interfere nas autorizações.
-   - Atua somente na navegação e apresentação visual.
+   - NÃO altera funcionamento do cronômetro.
+   - NÃO altera funcionamento dos alertas.
+   - Apenas organiza e reposiciona elementos visuais.
 ========================================================= */
 
-const NUCLEOS = new Set([
-  "comando",
-  "empresas",
-  "mobile",
-  "eventos",
-  "leilao",
-  "negociacoes"
-]);
+
+const NUCLEOS =
+  new Set([
+    "comando",
+    "empresas",
+    "mobile",
+    "eventos",
+    "leilao",
+    "negociacoes"
+  ]);
+
 
 const TITULOS = {
-  comando: "Comando",
-  empresas: "Empresas",
-  mobile: "Mobile",
-  eventos: "Eventos",
-  leilao: "Leilão",
-  negociacoes: "Negociações"
+
+  comando:
+    "Comando",
+
+  empresas:
+    "Empresas",
+
+  mobile:
+    "Mobile",
+
+  eventos:
+    "Eventos",
+
+  leilao:
+    "Leilão",
+
+  negociacoes:
+    "Negociações"
+
 };
+
 
 iniciarProfessorPages();
 
@@ -59,29 +95,55 @@ function iniciarProfessorPages() {
     return;
   }
 
+
   instalarEstilo();
+
 
   document.body.classList.add(
     "adm360-professor-pages"
   );
 
+
   prepararPaineis();
+
+
+  /*
+    Reposiciona imediatamente qualquer
+    módulo que já exista.
+  */
+
+  organizarModulosDinamicos();
+
+
+  /*
+    Como cronômetro e componentes são
+    carregados por módulos independentes,
+    observamos quando aparecerem.
+  */
+
+  instalarOrganizadorDinamico();
+
 
   instalarNavegacao();
 
+
   instalarHistorico();
+
 
   const inicial =
     nucleoDoHash() ||
     nucleoAtivoAtual() ||
     "comando";
 
+
   abrirNucleo(
     inicial,
     {
-      atualizarHash: false
+      atualizarHash:
+        false
     }
   );
+
 }
 
 
@@ -99,13 +161,16 @@ function instalarEstilo() {
     return;
   }
 
+
   const style =
     document.createElement(
       "style"
     );
 
+
   style.id =
     "adm360ProfessorPagesStyle";
+
 
   style.textContent = `
 
@@ -116,13 +181,18 @@ function instalarEstilo() {
     body.adm360-professor-pages
     .teacher-nuclei {
 
-      position: sticky;
+      position:
+        sticky;
 
-      top: 8px;
+      top:
+        8px;
 
-      z-index: 60;
+      z-index:
+        60;
 
-      margin-bottom: 14px;
+      margin-bottom:
+        14px;
+
     }
 
 
@@ -147,6 +217,7 @@ function instalarEstilo() {
 
       animation:
         none !important;
+
     }
 
 
@@ -178,10 +249,11 @@ function instalarEstilo() {
         stable;
 
       padding:
-        2px 8px 24px 2px;
+        2px 8px 28px 2px;
 
       box-sizing:
         border-box;
+
     }
 
 
@@ -190,17 +262,11 @@ function instalarEstilo() {
     ===================================================== */
 
     body.adm360-professor-pages
-    .teacher-nucleus-panel.active
-    ::-webkit-scrollbar {
-
-      width: 10px;
-    }
-
-
-    body.adm360-professor-pages
     .teacher-nucleus-panel.active::-webkit-scrollbar {
 
-      width: 10px;
+      width:
+        10px;
+
     }
 
 
@@ -217,6 +283,7 @@ function instalarEstilo() {
 
       border-radius:
         999px;
+
     }
 
 
@@ -242,6 +309,7 @@ function instalarEstilo() {
           30,
           .55
         );
+
     }
 
 
@@ -255,11 +323,12 @@ function instalarEstilo() {
           255,
           .48
         );
+
     }
 
 
     /* =====================================================
-       CABEÇALHO DA TELA ATIVA
+       CABEÇALHO DA TELA
     ===================================================== */
 
     body.adm360-professor-pages
@@ -302,6 +371,7 @@ function instalarEstilo() {
           0,
           .18
         );
+
     }
 
 
@@ -327,24 +397,68 @@ function instalarEstilo() {
           255,
           .20
         );
+
     }
 
 
     /* =====================================================
-       ELEMENTOS INTERNOS
+       MÓDULOS REALOCADOS
     ===================================================== */
 
     body.adm360-professor-pages
-    .teacher-nucleus-panel.active
-    > * {
+    #adm360ProfessorTimer {
 
-      max-width:
+      width:
         100%;
 
       box-sizing:
         border-box;
+
+      margin-top:
+        18px;
+
+      margin-bottom:
+        6px;
+
     }
 
+
+    body.adm360-professor-pages
+    #adm360ComponentsCompactBar {
+
+      width:
+        100%;
+
+      box-sizing:
+        border-box;
+
+      margin-top:
+        0;
+
+      margin-bottom:
+        16px;
+
+    }
+
+
+    body.adm360-professor-pages
+    #adm360ProfessorComponents {
+
+      width:
+        100%;
+
+      box-sizing:
+        border-box;
+
+      margin-bottom:
+        18px;
+
+    }
+
+
+    /* =====================================================
+       FICHA GERENCIAL
+    ===================================================== */
 
     body.adm360-professor-pages
     .teacher-nucleus-panel.active
@@ -352,11 +466,12 @@ function instalarEstilo() {
 
       margin-bottom:
         18px;
+
     }
 
 
     /* =====================================================
-       MOBILE / TELA PEQUENA
+       MOBILE
     ===================================================== */
 
     @media(
@@ -381,6 +496,7 @@ function instalarEstilo() {
 
         padding-right:
           0;
+
       }
 
 
@@ -389,20 +505,23 @@ function instalarEstilo() {
 
         position:
           static;
+
       }
 
     }
 
   `;
 
+
   document.head.appendChild(
     style
   );
+
 }
 
 
 /* =========================================================
-   PREPARA OS PAINÉIS
+   PREPARA PAINÉIS
 ========================================================= */
 
 function prepararPaineis() {
@@ -419,24 +538,30 @@ function prepararPaineis() {
           "region"
         );
 
+
         panel.setAttribute(
           "tabindex",
           "-1"
         );
+
 
         const nome =
           normalizarNucleo(
             panel.dataset.panel
           );
 
+
         if (nome) {
 
           panel.setAttribute(
+
             "aria-label",
+
             `Tela ${
               TITULOS[nome] ||
               nome
             }`
+
           );
 
         }
@@ -453,25 +578,339 @@ function prepararPaineis() {
       button => {
 
         button.setAttribute(
+
           "aria-pressed",
-          button
-            .classList
-            .contains(
-              "active"
-            )
+
+          button.classList.contains(
+            "active"
+          )
             ? "true"
             : "false"
+
         );
 
       }
     );
+
+}
+
+
+/* =========================================================
+   ORGANIZA MÓDULOS DINÂMICOS
+
+   NÃO recria os elementos.
+   Apenas MOVE os elementos existentes.
+   Assim todos os listeners e funções
+   continuam funcionando normalmente.
+========================================================= */
+
+function organizarModulosDinamicos() {
+
+  moverCronometroParaComando();
+
+  moverComponentesParaEmpresas();
+
+}
+
+
+/* =========================================================
+   CRONÔMETRO + TARJAS → COMANDO
+========================================================= */
+
+function moverCronometroParaComando() {
+
+  const comando =
+    document.querySelector(
+      '.teacher-nucleus-panel[data-panel="comando"]'
+    );
+
+
+  const timer =
+    document.querySelector(
+      "#adm360ProfessorTimer"
+    );
+
+
+  if (
+    !comando ||
+    !timer
+  ) {
+    return;
+  }
+
+
+  /*
+    Se já está no Comando,
+    não faz nada.
+  */
+
+  if (
+    comando.contains(
+      timer
+    )
+  ) {
+    return;
+  }
+
+
+  /*
+    Preferência:
+    cronômetro após as solicitações
+    de acesso.
+  */
+
+  const access =
+    comando.querySelector(
+      "#accessRequestsCard"
+    );
+
+
+  if (access) {
+
+    access.insertAdjacentElement(
+      "afterend",
+      timer
+    );
+
+  } else {
+
+    comando.appendChild(
+      timer
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   COMPONENTES → EMPRESAS
+========================================================= */
+
+function moverComponentesParaEmpresas() {
+
+  const empresas =
+    document.querySelector(
+      '.teacher-nucleus-panel[data-panel="empresas"]'
+    );
+
+
+  if (!empresas) {
+    return;
+  }
+
+
+  const barra =
+    document.querySelector(
+      "#adm360ComponentsCompactBar"
+    );
+
+
+  const painel =
+    document.querySelector(
+      "#adm360ProfessorComponents"
+    );
+
+
+  const companiesCard =
+    empresas.querySelector(
+      ".companies-card"
+    );
+
+
+  /*
+    Barra compacta acima da lista
+    de empresas.
+  */
+
+  if (
+    barra &&
+    !empresas.contains(
+      barra
+    )
+  ) {
+
+    if (companiesCard) {
+
+      empresas.insertBefore(
+        barra,
+        companiesCard
+      );
+
+    } else {
+
+      empresas.appendChild(
+        barra
+      );
+
+    }
+
+  }
+
+
+  /*
+    Painel completo imediatamente
+    abaixo da barra compacta.
+  */
+
+  if (
+    painel &&
+    !empresas.contains(
+      painel
+    )
+  ) {
+
+    if (
+      barra &&
+      barra.parentNode === empresas
+    ) {
+
+      barra.insertAdjacentElement(
+        "afterend",
+        painel
+      );
+
+    } else if (
+      companiesCard
+    ) {
+
+      empresas.insertBefore(
+        painel,
+        companiesCard
+      );
+
+    } else {
+
+      empresas.appendChild(
+        painel
+      );
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   OBSERVADOR
+
+   Cronômetro e componentes podem aparecer
+   depois que professor-pages.js já carregou.
+
+   Portanto observamos apenas a criação
+   desses elementos e os posicionamos.
+========================================================= */
+
+function instalarOrganizadorDinamico() {
+
+  const observer =
+    new MutationObserver(
+      mutations => {
+
+        let precisaOrganizar =
+          false;
+
+
+        for (
+          const mutation
+          of mutations
+        ) {
+
+          for (
+            const node
+            of mutation.addedNodes
+          ) {
+
+            if (
+              node.nodeType !==
+              1
+            ) {
+              continue;
+            }
+
+
+            const element =
+              node;
+
+
+            if (
+              element.id ===
+                "adm360ProfessorTimer" ||
+
+              element.id ===
+                "adm360ComponentsCompactBar" ||
+
+              element.id ===
+                "adm360ProfessorComponents" ||
+
+              element.querySelector?.(
+                "#adm360ProfessorTimer"
+              ) ||
+
+              element.querySelector?.(
+                "#adm360ComponentsCompactBar"
+              ) ||
+
+              element.querySelector?.(
+                "#adm360ProfessorComponents"
+              )
+            ) {
+
+              precisaOrganizar =
+                true;
+
+              break;
+
+            }
+
+          }
+
+
+          if (
+            precisaOrganizar
+          ) {
+            break;
+          }
+
+        }
+
+
+        if (
+          precisaOrganizar
+        ) {
+
+          requestAnimationFrame(
+            () => {
+
+              organizarModulosDinamicos();
+
+            }
+          );
+
+        }
+
+      }
+    );
+
+
+  observer.observe(
+    document.body,
+    {
+      childList:
+        true,
+
+      subtree:
+        true
+    }
+  );
+
 }
 
 
 /* =========================================================
    NAVEGAÇÃO
 
-   IMPORTANTE:
    CAPTURE impede o código antigo
    de executar window.scrollTo().
 ========================================================= */
@@ -497,9 +936,7 @@ function instalarNavegacao() {
 
       const nome =
         normalizarNucleo(
-          button
-            .dataset
-            .nucleus
+          button.dataset.nucleus
         );
 
 
@@ -528,11 +965,12 @@ function instalarNavegacao() {
     true
 
   );
+
 }
 
 
 /* =========================================================
-   ABRE UMA TELA
+   ABRE NÚCLEO
 ========================================================= */
 
 function abrirNucleo(
@@ -554,6 +992,15 @@ function abrirNucleo(
   }
 
 
+  /*
+    Garante os módulos
+    no local correto antes
+    da abertura.
+  */
+
+  organizarModulosDinamicos();
+
+
   /* =======================================================
      BOTÕES
   ======================================================= */
@@ -566,9 +1013,7 @@ function abrirNucleo(
       button => {
 
         const ativo =
-          button
-            .dataset
-            .nucleus ===
+          button.dataset.nucleus ===
           nome;
 
 
@@ -579,10 +1024,13 @@ function abrirNucleo(
 
 
         button.setAttribute(
+
           "aria-pressed",
+
           ativo
             ? "true"
             : "false"
+
         );
 
       }
@@ -605,9 +1053,7 @@ function abrirNucleo(
       panel => {
 
         const ativo =
-          panel
-            .dataset
-            .panel ===
+          panel.dataset.panel ===
           nome;
 
 
@@ -622,8 +1068,10 @@ function abrirNucleo(
 
 
         if (ativo) {
+
           painelAtivo =
             panel;
+
         }
 
       }
@@ -631,10 +1079,12 @@ function abrirNucleo(
 
 
   /* =======================================================
-     CADA TELA COMEÇA DO TOPO
+     TELA COMEÇA DO TOPO
   ======================================================= */
 
-  if (painelAtivo) {
+  if (
+    painelAtivo
+  ) {
 
     painelAtivo.scrollTop =
       0;
@@ -656,7 +1106,9 @@ function abrirNucleo(
      ENDEREÇO
   ======================================================= */
 
-  if (atualizarHash) {
+  if (
+    atualizarHash
+  ) {
 
     atualizarEndereco(
       nome
@@ -673,14 +1125,12 @@ function abrirNucleo(
     `ADM Arena 360 — ${
       TITULOS[nome]
     } | Professor`;
+
 }
 
 
 /* =========================================================
    ENDEREÇO
-
-   replaceState evita salto automático
-   do navegador.
 ========================================================= */
 
 function atualizarEndereco(
@@ -700,26 +1150,28 @@ function atualizarEndereco(
   window.history.replaceState(
 
     {
+
       ...(
-        window
-          .history
-          .state ||
+        window.history.state ||
         {}
       ),
 
       adm360Nucleo:
         nome
+
     },
 
     "",
 
     url
+
   );
+
 }
 
 
 /* =========================================================
-   HASH
+   HISTÓRICO / HASH
 ========================================================= */
 
 function instalarHistorico() {
@@ -740,19 +1192,17 @@ function instalarHistorico() {
 
 
       abrirNucleo(
-
         nome,
-
         {
           atualizarHash:
             false
         }
-
       );
 
     }
 
   );
+
 }
 
 
@@ -765,9 +1215,7 @@ function nucleoDoHash() {
   return normalizarNucleo(
 
     String(
-      window
-        .location
-        .hash ||
+      window.location.hash ||
       ""
     )
       .replace(
@@ -778,6 +1226,7 @@ function nucleoDoHash() {
       .toLowerCase()
 
   );
+
 }
 
 
@@ -794,6 +1243,7 @@ function nucleoAtivoAtual() {
       ?.dataset
       ?.nucleus
   );
+
 }
 
 
@@ -815,4 +1265,5 @@ function normalizarNucleo(
   )
     ? nome
     : null;
+
 }
