@@ -120,6 +120,33 @@ if (
 
 
   /* =======================================================
+     GESTÃO AVANÇADA
+     Rodadas 5 a 8 — Empresa
+  ======================================================= */
+
+  if (
+    page ===
+    "empresa.html"
+  ) {
+
+    import(
+      "./gestao-avancada.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — Gestão Avançada:",
+            error
+          );
+
+        }
+      );
+
+  }
+
+
+  /* =======================================================
      PROFESSOR
   ======================================================= */
 
@@ -172,13 +199,6 @@ if (
         }
       );
 
-
-    /* =====================================================
-       LIMPEZA DO MOBILE ANTIGO
-
-       Apenas visual.
-       Não altera Firebase ou dados da Arena.
-    ===================================================== */
 
     import(
       "./mobile-cleanup.js"
