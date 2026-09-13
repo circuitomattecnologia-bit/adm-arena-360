@@ -185,6 +185,21 @@ if (
         }
       );
 
+
+    import(
+      "./rodada12.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — Rodada 12:",
+            error
+          );
+
+        }
+      );
+
   }
 
 
