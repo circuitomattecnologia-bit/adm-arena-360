@@ -172,6 +172,28 @@ if (
         }
       );
 
+
+    /* =====================================================
+       LIMPEZA DO MOBILE ANTIGO
+
+       Apenas visual.
+       Não altera Firebase ou dados da Arena.
+    ===================================================== */
+
+    import(
+      "./mobile-cleanup.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — organização do Mobile:",
+            error
+          );
+
+        }
+      );
+
   }
 
 }
