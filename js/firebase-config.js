@@ -51,7 +51,6 @@ if (
 
   /* =======================================================
      CRONÔMETRO
-     Professor + Empresa
   ======================================================= */
 
   const timerPages =
@@ -86,7 +85,6 @@ if (
 
   /* =======================================================
      INTELIGÊNCIA MOBILE
-     Professor + Empresa
   ======================================================= */
 
   const mobilePages =
@@ -120,8 +118,7 @@ if (
 
 
   /* =======================================================
-     GESTÃO AVANÇADA
-     Rodadas 5 a 8 — Empresa
+     EMPRESA
   ======================================================= */
 
   if (
@@ -208,6 +205,25 @@ if (
 
           console.error(
             "ADM Arena 360 — organização do Mobile:",
+            error
+          );
+
+        }
+      );
+
+
+    /* =====================================================
+       ACOMPANHAMENTO R5–R8
+    ===================================================== */
+
+    import(
+      "./professor-gestao-avancada.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — acompanhamento Gestão Avançada:",
             error
           );
 
