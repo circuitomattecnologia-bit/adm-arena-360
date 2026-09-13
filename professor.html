@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,7 +9,205 @@
   <title>ADM Arena 360 — Professor | Projeto Empreendedor</title>
 
   <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    /* =========================================================
+       ADM ARENA 360
+       CENTRAL DE COMANDO DO PROFESSOR
+       NAVEGAÇÃO POR NÚCLEOS
+    ========================================================== */
+
+    .teacher-command-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .teacher-summary-item {
+      padding: 15px 16px;
+      border-radius: 18px;
+      background: rgba(10, 24, 47, .78);
+      border: 1px solid rgba(255, 255, 255, .10);
+      min-height: 84px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .teacher-summary-item span {
+      opacity: .74;
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .teacher-summary-item strong {
+      font-size: 1.05rem;
+    }
+
+    .teacher-nuclei {
+      position: sticky;
+      top: 8px;
+      z-index: 30;
+      padding: 12px;
+      margin: 16px 0 20px;
+      border-radius: 22px;
+      background: rgba(5, 14, 30, .94);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, .12);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, .28);
+    }
+
+    .teacher-nuclei-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 0 4px;
+    }
+
+    .teacher-nuclei-title strong {
+      font-size: .9rem;
+    }
+
+    .teacher-nuclei-title span {
+      font-size: .76rem;
+      opacity: .68;
+    }
+
+    .teacher-nuclei-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .teacher-nucleus-btn {
+      border: 1px solid rgba(255, 255, 255, .11);
+      background: rgba(255, 255, 255, .055);
+      color: inherit;
+      border-radius: 14px;
+      padding: 11px 8px;
+      min-height: 65px;
+      cursor: pointer;
+      font-weight: 800;
+      line-height: 1.2;
+      transition:
+        transform .16s ease,
+        border-color .16s ease,
+        background .16s ease;
+    }
+
+    .teacher-nucleus-btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, .28);
+      background: rgba(255, 255, 255, .09);
+    }
+
+    .teacher-nucleus-btn.active {
+      background:
+        linear-gradient(
+          135deg,
+          rgba(46, 134, 255, .28),
+          rgba(221, 53, 154, .22)
+        );
+      border-color: rgba(116, 176, 255, .72);
+      box-shadow: 0 0 22px rgba(46, 134, 255, .17);
+    }
+
+    .teacher-nucleus-btn small {
+      display: block;
+      margin-top: 4px;
+      opacity: .64;
+      font-size: .66rem;
+      font-weight: 600;
+    }
+
+    .teacher-nucleus-panel {
+      display: none;
+      animation: nucleusEnter .18s ease;
+    }
+
+    .teacher-nucleus-panel.active {
+      display: block;
+    }
+
+    @keyframes nucleusEnter {
+      from {
+        opacity: 0;
+        transform: translateY(7px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .teacher-panel-heading {
+      margin-bottom: 14px;
+      padding: 15px 18px;
+      border-radius: 18px;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(34, 116, 255, .12),
+          rgba(225, 48, 151, .08)
+        );
+      border: 1px solid rgba(255, 255, 255, .09);
+    }
+
+    .teacher-panel-heading h2 {
+      margin: 3px 0;
+    }
+
+    .teacher-panel-heading p {
+      margin: 4px 0 0;
+      opacity: .72;
+    }
+
+    .teacher-alert-hint {
+      margin: 16px 0;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 197, 61, .34);
+      background: rgba(255, 197, 61, .08);
+    }
+
+    .teacher-alert-hint strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    @media (max-width: 1100px) {
+      .teacher-nuclei-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .teacher-command-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 650px) {
+      .teacher-nuclei {
+        position: static;
+      }
+
+      .teacher-nuclei-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .teacher-command-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
+
 
 <body class="professor-page">
 
@@ -17,13 +216,15 @@
 <main class="shell wide">
 
   <!-- =========================================================
-       CABEÇALHO PRINCIPAL
+       CABEÇALHO
   ========================================================== -->
+
   <header class="topbar arena-topbar professor-topbar">
 
     <div class="brand-block">
+
       <div class="eyebrow">
-        PAINEL MESTRE • GESTÃO DA SIMULAÇÃO
+        CENTRAL DE COMANDO • GESTÃO DA SIMULAÇÃO
       </div>
 
       <h1 class="arena-title">
@@ -31,6 +232,7 @@
       </h1>
 
       <div class="school-identification">
+
         <span>
           📘 DISCIPLINA:
           <strong>PROJETO EMPREENDEDOR</strong>
@@ -40,7 +242,9 @@
           👨‍🏫 PROF.
           <strong>LEOPOLDO</strong>
         </span>
+
       </div>
+
     </div>
 
     <a class="ghost btn-home" href="index.html">
@@ -51,8 +255,9 @@
 
 
   <!-- =========================================================
-       IDENTIDADE / PROPÓSITO
+       IDENTIDADE
   ========================================================== -->
+
   <section class="arena-course-banner professor-course-banner">
 
     <div class="course-banner-icon">
@@ -60,11 +265,15 @@
     </div>
 
     <div>
-      <strong>GESTÃO, DECISÃO E ESTRATÉGIA EMPREENDEDORA</strong>
+
+      <strong>
+        CENTRAL MESTRE DA ADM ARENA 360
+      </strong>
 
       <span>
-        Planejamento • Liderança • Negociação • Inovação • Gestão de Recursos
+        Gestão • Estratégia • Mercado • Finanças • Pessoas • Decisão
       </span>
+
     </div>
 
     <div class="course-professor">
@@ -75,690 +284,1002 @@
 
 
   <!-- =========================================================
-       CRIAÇÃO / ACESSO + CONTROLE DA PARTIDA
+       RESUMO EXECUTIVO
   ========================================================== -->
-  <section class="grid-2 professor-main-grid">
 
-    <!-- =======================================================
-         SALA
-    ======================================================== -->
-    <div class="card glass room-admin-card">
+  <section class="teacher-command-summary">
 
-      <div class="card-heading">
+    <div class="teacher-summary-item">
 
-        <div class="card-heading-icon">
-          🏫
-        </div>
+      <span>🎯 Rodada atual</span>
 
-        <div>
-          <div class="eyebrow">
-            GESTÃO DA TURMA
+      <strong id="teacherSummaryRound">
+        Consulte o Comando
+      </strong>
+
+    </div>
+
+
+    <div class="teacher-summary-item">
+
+      <span>📡 Situação da Arena</span>
+
+      <strong id="teacherSummaryStatus">
+        Aguardando
+      </strong>
+
+    </div>
+
+
+    <div class="teacher-summary-item">
+
+      <span>🏢 Empresas</span>
+
+      <strong id="teacherSummaryCompanies">
+        Monitoramento em tempo real
+      </strong>
+
+    </div>
+
+
+    <div class="teacher-summary-item">
+
+      <span>⚠️ Ações necessárias</span>
+
+      <strong id="teacherSummaryAlerts">
+        Consulte acessos e eventos
+      </strong>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================================================
+       NAVEGAÇÃO DOS NÚCLEOS
+  ========================================================== -->
+
+  <nav class="teacher-nuclei">
+
+    <div class="teacher-nuclei-title">
+
+      <strong>
+        🎛️ NÚCLEOS DA CENTRAL DE COMANDO
+      </strong>
+
+      <span>
+        Abra somente o que precisa utilizar
+      </span>
+
+    </div>
+
+
+    <div class="teacher-nuclei-grid">
+
+      <button
+        type="button"
+        class="teacher-nucleus-btn active"
+        data-nucleus="comando"
+      >
+        🎮 COMANDO
+        <small>Sala, rodada e acessos</small>
+      </button>
+
+
+      <button
+        type="button"
+        class="teacher-nucleus-btn"
+        data-nucleus="empresas"
+      >
+        🏢 EMPRESAS
+        <small>Participantes e desempenho</small>
+      </button>
+
+
+      <button
+        type="button"
+        class="teacher-nucleus-btn"
+        data-nucleus="mobile"
+      >
+        📱 MOBILE
+        <small>Inteligência estratégica</small>
+      </button>
+
+
+      <button
+        type="button"
+        class="teacher-nucleus-btn"
+        data-nucleus="eventos"
+      >
+        🚨 EVENTOS
+        <small>Ocorrências da Arena</small>
+      </button>
+
+
+      <button
+        type="button"
+        class="teacher-nucleus-btn"
+        data-nucleus="leilao"
+      >
+        🔨 LEILÃO
+        <small>Mercado de recursos</small>
+      </button>
+
+
+      <button
+        type="button"
+        class="teacher-nucleus-btn"
+        data-nucleus="negociacoes"
+      >
+        🤝 NEGOCIAÇÕES
+        <small>Mercado entre empresas</small>
+      </button>
+
+    </div>
+
+  </nav>
+
+
+  <!-- =========================================================
+       NÚCLEO 1 — COMANDO
+  ========================================================== -->
+
+  <div
+    class="teacher-nucleus-panel active"
+    data-panel="comando"
+  >
+
+    <div class="teacher-panel-heading">
+
+      <div class="eyebrow">
+        NÚCLEO PRINCIPAL
+      </div>
+
+      <h2>
+        🎮 Comando da Arena
+      </h2>
+
+      <p>
+        Controle da sala, andamento da partida e autorizações de acesso.
+      </p>
+
+    </div>
+
+
+    <section class="grid-2 professor-main-grid">
+
+      <!-- =====================================================
+           SALA
+      ====================================================== -->
+
+      <div class="card glass room-admin-card">
+
+        <div class="card-heading">
+
+          <div class="card-heading-icon">
+            🏫
           </div>
 
-          <h2>
-            Nova partida
-          </h2>
+          <div>
+
+            <div class="eyebrow">
+              GESTÃO DA TURMA
+            </div>
+
+            <h2>
+              Sala da Arena
+            </h2>
+
+          </div>
+
         </div>
+
+
+        <label for="turma">
+          👥 Nome da turma
+        </label>
+
+        <input
+          id="turma"
+          placeholder="Ex.: 3ª M01 — Técnico ADM"
+          autocomplete="off"
+        >
+
+
+        <label for="senha">
+          🔐 Senha do professor
+        </label>
+
+        <input
+          id="senha"
+          type="password"
+          placeholder="Crie uma senha para esta sala"
+          autocomplete="new-password"
+        >
+
+
+        <button
+          class="primary btn-create-room"
+          id="criarSala"
+        >
+          🚀 CRIAR SALA
+        </button>
+
+
+        <div
+          id="codigoWrap"
+          class="room-code hidden"
+        >
+
+          <span>
+            CÓDIGO DA SALA
+          </span>
+
+          <strong id="codigoSala">
+            ADM-0000
+          </strong>
+
+          <button
+            class="ghost"
+            id="copiarCodigo"
+          >
+            📋 Copiar código
+          </button>
+
+        </div>
+
+
+        <div class="divider-line"></div>
+
+
+        <div class="access-room-heading">
+
+          <span class="access-room-icon">
+            🔑
+          </span>
+
+          <div>
+
+            <div class="eyebrow">
+              CONTINUAR UMA ARENA
+            </div>
+
+            <h3>
+              Acessar sala existente
+            </h3>
+
+          </div>
+
+        </div>
+
+
+        <label for="codigoExistente">
+          🔢 Código da sala
+        </label>
+
+        <input
+          id="codigoExistente"
+          placeholder="Ex.: ADM-6170"
+          autocomplete="off"
+        >
+
+
+        <label for="senhaExistente">
+          🔐 Senha do professor
+        </label>
+
+        <input
+          id="senhaExistente"
+          type="password"
+          placeholder="Senha criada para esta sala"
+          autocomplete="current-password"
+        >
+
+
+        <button
+          id="acessarSala"
+          class="btn-access-room"
+        >
+          🔓 ENTRAR NA SALA
+        </button>
 
       </div>
 
 
-      <label for="turma">
-        👥 Nome da turma
-      </label>
+      <!-- =====================================================
+           CONTROLE DA PARTIDA
+      ====================================================== -->
 
-      <input
-        id="turma"
-        placeholder="Ex.: 3ª M01 — Técnico ADM"
-        autocomplete="off"
-      >
+      <div class="card glass game-control-card">
+
+        <div class="card-heading">
+
+          <div class="card-heading-icon">
+            🎛️
+          </div>
+
+          <div>
+
+            <div class="eyebrow">
+              COMANDO DA ARENA
+            </div>
+
+            <h2>
+              Controle da partida
+            </h2>
+
+          </div>
+
+        </div>
 
 
-      <label for="senha">
-        🔐 Senha do professor
-      </label>
+        <div class="control-grid">
 
-      <input
-        id="senha"
-        type="password"
-        placeholder="Crie uma senha para esta sala"
-        autocomplete="new-password"
-      >
+          <button
+            id="iniciar"
+            class="control-btn control-start"
+          >
+            ▶ INICIAR
+          </button>
 
 
-      <button
-        class="primary btn-create-room"
-        id="criarSala"
-      >
-        🚀 CRIAR SALA
-      </button>
+          <button
+            id="proxima"
+            class="control-btn control-next"
+          >
+            ⏭ PRÓXIMA RODADA
+          </button>
+
+
+          <button
+            id="pausar"
+            class="control-btn control-pause"
+          >
+            ⏸ PAUSAR
+          </button>
+
+
+          <button
+            id="crise"
+            class="control-btn control-crisis"
+          >
+            🚨 LANÇAR CRISE
+          </button>
+
+
+          <button
+            id="leilao"
+            class="control-btn control-auction"
+          >
+            🔨 ABRIR LEILÃO
+          </button>
+
+
+          <button
+            id="mercado"
+            class="control-btn control-market"
+          >
+            🤝 MERCADO LIVRE
+          </button>
+
+        </div>
+
+
+        <div class="status professor-status">
+
+          <span>
+            🎯 Rodada
+          </span>
+
+          <strong id="rodada">
+            0/16
+          </strong>
+
+
+          <span>
+            📡 Status
+          </span>
+
+          <strong id="status">
+            Aguardando sala
+          </strong>
+
+        </div>
+
+
+        <div class="teacher-alert-hint">
+
+          <strong>
+            🧭 Assistente da Arena
+          </strong>
+
+          O painel será evoluído para avisar automaticamente
+          o que precisa de sua atenção durante cada rodada.
+
+        </div>
+
+
+        <div class="teacher-security-note">
+
+          <div class="security-icon">
+            🔐
+          </div>
+
+          <div>
+
+            <strong>
+              Controle de acesso da Arena
+            </strong>
+
+            <p>
+              Empresas e celulares somente entram após sua autorização.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =======================================================
+         SOLICITAÇÕES
+    ======================================================== -->
+
+    <section
+      id="accessRequestsCard"
+      class="card glass access-requests-card"
+    >
+
+      <div class="section-title">
+
+        <div>
+
+          <div class="eyebrow">
+            AÇÃO DO PROFESSOR
+          </div>
+
+          <h2>
+            🔐 Solicitações de acesso
+          </h2>
+
+        </div>
+
+
+        <span
+          id="qtdSolicitacoes"
+          class="request-count"
+        >
+          0 solicitações
+        </span>
+
+      </div>
+
+
+      <p class="section-description">
+        Autorize ou negue cada nova entrada na Arena.
+      </p>
 
 
       <div
-        id="codigoWrap"
-        class="room-code hidden"
+        id="solicitacoesAcesso"
+        class="access-request-list empty"
       >
-
-        <span>
-          CÓDIGO DA SALA
-        </span>
-
-        <strong id="codigoSala">
-          ADM-0000
-        </strong>
-
-        <button
-          class="ghost"
-          id="copiarCodigo"
-        >
-          📋 Copiar código
-        </button>
-
+        Nenhuma solicitação de acesso no momento.
       </div>
 
+    </section>
 
-      <div class="divider-line"></div>
+  </div>
 
 
-      <div class="access-room-heading">
-        <span class="access-room-icon">
-          🔑
-        </span>
+  <!-- =========================================================
+       NÚCLEO 2 — EMPRESAS
+  ========================================================== -->
 
-        <div>
-          <div class="eyebrow">
-            CONTINUAR UMA ARENA
-          </div>
+  <div
+    class="teacher-nucleus-panel"
+    data-panel="empresas"
+  >
 
-          <h3>
-            Acessar sala existente
-          </h3>
-        </div>
+    <div class="teacher-panel-heading">
+
+      <div class="eyebrow">
+        VISÃO DAS EMPRESAS
       </div>
 
+      <h2>
+        🏢 Empresas e participantes
+      </h2>
 
-      <label for="codigoExistente">
-        🔢 Código da sala
-      </label>
-
-      <input
-        id="codigoExistente"
-        placeholder="Ex.: ADM-6170"
-        autocomplete="off"
-      >
-
-
-      <label for="senhaExistente">
-        🔐 Senha do professor
-      </label>
-
-      <input
-        id="senhaExistente"
-        type="password"
-        placeholder="Senha criada para esta sala"
-        autocomplete="current-password"
-      >
-
-
-      <button
-        id="acessarSala"
-        class="btn-access-room"
-      >
-        🔓 ENTRAR NA SALA
-      </button>
+      <p>
+        Acompanhe indicadores, recursos e componentes de cada grupo.
+      </p>
 
     </div>
 
 
-    <!-- =======================================================
-         CONTROLE DA PARTIDA
-    ======================================================== -->
-    <div class="card glass game-control-card">
+    <section class="card glass companies-card">
 
-      <div class="card-heading">
-
-        <div class="card-heading-icon">
-          🎛️
-        </div>
+      <div class="section-title">
 
         <div>
+
           <div class="eyebrow">
-            COMANDO DA ARENA
+            PARTICIPANTES DA SIMULAÇÃO
           </div>
 
           <h2>
-            Controle da partida
+            🏢 Empresas conectadas
           </h2>
+
         </div>
 
-      </div>
 
-
-      <div class="control-grid">
-
-        <button
-          id="iniciar"
-          class="control-btn control-start"
-        >
-          ▶ INICIAR
-        </button>
-
-
-        <button
-          id="proxima"
-          class="control-btn control-next"
-        >
-          ⏭ PRÓXIMA RODADA
-        </button>
-
-
-        <button
-          id="pausar"
-          class="control-btn control-pause"
-        >
-          ⏸ PAUSAR
-        </button>
-
-
-        <button
-          id="crise"
-          class="control-btn control-crisis"
-        >
-          🚨 LANÇAR CRISE
-        </button>
-
-
-        <button
-          id="leilao"
-          class="control-btn control-auction"
-        >
-          🔨 ABRIR LEILÃO
-        </button>
-
-
-        <button
-          id="mercado"
-          class="control-btn control-market"
-        >
-          🤝 MERCADO LIVRE
-        </button>
-
-      </div>
-
-
-      <div class="status professor-status">
-
-        <span>
-          🎯 Rodada
+        <span id="qtdEmpresas">
+          0 empresas
         </span>
 
-        <strong id="rodada">
-          0/8
-        </strong>
+      </div>
 
+
+      <div class="company-list-header">
 
         <span>
-          📡 Status
+          Empresa / Componentes
         </span>
 
-        <strong id="status">
-          Aguardando sala
-        </strong>
+        <span>
+          Caixa
+        </span>
+
+        <span>
+          Clientes
+        </span>
+
+        <span>
+          Reputação
+        </span>
+
+        <span>
+          XP
+        </span>
+
+        <span>
+          Recursos
+        </span>
 
       </div>
 
 
-      <div class="teacher-security-note">
+      <div
+        id="empresas"
+        class="company-list empty"
+      >
+        Crie ou acesse uma sala para iniciar.
+      </div>
 
-        <div class="security-icon">
-          🔐
-        </div>
+    </section>
+
+  </div>
+
+
+  <!-- =========================================================
+       NÚCLEO 3 — MOBILE
+  ========================================================== -->
+
+  <div
+    class="teacher-nucleus-panel"
+    data-panel="mobile"
+  >
+
+    <div class="teacher-panel-heading">
+
+      <div class="eyebrow">
+        INTELIGÊNCIA EMPRESARIAL
+      </div>
+
+      <h2>
+        📱 Central Estratégica Mobile
+      </h2>
+
+      <p>
+        Canal reservado para informações estratégicas e confidenciais.
+      </p>
+
+    </div>
+
+
+    <section class="card glass teacher-mobile-center">
+
+      <div class="section-title">
 
         <div>
-          <strong>
-            Controle de acesso da Arena
-          </strong>
 
-          <p>
-            Empresas que retornarem à sala precisarão da sua autorização
-            antes de continuar a partida.
-          </p>
+          <div class="eyebrow">
+            INTELIGÊNCIA EMPRESARIAL
+          </div>
+
+          <h2>
+            📱 Central Estratégica Mobile
+          </h2>
+
+        </div>
+
+
+        <span
+          id="qtdCelulares"
+          class="mobile-count"
+        >
+          0 celulares
+        </span>
+
+      </div>
+
+
+      <p class="section-description">
+        Envie informações, oportunidades, alertas ou pistas estratégicas
+        para uma empresa específica ou para todas as empresas conectadas.
+      </p>
+
+
+      <div class="mobile-admin-layout">
+
+        <div class="mobile-message-form">
+
+          <label for="mobileDestino">
+            🏢 Destinatário
+          </label>
+
+          <select id="mobileDestino">
+
+            <option value="all">
+              📢 Todas as empresas
+            </option>
+
+          </select>
+
+
+          <label for="mobileTipo">
+            🎯 Tipo de informação
+          </label>
+
+          <select id="mobileTipo">
+
+            <option value="alerta">
+              ⚠️ Alerta de mercado
+            </option>
+
+            <option value="oportunidade">
+              💡 Oportunidade estratégica
+            </option>
+
+            <option value="pista">
+              🔐 Informação privilegiada
+            </option>
+
+            <option value="negociacao">
+              🤝 Informação comercial
+            </option>
+
+            <option value="resultado">
+              📊 Resultado / consequência
+            </option>
+
+          </select>
+
+
+          <label for="mobileMensagem">
+            💬 Mensagem estratégica
+          </label>
+
+          <textarea
+            id="mobileMensagem"
+            placeholder="Ex.: Analistas identificaram sinais de mudança no mercado que poderão influenciar uma rodada futura."
+          ></textarea>
+
+
+          <button
+            id="enviarMobile"
+            class="btn-mobile-send"
+          >
+            📲 ENVIAR PARA CENTRAL MOBILE
+          </button>
+
+        </div>
+
+
+        <div class="mobile-connected-panel">
+
+          <div class="mobile-connected-title">
+            📡 Celulares vinculados
+          </div>
+
+          <div
+            id="celularesConectados"
+            class="mobile-connected-list empty"
+          >
+            Nenhum celular estratégico conectado.
+          </div>
+
         </div>
 
       </div>
 
-    </div>
+    </section>
 
-  </section>
+  </div>
 
 
   <!-- =========================================================
-       SOLICITAÇÕES DE ACESSO
+       NÚCLEO 4 — EVENTOS
   ========================================================== -->
-  <section
-    id="accessRequestsCard"
-    class="card glass access-requests-card"
+
+  <div
+    class="teacher-nucleus-panel"
+    data-panel="eventos"
   >
 
-    <div class="section-title">
+    <div class="teacher-panel-heading">
 
-      <div>
+      <div class="eyebrow">
+        EVENTOS E OCORRÊNCIAS
+      </div>
 
-        <div class="eyebrow">
-          CONTROLE DE REENTRADA
+      <h2>
+        🚨 Eventos da Arena
+      </h2>
+
+      <p>
+        Dispare situações que alteram o cenário empresarial.
+      </p>
+
+    </div>
+
+
+    <section class="card glass events-card">
+
+      <div class="section-title">
+
+        <div>
+
+          <div class="eyebrow">
+            EVENTOS DA SIMULAÇÃO
+          </div>
+
+          <h2>
+            🚨 Disparar evento de mercado
+          </h2>
+
         </div>
 
-        <h2>
-          🔐 Solicitações de acesso
-        </h2>
+        <span class="event-rule">
+          Cada evento: 1 uso por Arena
+        </span>
 
       </div>
 
 
-      <span
-        id="qtdSolicitacoes"
-        class="request-count"
-      >
-        0 solicitações
-      </span>
-
-    </div>
+      <p class="section-description">
+        Os eventos modificam o cenário das empresas e exigem decisões rápidas.
+        Eventos já utilizados permanecem bloqueados.
+      </p>
 
 
-    <p class="section-description">
-      Quando uma empresa tentar retornar à Arena, a solicitação aparecerá
-      aqui. O estudante só entra depois da sua autorização.
-    </p>
+      <div class="event-grid">
 
-
-    <div
-      id="solicitacoesAcesso"
-      class="access-request-list empty"
-    >
-      Nenhuma solicitação de acesso no momento.
-    </div>
-
-  </section>
-
-
-  <!-- =========================================================
-       EMPRESAS CONECTADAS
-  ========================================================== -->
-  <section class="card glass companies-card">
-
-    <div class="section-title">
-
-      <div>
-
-        <div class="eyebrow">
-          PARTICIPANTES DA SIMULAÇÃO
-        </div>
-
-        <h2>
-          🏢 Empresas conectadas
-        </h2>
-
-      </div>
-
-
-      <span id="qtdEmpresas">
-        0 empresas
-      </span>
-
-    </div>
-
-
-    <div class="company-list-header">
-
-      <span>
-        Empresa / Componentes
-      </span>
-
-      <span>
-        Caixa
-      </span>
-
-      <span>
-        Clientes
-      </span>
-
-      <span>
-        Reputação
-      </span>
-
-      <span>
-        XP
-      </span>
-
-      <span>
-        Recursos
-      </span>
-
-    </div>
-
-
-    <div
-      id="empresas"
-      class="company-list empty"
-    >
-      Crie ou acesse uma sala para iniciar.
-    </div>
-
-  </section>
-
-
-  <!-- =========================================================
-       CENTRAL ESTRATÉGICA MOBILE
-  ========================================================== -->
-  <section class="card glass teacher-mobile-center">
-
-    <div class="section-title">
-
-      <div>
-
-        <div class="eyebrow">
-          INTELIGÊNCIA EMPRESARIAL
-        </div>
-
-        <h2>
-          📱 Central Estratégica Mobile
-        </h2>
-
-      </div>
-
-
-      <span
-        id="qtdCelulares"
-        class="mobile-count"
-      >
-        0 celulares
-      </span>
-
-    </div>
-
-
-    <p class="section-description">
-      Envie informações, oportunidades, alertas ou pistas estratégicas
-      para uma empresa específica ou para todas as empresas conectadas.
-    </p>
-
-
-    <div class="mobile-admin-layout">
-
-      <div class="mobile-message-form">
-
-        <label for="mobileDestino">
-          🏢 Destinatário
-        </label>
-
-        <select id="mobileDestino">
-
-          <option value="all">
-            📢 Todas as empresas
-          </option>
-
-        </select>
-
-
-        <label for="mobileTipo">
-          🎯 Tipo de informação
-        </label>
-
-        <select id="mobileTipo">
-
-          <option value="alerta">
-            ⚠️ Alerta de mercado
-          </option>
-
-          <option value="oportunidade">
-            💡 Oportunidade estratégica
-          </option>
-
-          <option value="pista">
-            🔍 Informação / pista exclusiva
-          </option>
-
-          <option value="negociacao">
-            🤝 Informação comercial
-          </option>
-
-          <option value="resultado">
-            📊 Resultado / consequência
-          </option>
-
-        </select>
-
-
-        <label for="mobileMensagem">
-          💬 Mensagem estratégica
-        </label>
-
-        <textarea
-          id="mobileMensagem"
-          placeholder="Ex.: Informações de mercado indicam possível aumento da procura na próxima rodada."
-        ></textarea>
+        <button
+          class="event event-supplier"
+          data-event="fornecedor"
+        >
+          📦
+          <span>Fornecedor +18%</span>
+        </button>
 
 
         <button
-          id="enviarMobile"
-          class="btn-mobile-send"
+          class="event event-viral"
+          data-event="viral"
         >
-          📲 ENVIAR PARA CENTRAL MOBILE
+          📱
+          <span>Reclamação viral</span>
+        </button>
+
+
+        <button
+          class="event event-team"
+          data-event="equipe"
+        >
+          👥
+          <span>Equipe insatisfeita</span>
+        </button>
+
+
+        <button
+          class="event event-boom"
+          data-event="boom"
+        >
+          📈
+          <span>Boom de vendas</span>
+        </button>
+
+
+        <button
+          class="event event-logistics"
+          data-event="logistica"
+        >
+          🚚
+          <span>Crise logística</span>
+        </button>
+
+
+        <button
+          class="event event-credit"
+          data-event="credito"
+        >
+          🏦
+          <span>Crédito liberado</span>
         </button>
 
       </div>
 
+    </section>
 
-      <div class="mobile-connected-panel">
-
-        <div class="mobile-connected-title">
-          📡 Celulares vinculados
-        </div>
-
-        <div
-          id="celularesConectados"
-          class="mobile-connected-list empty"
-        >
-          Nenhum celular estratégico conectado.
-        </div>
-
-      </div>
-
-    </div>
-
-  </section>
+  </div>
 
 
   <!-- =========================================================
-       EVENTOS DE MERCADO
+       NÚCLEO 5 — LEILÃO
   ========================================================== -->
-  <section class="card glass events-card">
 
-    <div class="section-title">
-
-      <div>
-
-        <div class="eyebrow">
-          EVENTOS DA SIMULAÇÃO
-        </div>
-
-        <h2>
-          🚨 Disparar evento de mercado
-        </h2>
-
-      </div>
-
-      <span class="event-rule">
-        Cada evento: 1 uso por Arena
-      </span>
-
-    </div>
-
-
-    <p class="section-description">
-      Os eventos modificam o cenário das empresas e exigem decisões rápidas.
-      Eventos já utilizados permanecem bloqueados.
-    </p>
-
-
-    <div class="event-grid">
-
-      <button
-        class="event event-supplier"
-        data-event="fornecedor"
-      >
-        📦
-        <span>Fornecedor +18%</span>
-      </button>
-
-
-      <button
-        class="event event-viral"
-        data-event="viral"
-      >
-        📱
-        <span>Reclamação viral</span>
-      </button>
-
-
-      <button
-        class="event event-team"
-        data-event="equipe"
-      >
-        👥
-        <span>Equipe insatisfeita</span>
-      </button>
-
-
-      <button
-        class="event event-boom"
-        data-event="boom"
-      >
-        📈
-        <span>Boom de vendas</span>
-      </button>
-
-
-      <button
-        class="event event-logistics"
-        data-event="logistica"
-      >
-        🚚
-        <span>Crise logística</span>
-      </button>
-
-
-      <button
-        class="event event-credit"
-        data-event="credito"
-      >
-        🏦
-        <span>Crédito liberado</span>
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <!-- =========================================================
-       LEILÃO
-       O professor.js atual/incrementado poderá preencher esta área.
-  ========================================================== -->
-  <section
-    id="painelLeilao"
-    class="card glass auction-admin-card"
+  <div
+    class="teacher-nucleus-panel"
+    data-panel="leilao"
   >
 
-    <div class="section-title">
+    <div class="teacher-panel-heading">
 
-      <div>
-
-        <div class="eyebrow">
-          MERCADO DE RECURSOS
-        </div>
-
-        <h2>
-          🔨 Central de Leilão
-        </h2>
-
+      <div class="eyebrow">
+        MERCADO DE RECURSOS
       </div>
 
+      <h2>
+        🔨 Central de Leilão
+      </h2>
 
-      <span
-        id="statusLeilao"
-        class="auction-status"
-      >
-        Aguardando
-      </span>
-
-    </div>
-
-
-    <div
-      id="conteudoLeilao"
-      class="auction-admin-content"
-    >
-      <p class="muted">
-        O painel será ativado quando um leilão for aberto.
+      <p>
+        Acompanhe lances e recursos disputados pelas empresas.
       </p>
+
     </div>
 
-  </section>
 
+    <section
+      id="painelLeilao"
+      class="card glass auction-admin-card"
+    >
 
-  <!-- =========================================================
-       CENTRAL DE NEGOCIAÇÕES
-  ========================================================== -->
-  <section
-    id="centralNegociacoes"
-    class="card glass negotiations-admin-card"
-  >
+      <div class="section-title">
 
-    <div class="section-title">
+        <div>
 
-      <div>
+          <div class="eyebrow">
+            MERCADO DE RECURSOS
+          </div>
 
-        <div class="eyebrow">
-          RELAÇÕES ENTRE EMPRESAS
+          <h2>
+            🔨 Central de Leilão
+          </h2>
+
         </div>
 
-        <h2>
-          🤝 Central de Negociações
-        </h2>
+
+        <span
+          id="statusLeilao"
+          class="auction-status"
+        >
+          Aguardando
+        </span>
 
       </div>
 
 
-      <span
-        id="qtdNegociacoes"
-        class="negotiation-count"
+      <div
+        id="conteudoLeilao"
+        class="auction-admin-content"
       >
-        0 negociações
-      </span>
 
-    </div>
+        <p class="muted">
+          O painel será ativado quando um leilão for aberto.
+        </p>
 
+      </div>
 
-    <p class="section-description">
-      Acompanhe propostas, vendas de recursos, contrapropostas
-      e negociações concluídas entre as empresas.
-    </p>
+    </section>
 
-
-    <div
-      id="listaNegociacoes"
-      class="teacher-negotiation-list empty"
-    >
-      Nenhuma negociação registrada.
-    </div>
-
-  </section>
+  </div>
 
 
   <!-- =========================================================
-       PAINEL DE ORIENTAÇÃO PEDAGÓGICA
+       NÚCLEO 6 — NEGOCIAÇÕES
   ========================================================== -->
+
+  <div
+    class="teacher-nucleus-panel"
+    data-panel="negociacoes"
+  >
+
+    <div class="teacher-panel-heading">
+
+      <div class="eyebrow">
+        RELAÇÕES ENTRE EMPRESAS
+      </div>
+
+      <h2>
+        🤝 Central de Negociações
+      </h2>
+
+      <p>
+        Acompanhe as operações realizadas entre as empresas.
+      </p>
+
+    </div>
+
+
+    <section
+      id="centralNegociacoes"
+      class="card glass negotiations-admin-card"
+    >
+
+      <div class="section-title">
+
+        <div>
+
+          <div class="eyebrow">
+            RELAÇÕES ENTRE EMPRESAS
+          </div>
+
+          <h2>
+            🤝 Central de Negociações
+          </h2>
+
+        </div>
+
+
+        <span
+          id="qtdNegociacoes"
+          class="negotiation-count"
+        >
+          0 negociações
+        </span>
+
+      </div>
+
+
+      <p class="section-description">
+        Acompanhe propostas, vendas de recursos, contrapropostas
+        e negociações concluídas entre as empresas.
+      </p>
+
+
+      <div
+        id="listaNegociacoes"
+        class="teacher-negotiation-list empty"
+      >
+        Nenhuma negociação registrada.
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <!-- =========================================================
+       ORIENTAÇÃO PEDAGÓGICA
+  ========================================================== -->
+
   <section class="card glass pedagogical-card">
 
     <div class="pedagogical-icon">
@@ -772,38 +1293,19 @@
       </div>
 
       <h3>
-        Competências trabalhadas na ADM Arena 360
+        ADM Arena 360 — Guerra de Gestão
       </h3>
 
       <div class="pedagogical-skills">
 
-        <span>
-          🧠 Planejamento
-        </span>
-
-        <span>
-          🎯 Tomada de decisão
-        </span>
-
-        <span>
-          💰 Gestão de recursos
-        </span>
-
-        <span>
-          🤝 Negociação
-        </span>
-
-        <span>
-          👥 Trabalho em equipe
-        </span>
-
-        <span>
-          💡 Inovação
-        </span>
-
-        <span>
-          🚀 Visão empreendedora
-        </span>
+        <span>🧠 Planejamento</span>
+        <span>🎯 Tomada de decisão</span>
+        <span>💰 Gestão financeira</span>
+        <span>🤝 Negociação</span>
+        <span>👥 Gestão de pessoas</span>
+        <span>💡 Inovação</span>
+        <span>📈 Mercado</span>
+        <span>❤️ Responsabilidade social</span>
 
       </div>
 
@@ -813,8 +1315,9 @@
 
 
   <!-- =========================================================
-       MODAL INFORMAÇÃO MOBILE
+       MODAL MOBILE
   ========================================================== -->
+
   <div
     id="modalProfessorMobile"
     class="modal hidden"
@@ -854,6 +1357,7 @@
   <!-- =========================================================
        TOAST
   ========================================================== -->
+
   <div
     id="toast"
     class="toast hidden"
@@ -862,10 +1366,175 @@
 </main>
 
 
+<!-- =========================================================
+     NAVEGAÇÃO LOCAL DOS NÚCLEOS
+========================================================== -->
+
+<script>
+  (() => {
+
+    const buttons =
+      document.querySelectorAll(
+        ".teacher-nucleus-btn"
+      );
+
+    const panels =
+      document.querySelectorAll(
+        ".teacher-nucleus-panel"
+      );
+
+
+    function openNucleus(name) {
+
+      buttons.forEach(button => {
+
+        button.classList.toggle(
+          "active",
+          button.dataset.nucleus === name
+        );
+
+      });
+
+
+      panels.forEach(panel => {
+
+        panel.classList.toggle(
+          "active",
+          panel.dataset.panel === name
+        );
+
+      });
+
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+    }
+
+
+    buttons.forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          openNucleus(
+            button.dataset.nucleus
+          );
+
+        }
+      );
+
+    });
+
+
+    /*
+      Espelha os indicadores já utilizados
+      pelo sistema atual no resumo executivo.
+      Não altera o Firebase nem a partida.
+    */
+
+    setInterval(() => {
+
+      const round =
+        document.querySelector("#rodada");
+
+      const status =
+        document.querySelector("#status");
+
+      const companies =
+        document.querySelector("#qtdEmpresas");
+
+      const requests =
+        document.querySelector("#qtdSolicitacoes");
+
+
+      const summaryRound =
+        document.querySelector(
+          "#teacherSummaryRound"
+        );
+
+      const summaryStatus =
+        document.querySelector(
+          "#teacherSummaryStatus"
+        );
+
+      const summaryCompanies =
+        document.querySelector(
+          "#teacherSummaryCompanies"
+        );
+
+      const summaryAlerts =
+        document.querySelector(
+          "#teacherSummaryAlerts"
+        );
+
+
+      if (
+        summaryRound &&
+        round
+      ) {
+
+        summaryRound.textContent =
+          round.textContent.trim();
+
+      }
+
+
+      if (
+        summaryStatus &&
+        status
+      ) {
+
+        summaryStatus.textContent =
+          status.textContent.trim();
+
+      }
+
+
+      if (
+        summaryCompanies &&
+        companies
+      ) {
+
+        summaryCompanies.textContent =
+          companies.textContent.trim();
+
+      }
+
+
+      if (
+        summaryAlerts &&
+        requests
+      ) {
+
+        const value =
+          requests.textContent.trim();
+
+        summaryAlerts.textContent =
+          value === "0 solicitações"
+            ? "Nenhum acesso pendente"
+            : value;
+
+      }
+
+    }, 700);
+
+  })();
+</script>
+
+
 <script
   type="module"
   src="js/professor.js"
 ></script>
-<script type="module" src="js/abertura.js"></script>
+
+<script
+  type="module"
+  src="js/abertura.js"
+></script>
+
 </body>
 </html>
