@@ -19,7 +19,7 @@ import {
    PROF. LEOPOLDO
 
    PAINEL DO PROFESSOR
-   VERSÃO CONSOLIDADA
+   VERSÃO CONSOLIDADA — 16 RODADAS
 
    REGRA DE ACESSO
    ------------------------------------------------------------
@@ -490,15 +490,6 @@ function renderEventButtons() {
 
 /* ============================================================
    AUTORIZAÇÃO DE ACESSO
-
-   IMPORTANTE:
-   A chave da solicitação NÃO é obrigatoriamente o companyId.
-
-   Empresa:
-     companyId
-
-   Mobile:
-     companyId__mobile
    ============================================================ */
 
 function getPendingAccessRequests() {
@@ -795,15 +786,6 @@ async function respondAccessRequest(
       ];
 
 
-    /* --------------------------------------------------------
-       SENHA DIVERGENTE
-
-       Só troca a senha se:
-       1. houve divergência;
-       2. professor clicou AUTORIZAR;
-       3. existe senha solicitada.
-       -------------------------------------------------------- */
-
     if (
       status === "approved" &&
       request.passwordMismatch &&
@@ -864,12 +846,6 @@ async function respondAccessRequest(
     }
 
 
-    /*
-      Nunca manter a senha digitada
-      dentro da solicitação após
-      a decisão do professor.
-    */
-
     delete request.requestedPassword;
 
 
@@ -914,10 +890,6 @@ async function respondAccessRequest(
 
 /* ============================================================
    INVALIDAR AUTORIZAÇÕES
-
-   Usado quando o professor pausa a Arena.
-   Assim uma autorização antiga não volta a funcionar
-   automaticamente depois da retomada.
    ============================================================ */
 
 function invalidateApprovedAccesses(
@@ -1004,11 +976,6 @@ async function excluirEmpresa(
       companyId
     ];
 
-
-    /*
-      Remove TODAS as solicitações da empresa:
-      computador, mobile e futuras variantes.
-    */
 
     latest.accessRequests =
       latest.accessRequests ||
@@ -2243,7 +2210,7 @@ function render() {
     $("#rodada").textContent =
       `${Number(
         roomData.round || 0
-      )}/8`;
+      )}/16`;
 
   }
 
@@ -2783,7 +2750,7 @@ $("#proxima")
 
       roomData.round =
         Math.min(
-          8,
+          16,
           Number(
             roomData.round || 0
           ) + 1
@@ -2856,11 +2823,6 @@ $("#pausar")
         roomData.status =
           "Pausado";
 
-
-        /*
-          Todas as autorizações concedidas
-          deixam de ser válidas.
-        */
 
         invalidateApprovedAccesses(
           roomData
@@ -3391,5 +3353,5 @@ console.log(
 );
 
 console.log(
-  "Painel do Professor carregado: toda entrada exige autorização do professor."
+  "Painel do Professor carregado: 16 rodadas e toda entrada exige autorização do professor."
 );
