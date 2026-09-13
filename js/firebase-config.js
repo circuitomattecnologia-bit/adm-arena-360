@@ -5,7 +5,8 @@ export const FIREBASE = {
   enabled: true,
 
   config: {
-    apiKey: "AIzaSyBCfG1SkyLCkWcYwAgVduVHG2x8EtpZ0G",
+    apiKey:
+      "AIzaSyBCfG1SkyLCkWcYwAgVduVHG2x8EtpZ0G",
 
     authDomain:
       "adm-arena-360.firebaseapp.com",
@@ -46,9 +47,10 @@ if (
       .toLowerCase();
 
 
-  /* CRONÔMETRO:
-     professor + empresa
-  */
+  /* =======================================================
+     CRONÔMETRO
+     Professor + Empresa
+  ======================================================= */
 
   const timerPages =
     new Set([
@@ -61,7 +63,9 @@ if (
     timerPages.has(page)
   ) {
 
-    import("./cronometro.js")
+    import(
+      "./cronometro.js"
+    )
       .catch(error => {
 
         console.error(
@@ -74,19 +78,45 @@ if (
   }
 
 
-  /* GESTÃO COMPACTA DOS COMPONENTES:
-     somente professor
-  */
+  /* =======================================================
+     PROFESSOR
+  ======================================================= */
 
   if (
-    page === "professor.html"
+    page ===
+    "professor.html"
   ) {
 
-    import("./componentes-ui.js")
+    /*
+      Gestão compacta
+      dos componentes
+    */
+
+    import(
+      "./componentes-ui.js"
+    )
       .catch(error => {
 
         console.error(
           "ADM Arena 360 — interface de componentes:",
+          error
+        );
+
+      });
+
+
+    /*
+      Núcleo Empresas:
+      detalhes + proteção de exclusão
+    */
+
+    import(
+      "./empresas-ui.js"
+    )
+      .catch(error => {
+
+        console.error(
+          "ADM Arena 360 — interface de empresas:",
           error
         );
 
