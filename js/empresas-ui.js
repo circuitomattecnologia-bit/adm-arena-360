@@ -3,25 +3,27 @@
    NÚCLEO EMPRESAS — FICHA GERENCIAL
 
    DISCIPLINA: PROJETO EMPREENDEDOR
+   PROF. LEOPOLDO
 
-   MÓDULO VISUAL / ADMINISTRATIVO.
+   MÓDULO VISUAL / ADMINISTRATIVO
 
-   NÃO LÊ FIREBASE.
-   NÃO GRAVA FIREBASE.
-   NÃO ALTERA RODADA.
-   NÃO ALTERA CAIXA.
-   NÃO ALTERA XP.
-   NÃO ALTERA CLIENTES.
-   NÃO ALTERA REPUTAÇÃO.
-   NÃO ALTERA RECURSOS.
-   NÃO ALTERA EMPRESAS.
+   IMPORTANTE:
+   - NÃO LÊ FIREBASE
+   - NÃO GRAVA FIREBASE
+   - NÃO ALTERA RODADA
+   - NÃO ALTERA CAIXA
+   - NÃO ALTERA XP
+   - NÃO ALTERA CLIENTES
+   - NÃO ALTERA REPUTAÇÃO
+   - NÃO ALTERA RECURSOS
+   - NÃO ALTERA EMPRESAS
 
    FUNÇÕES:
-   1. Transformar DETALHES em FICHA GERENCIAL.
-   2. Exibir visão atual da empresa.
-   3. Preparar espaço para histórico gerencial futuro.
-   4. Manter ações administrativas separadas.
-   5. Proteger fortemente a exclusão de empresa.
+   1. Ficha Gerencial individual.
+   2. Abertura em largura total da linha.
+   3. Visão atual da empresa.
+   4. Estrutura preparada para histórico futuro.
+   5. Proteção forte contra exclusão acidental.
 ========================================================= */
 
 
@@ -60,13 +62,14 @@ function instalarEstilo() {
   style.textContent = `
 
     /* =====================================================
-       BOTÃO FICHA GERENCIAL
+       BOTÃO
     ===================================================== */
 
     .adm360-company-details-btn {
+
       border:
         1px solid
-        rgba(92,183,255,.40);
+        rgba(92,183,255,.42);
 
       background:
         linear-gradient(
@@ -75,15 +78,13 @@ function instalarEstilo() {
           rgba(69,113,255,.08)
         );
 
-      color: #e6f5ff;
+      color: #e7f6ff;
 
-      border-radius: 10px;
+      border-radius: 11px;
 
-      padding: 8px 12px;
+      padding: 9px 13px;
 
       font-weight: 950;
-
-      letter-spacing: .02em;
 
       cursor: pointer;
 
@@ -99,6 +100,7 @@ function instalarEstilo() {
 
 
     .adm360-company-details-btn:hover {
+
       background:
         linear-gradient(
           135deg,
@@ -107,7 +109,7 @@ function instalarEstilo() {
         );
 
       border-color:
-        rgba(92,183,255,.60);
+        rgba(92,183,255,.65);
 
       transform:
         translateY(-1px);
@@ -115,30 +117,63 @@ function instalarEstilo() {
 
 
     .adm360-company-details-btn.is-open {
-      background:
-        rgba(92,183,255,.18);
 
-      border-color:
-        rgba(92,183,255,.58);
+      background:
+        linear-gradient(
+          135deg,
+          rgba(92,183,255,.23),
+          rgba(69,113,255,.16)
+        );
 
       color: #ffffff;
+
+      border-color:
+        rgba(92,183,255,.68);
     }
 
 
     /* =====================================================
-       PAINEL PRINCIPAL
+       FICHA GERENCIAL
+
+       CORREÇÃO PRINCIPAL:
+       grid-column: 1 / -1
+
+       Isso obriga a ficha a ocupar TODAS
+       as colunas da linha da empresa.
     ===================================================== */
 
     .adm360-company-detail-panel {
+
       display: none;
 
-      width: 100%;
+      grid-column:
+        1 / -1 !important;
 
-      margin-top: 14px;
+      width:
+        100% !important;
+
+      max-width:
+        none !important;
+
+      min-width: 0;
+
+      justify-self:
+        stretch !important;
+
+      align-self:
+        stretch;
+
+      box-sizing:
+        border-box;
+
+      margin:
+        15px 0 7px;
 
       padding: 0;
 
       border-radius: 18px;
+
+      overflow: hidden;
 
       border:
         1px solid
@@ -147,16 +182,12 @@ function instalarEstilo() {
       background:
         linear-gradient(
           145deg,
-          rgba(7,18,42,.96),
-          rgba(8,24,55,.93)
+          rgba(7,18,42,.98),
+          rgba(8,24,55,.96)
         );
 
-      box-sizing: border-box;
-
-      overflow: hidden;
-
       box-shadow:
-        0 18px 50px
+        0 18px 45px
         rgba(0,0,0,.20);
     }
 
@@ -167,10 +198,15 @@ function instalarEstilo() {
 
 
     /* =====================================================
-       CABEÇALHO DA FICHA
+       CABEÇALHO
     ===================================================== */
 
     .adm360-company-sheet-header {
+
+      width: 100%;
+
+      box-sizing: border-box;
+
       display: flex;
 
       align-items: center;
@@ -179,18 +215,19 @@ function instalarEstilo() {
 
       gap: 18px;
 
-      padding: 18px 20px;
+      padding:
+        18px 20px;
 
       background:
         linear-gradient(
           90deg,
-          rgba(31,104,255,.18),
+          rgba(31,104,255,.19),
           rgba(18,219,210,.08)
         );
 
       border-bottom:
         1px solid
-        rgba(92,183,255,.17);
+        rgba(92,183,255,.18);
     }
 
 
@@ -200,6 +237,7 @@ function instalarEstilo() {
 
 
     .adm360-company-sheet-kicker {
+
       display: block;
 
       margin-bottom: 4px;
@@ -218,35 +256,39 @@ function instalarEstilo() {
 
 
     .adm360-company-sheet-title {
+
       margin: 0;
 
       color: #ffffff;
 
-      font-size: 1.08rem;
+      font-size: 1.18rem;
 
       font-weight: 950;
-
-      line-height: 1.25;
     }
 
 
     .adm360-company-sheet-status {
+
       flex: 0 0 auto;
 
-      padding: 7px 11px;
+      padding:
+        7px 11px;
 
-      border-radius: 999px;
+      border-radius:
+        999px;
 
       border:
         1px solid
-        rgba(53,211,170,.32);
+        rgba(53,211,170,.34);
 
       background:
         rgba(53,211,170,.08);
 
-      color: #aaf5dc;
+      color:
+        #acf4dd;
 
-      font-size: .72rem;
+      font-size:
+        .72rem;
 
       font-weight: 950;
 
@@ -259,45 +301,63 @@ function instalarEstilo() {
     ===================================================== */
 
     .adm360-company-sheet-body {
-      padding: 18px 20px 20px;
+
+      width: 100%;
+
+      box-sizing:
+        border-box;
+
+      padding:
+        20px;
     }
 
 
     .adm360-company-section-title {
+
       display: flex;
 
       align-items: center;
 
       gap: 8px;
 
-      margin-bottom: 10px;
+      margin:
+        2px 0 11px;
 
-      color: #dff5ff;
+      color:
+        #dff5ff;
 
-      font-size: .82rem;
+      font-size:
+        .82rem;
 
-      font-weight: 950;
+      font-weight:
+        950;
 
-      letter-spacing: .04em;
+      letter-spacing:
+        .04em;
 
-      text-transform: uppercase;
+      text-transform:
+        uppercase;
     }
 
 
     .adm360-company-section-title span {
-      display: inline-flex;
 
       width: 8px;
 
       height: 8px;
 
-      border-radius: 50%;
+      flex:
+        0 0 8px;
 
-      background: #58dfff;
+      border-radius:
+        50%;
+
+      background:
+        #58dfff;
 
       box-shadow:
         0 0 12px
-        rgba(88,223,255,.40);
+        rgba(88,223,255,.45);
     }
 
 
@@ -306,11 +366,20 @@ function instalarEstilo() {
     ===================================================== */
 
     .adm360-company-current {
-      margin-bottom: 18px;
 
-      padding: 15px 16px;
+      width: 100%;
 
-      border-radius: 14px;
+      box-sizing:
+        border-box;
+
+      margin-bottom:
+        20px;
+
+      padding:
+        15px 17px;
+
+      border-radius:
+        14px;
 
       border:
         1px solid
@@ -322,16 +391,21 @@ function instalarEstilo() {
 
 
     .adm360-company-current-text {
+
       color:
-        rgba(255,255,255,.83);
+        rgba(255,255,255,.84);
 
-      font-size: .88rem;
+      font-size:
+        .88rem;
 
-      line-height: 1.68;
+      line-height:
+        1.65;
 
-      white-space: pre-line;
+      white-space:
+        pre-line;
 
-      word-break: break-word;
+      word-break:
+        break-word;
     }
 
 
@@ -340,71 +414,101 @@ function instalarEstilo() {
     ===================================================== */
 
     .adm360-company-management-grid {
+
+      width: 100%;
+
       display: grid;
 
       grid-template-columns:
-        repeat(3, minmax(0, 1fr));
+        repeat(
+          3,
+          minmax(0,1fr)
+        );
 
-      gap: 12px;
+      gap:
+        13px;
 
-      margin-bottom: 18px;
+      margin-bottom:
+        20px;
     }
 
 
     .adm360-company-management-card {
+
       min-width: 0;
 
-      min-height: 118px;
+      min-height:
+        145px;
 
-      padding: 14px 15px;
+      box-sizing:
+        border-box;
 
-      border-radius: 14px;
+      padding:
+        15px 16px;
+
+      border-radius:
+        14px;
 
       border:
         1px solid
         rgba(255,255,255,.09);
 
       background:
-        rgba(255,255,255,.025);
-
-      box-sizing: border-box;
+        linear-gradient(
+          145deg,
+          rgba(255,255,255,.035),
+          rgba(255,255,255,.018)
+        );
     }
 
 
     .adm360-company-management-card h4 {
+
       margin:
         0 0 8px;
 
-      color: #ffffff;
+      color:
+        #ffffff;
 
-      font-size: .82rem;
+      font-size:
+        .84rem;
 
-      font-weight: 950;
+      font-weight:
+        950;
 
-      line-height: 1.35;
+      line-height:
+        1.35;
     }
 
 
     .adm360-company-management-card p {
+
       margin: 0;
 
       color:
-        rgba(255,255,255,.58);
+        rgba(255,255,255,.61);
 
-      font-size: .78rem;
+      font-size:
+        .78rem;
 
-      line-height: 1.55;
+      line-height:
+        1.52;
     }
 
 
     .adm360-company-no-record {
-      display: inline-flex;
 
-      margin-top: 9px;
+      display:
+        inline-flex;
 
-      padding: 5px 8px;
+      margin-top:
+        10px;
 
-      border-radius: 8px;
+      padding:
+        5px 8px;
+
+      border-radius:
+        8px;
 
       border:
         1px solid
@@ -414,24 +518,35 @@ function instalarEstilo() {
         rgba(255,255,255,.025);
 
       color:
-        rgba(255,255,255,.50);
+        rgba(255,255,255,.52);
 
-      font-size: .69rem;
+      font-size:
+        .69rem;
 
-      font-weight: 850;
+      font-weight:
+        850;
     }
 
 
     /* =====================================================
-       OBSERVAÇÃO PEDAGÓGICA
+       FINALIDADE
     ===================================================== */
 
     .adm360-company-pedagogical-box {
-      margin-bottom: 18px;
 
-      padding: 14px 16px;
+      width: 100%;
 
-      border-radius: 14px;
+      box-sizing:
+        border-box;
+
+      margin-bottom:
+        18px;
+
+      padding:
+        14px 16px;
+
+      border-radius:
+        14px;
 
       border:
         1px solid
@@ -443,27 +558,35 @@ function instalarEstilo() {
 
 
     .adm360-company-pedagogical-box strong {
+
       display: block;
 
-      margin-bottom: 6px;
+      margin-bottom:
+        6px;
 
-      color: #ffe59a;
+      color:
+        #ffe59a;
 
-      font-size: .80rem;
+      font-size:
+        .80rem;
 
-      font-weight: 950;
+      font-weight:
+        950;
     }
 
 
     .adm360-company-pedagogical-box p {
+
       margin: 0;
 
       color:
-        rgba(255,255,255,.66);
+        rgba(255,255,255,.67);
 
-      font-size: .78rem;
+      font-size:
+        .78rem;
 
-      line-height: 1.55;
+      line-height:
+        1.55;
     }
 
 
@@ -472,9 +595,17 @@ function instalarEstilo() {
     ===================================================== */
 
     .adm360-company-security-box {
-      padding: 14px 16px;
 
-      border-radius: 14px;
+      width: 100%;
+
+      box-sizing:
+        border-box;
+
+      padding:
+        14px 16px;
+
+      border-radius:
+        14px;
 
       border:
         1px solid
@@ -486,42 +617,53 @@ function instalarEstilo() {
 
 
     .adm360-company-security-box strong {
+
       display: block;
 
-      color: #ffabb7;
+      color:
+        #ffabb7;
 
-      margin-bottom: 6px;
+      margin-bottom:
+        6px;
 
-      font-size: .80rem;
+      font-size:
+        .80rem;
 
-      font-weight: 950;
+      font-weight:
+        950;
     }
 
 
     .adm360-company-security-box small {
+
       display: block;
 
       color:
         rgba(255,255,255,.65);
 
-      line-height: 1.5;
+      line-height:
+        1.5;
 
-      margin-bottom: 12px;
+      margin-bottom:
+        12px;
     }
 
 
     .adm360-company-delete-area {
+
       display: flex;
 
       align-items: center;
 
-      justify-content: space-between;
+      justify-content:
+        space-between;
 
       flex-wrap: wrap;
 
-      gap: 10px;
+      gap: 12px;
 
-      padding-top: 11px;
+      padding-top:
+        11px;
 
       border-top:
         1px solid
@@ -530,15 +672,21 @@ function instalarEstilo() {
 
 
     .adm360-company-delete-warning {
-      max-width: 650px;
 
-      color: #ffbcc5;
+      max-width:
+        760px;
 
-      font-size: .72rem;
+      color:
+        #ffbcc5;
 
-      line-height: 1.45;
+      font-size:
+        .72rem;
 
-      font-weight: 800;
+      line-height:
+        1.45;
+
+      font-weight:
+        800;
     }
 
 
@@ -547,13 +695,16 @@ function instalarEstilo() {
     ===================================================== */
 
     .delete-company {
-      display: none !important;
+      display:
+        none !important;
     }
 
 
     .adm360-company-detail-panel.show
     .delete-company {
-      display: inline-flex !important;
+
+      display:
+        inline-flex !important;
     }
 
 
@@ -561,11 +712,15 @@ function instalarEstilo() {
        RESPONSIVO
     ===================================================== */
 
-    @media(max-width:1000px) {
+    @media(max-width:1100px) {
 
       .adm360-company-management-grid {
+
         grid-template-columns:
-          repeat(2, minmax(0, 1fr));
+          repeat(
+            2,
+            minmax(0,1fr)
+          );
       }
 
     }
@@ -574,6 +729,7 @@ function instalarEstilo() {
     @media(max-width:700px) {
 
       .adm360-company-details-btn {
+
         width: 100%;
 
         margin:
@@ -582,31 +738,36 @@ function instalarEstilo() {
 
 
       .adm360-company-sheet-header {
-        align-items: flex-start;
 
-        flex-direction: column;
-      }
+        flex-direction:
+          column;
 
-
-      .adm360-company-sheet-status {
-        align-self: flex-start;
-      }
-
-
-      .adm360-company-sheet-body {
-        padding: 15px;
+        align-items:
+          flex-start;
       }
 
 
       .adm360-company-management-grid {
-        grid-template-columns: 1fr;
+
+        grid-template-columns:
+          1fr;
+      }
+
+
+      .adm360-company-sheet-body {
+
+        padding:
+          15px;
       }
 
 
       .adm360-company-delete-area {
-        align-items: stretch;
 
-        flex-direction: column;
+        flex-direction:
+          column;
+
+        align-items:
+          stretch;
       }
 
     }
@@ -614,7 +775,9 @@ function instalarEstilo() {
   `;
 
 
-  document.head.appendChild(style);
+  document.head.appendChild(
+    style
+  );
 }
 
 
@@ -630,11 +793,11 @@ function iniciarEmpresasUI() {
 
 
   const observer =
-    new MutationObserver(() => {
-
-      processarEmpresas();
-
-    });
+    new MutationObserver(
+      () => {
+        processarEmpresas();
+      }
+    );
 
 
   observer.observe(
@@ -654,14 +817,18 @@ function iniciarEmpresasUI() {
    LOCALIZA A LINHA DA EMPRESA
 ========================================================= */
 
-function localizarLinhaEmpresa(button) {
+function localizarLinhaEmpresa(
+  button
+) {
 
   let node =
     button?.parentElement;
 
 
   const container =
-    document.querySelector("#empresas");
+    document.querySelector(
+      "#empresas"
+    );
 
 
   while (
@@ -671,7 +838,8 @@ function localizarLinhaEmpresa(button) {
   ) {
 
     if (
-      node.parentElement === container
+      node.parentElement ===
+      container
     ) {
       return node;
     }
@@ -690,13 +858,15 @@ function localizarLinhaEmpresa(button) {
 
 
 /* =========================================================
-   PROCESSA EMPRESAS JÁ RENDERIZADAS
+   PROCESSA EMPRESAS
 ========================================================= */
 
 function processarEmpresas() {
 
   const container =
-    document.querySelector("#empresas");
+    document.querySelector(
+      "#empresas"
+    );
 
 
   if (!container) {
@@ -705,54 +875,67 @@ function processarEmpresas() {
 
 
   container
-    .querySelectorAll(".delete-company")
-    .forEach(deleteButton => {
+    .querySelectorAll(
+      ".delete-company"
+    )
+    .forEach(
+      deleteButton => {
 
-      if (
-        deleteButton.dataset
-          .adm360Protected === "1"
-      ) {
-        return;
-      }
-
-
-      deleteButton.dataset
-        .adm360Protected = "1";
-
-
-      const companyId =
-        deleteButton.dataset
-          .companyId || "";
-
-
-      const companyName =
-        deleteButton.dataset
-          .companyName || "Empresa";
-
-
-      const row =
-        localizarLinhaEmpresa(
+        if (
           deleteButton
+            .dataset
+            .adm360Protected ===
+          "1"
+        ) {
+          return;
+        }
+
+
+        deleteButton
+          .dataset
+          .adm360Protected =
+          "1";
+
+
+        const companyId =
+          deleteButton
+            .dataset
+            .companyId ||
+          "";
+
+
+        const companyName =
+          deleteButton
+            .dataset
+            .companyName ||
+          "Empresa";
+
+
+        const row =
+          localizarLinhaEmpresa(
+            deleteButton
+          );
+
+
+        if (!row) {
+          return;
+        }
+
+
+        row.dataset
+          .adm360CompanyRow =
+          companyId ||
+          companyName;
+
+
+        criarFichaGerencial(
+          row,
+          deleteButton,
+          companyName
         );
 
-
-      if (!row) {
-        return;
       }
-
-
-      row.dataset
-        .adm360CompanyRow =
-        companyId || companyName;
-
-
-      criarFichaGerencial(
-        row,
-        deleteButton,
-        companyName
-      );
-
-    });
+    );
 }
 
 
@@ -775,12 +958,10 @@ function criarFichaGerencial(
   }
 
 
-  /* =======================================================
-     BOTÃO
-  ======================================================= */
-
   const button =
-    document.createElement("button");
+    document.createElement(
+      "button"
+    );
 
 
   button.type =
@@ -796,22 +977,22 @@ function criarFichaGerencial(
 
 
   /* =======================================================
-     CAPTURA SOMENTE O QUE JÁ EXISTE VISUALMENTE
+     CAPTURA APENAS DADOS JÁ VISÍVEIS
 
-     Não cria novos valores.
-     Não consulta Firebase.
+     Não consulta banco.
+     Não cria valores.
   ======================================================= */
 
   const currentText =
-    capturarResumoAtual(row);
+    capturarResumoAtual(
+      row
+    );
 
-
-  /* =======================================================
-     PAINEL
-  ======================================================= */
 
   const panel =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
 
   panel.className =
@@ -837,7 +1018,9 @@ function criarFichaGerencial(
         <h3
           class="adm360-company-sheet-title"
         >
-          ${escapeHtml(companyName)}
+          🏢 ${escapeHtml(
+            companyName
+          )}
         </h3>
 
       </div>
@@ -856,8 +1039,6 @@ function criarFichaGerencial(
       class="adm360-company-sheet-body"
     >
 
-      <!-- VISÃO ATUAL -->
-
       <div
         class="adm360-company-section-title"
       >
@@ -875,15 +1056,18 @@ function criarFichaGerencial(
         >
           ${
             currentText
-              ? escapeHtml(currentText)
-              : "Não foi possível identificar os dados atuais exibidos na linha da empresa."
+              ? escapeHtml(
+                  currentText
+                )
+              : (
+                "Dados atuais não " +
+                "identificados."
+              )
           }
         </div>
 
       </div>
 
-
-      <!-- HISTÓRICO GERENCIAL -->
 
       <div
         class="adm360-company-section-title"
@@ -897,19 +1081,19 @@ function criarFichaGerencial(
         class="adm360-company-management-grid"
       >
 
-        <div
+        <article
           class="adm360-company-management-card"
         >
 
           <h4>
-            FINANCEIRO
+            💰 FINANCEIRO
           </h4>
 
           <p>
-            Evolução do caixa, investimentos,
-            empréstimos, dívidas e compromissos
-            financeiros poderão ser acompanhados
-            neste espaço.
+            Evolução do caixa,
+            investimentos, empréstimos,
+            dívidas e compromissos
+            financeiros da empresa.
           </p>
 
           <div
@@ -918,21 +1102,21 @@ function criarFichaGerencial(
             Ainda não há histórico registrado
           </div>
 
-        </div>
+        </article>
 
 
-        <div
+        <article
           class="adm360-company-management-card"
         >
 
           <h4>
-            DECISÕES POR RODADA
+            🎯 DECISÕES POR RODADA
           </h4>
 
           <p>
-            Registro das decisões estratégicas
-            tomadas pela empresa e dos resultados
-            gerados em cada rodada da Arena.
+            Decisões estratégicas adotadas
+            pela equipe e resultados
+            produzidos ao longo da Arena.
           </p>
 
           <div
@@ -941,21 +1125,21 @@ function criarFichaGerencial(
             Ainda não há histórico registrado
           </div>
 
-        </div>
+        </article>
 
 
-        <div
+        <article
           class="adm360-company-management-card"
         >
 
           <h4>
-            MERCADO E CLIENTES
+            📈 MERCADO E CLIENTES
           </h4>
 
           <p>
-            Evolução da carteira de clientes,
-            posicionamento de mercado,
-            desempenho comercial e negociações.
+            Evolução dos clientes,
+            posicionamento comercial,
+            mercado e negociações.
           </p>
 
           <div
@@ -964,21 +1148,22 @@ function criarFichaGerencial(
             Ainda não há histórico registrado
           </div>
 
-        </div>
+        </article>
 
 
-        <div
+        <article
           class="adm360-company-management-card"
         >
 
           <h4>
-            REPUTAÇÃO E PESSOAS
+            🏆 REPUTAÇÃO E PESSOAS
           </h4>
 
           <p>
-            Impactos das decisões sobre reputação,
-            gestão de pessoas e relacionamento
-            com o mercado.
+            Impactos das decisões
+            sobre reputação, equipe
+            e relacionamento com
+            o mercado.
           </p>
 
           <div
@@ -987,21 +1172,22 @@ function criarFichaGerencial(
             Ainda não há histórico registrado
           </div>
 
-        </div>
+        </article>
 
 
-        <div
+        <article
           class="adm360-company-management-card"
         >
 
           <h4>
-            EVENTOS E CRISES
+            🚨 EVENTOS E CRISES
           </h4>
 
           <p>
-            Ocorrências recebidas pela empresa,
-            respostas adotadas e consequências
-            produzidas durante a competição.
+            Ocorrências enfrentadas,
+            respostas adotadas
+            e consequências produzidas
+            durante a competição.
           </p>
 
           <div
@@ -1010,21 +1196,22 @@ function criarFichaGerencial(
             Ainda não há histórico registrado
           </div>
 
-        </div>
+        </article>
 
 
-        <div
+        <article
           class="adm360-company-management-card"
         >
 
           <h4>
-            INOVAÇÃO E RESPONSABILIDADE SOCIAL
+            💡 INOVAÇÃO E RESPONSABILIDADE SOCIAL
           </h4>
 
           <p>
             Investimentos em inovação,
-            iniciativas sociais e resultados
-            relacionados à gestão sustentável.
+            ações sociais e resultados
+            relacionados à gestão
+            sustentável.
           </p>
 
           <div
@@ -1033,12 +1220,10 @@ function criarFichaGerencial(
             Ainda não há histórico registrado
           </div>
 
-        </div>
+        </article>
 
       </div>
 
-
-      <!-- ORIENTAÇÃO -->
 
       <div
         class="adm360-company-pedagogical-box"
@@ -1049,35 +1234,32 @@ function criarFichaGerencial(
         </strong>
 
         <p>
-          Esta ficha será ampliada conforme
+          A ficha será ampliada conforme
           novas rodadas e novos registros
           gerenciais forem implementados.
           O objetivo é permitir ao professor
-          acompanhar não apenas o resultado
-          atual, mas também compreender quais
-          decisões levaram a empresa ao seu
-          desempenho.
+          compreender não apenas o resultado
+          atual, mas também quais decisões
+          levaram a empresa ao seu desempenho.
         </p>
 
       </div>
 
-
-      <!-- ADMINISTRAÇÃO -->
 
       <div
         class="adm360-company-security-box"
       >
 
         <strong>
-          AÇÕES ADMINISTRATIVAS
+          🔐 AÇÕES ADMINISTRATIVAS
         </strong>
 
         <small>
-          As ações abaixo não fazem parte
-          da gestão normal da empresa durante
-          a Arena. A exclusão é uma operação
-          crítica e permanece protegida
-          por múltiplas confirmações.
+          A exclusão não faz parte
+          da gestão normal da empresa.
+          É uma operação crítica
+          e permanece protegida por
+          três etapas de confirmação.
         </small>
 
 
@@ -1089,9 +1271,10 @@ function criarFichaGerencial(
             class="adm360-company-delete-warning"
           >
             EXCLUSÃO PROTEGIDA:
-            somente utilize esta função
-            quando uma empresa realmente
-            precisar ser removida da Arena.
+            utilize somente quando
+            uma empresa realmente
+            precisar ser removida
+            da Arena.
           </div>
 
         </div>
@@ -1108,32 +1291,36 @@ function criarFichaGerencial(
   ======================================================= */
 
   const originalParent =
-    deleteButton.parentElement;
+    deleteButton
+      .parentElement;
 
 
   if (originalParent) {
 
-    originalParent.insertBefore(
-      button,
-      deleteButton
-    );
+    originalParent
+      .insertBefore(
+        button,
+        deleteButton
+      );
 
   }
 
 
   /* =======================================================
-     INSERE PAINEL NA LINHA
+     INSERE FICHA
+
+     A ficha fica dentro da linha da empresa,
+     porém CSS grid-column: 1 / -1 faz com que
+     ocupe a linha inteira.
   ======================================================= */
 
-  row.appendChild(panel);
+  row.appendChild(
+    panel
+  );
 
 
   /* =======================================================
-     MOVE O BOTÃO EXCLUIR ORIGINAL
-
-     Mantemos exatamente o botão original,
-     para que professor.js continue sendo
-     responsável pela exclusão real.
+     MANTÉM BOTÃO ORIGINAL DE EXCLUSÃO
   ======================================================= */
 
   const deleteArea =
@@ -1144,9 +1331,10 @@ function criarFichaGerencial(
 
   if (deleteArea) {
 
-    deleteArea.appendChild(
-      deleteButton
-    );
+    deleteArea
+      .appendChild(
+        deleteButton
+      );
 
   }
 
@@ -1156,10 +1344,13 @@ function criarFichaGerencial(
   ======================================================= */
 
   button.addEventListener(
+
     "click",
+
     event => {
 
       event.preventDefault();
+
       event.stopPropagation();
 
 
@@ -1171,7 +1362,9 @@ function criarFichaGerencial(
 
       const open =
         panel.classList
-          .toggle("show");
+          .toggle(
+            "show"
+          );
 
 
       button.classList
@@ -1187,18 +1380,18 @@ function criarFichaGerencial(
           : "FICHA GERENCIAL";
 
     }
+
   );
 }
 
 
 /* =========================================================
-   CAPTURA O RESUMO ATUAL
-
-   Remove apenas os textos administrativos
-   adicionados por este módulo.
+   CAPTURA RESUMO ATUAL
 ========================================================= */
 
-function capturarResumoAtual(row) {
+function capturarResumoAtual(
+  row
+) {
 
   if (!row) {
     return "";
@@ -1206,7 +1399,9 @@ function capturarResumoAtual(row) {
 
 
   const clone =
-    row.cloneNode(true);
+    row.cloneNode(
+      true
+    );
 
 
   clone
@@ -1217,13 +1412,16 @@ function capturarResumoAtual(row) {
         ".delete-company"
       ].join(",")
     )
-    .forEach(element => {
-      element.remove();
-    });
+    .forEach(
+      element => {
+        element.remove();
+      }
+    );
 
 
   return String(
-    clone.innerText || ""
+    clone.innerText ||
+    ""
   )
     .replace(
       /FICHA GERENCIAL/gi,
@@ -1252,7 +1450,7 @@ function capturarResumoAtual(row) {
 /* =========================================================
    FECHA OUTRAS FICHAS
 
-   Mantém somente uma ficha aberta por vez.
+   Somente uma empresa aberta por vez.
 ========================================================= */
 
 function fecharOutrasFichas(
@@ -1264,46 +1462,54 @@ function fecharOutrasFichas(
     .querySelectorAll(
       ".adm360-company-detail-panel.show"
     )
-    .forEach(panel => {
+    .forEach(
+      panel => {
 
-      if (
-        panel === currentPanel
-      ) {
-        return;
+        if (
+          panel ===
+          currentPanel
+        ) {
+          return;
+        }
+
+
+        panel.classList
+          .remove(
+            "show"
+          );
+
+
+        const row =
+          panel.closest(
+            "[data-adm360-company-row]"
+          );
+
+
+        const button =
+          row?.querySelector(
+            ".adm360-company-details-btn"
+          );
+
+
+        if (
+          button &&
+          button !==
+          currentButton
+        ) {
+
+          button.classList
+            .remove(
+              "is-open"
+            );
+
+
+          button.textContent =
+            "FICHA GERENCIAL";
+
+        }
+
       }
-
-
-      panel.classList
-        .remove("show");
-
-
-      const row =
-        panel.closest(
-          "[data-adm360-company-row]"
-        );
-
-
-      const button =
-        row?.querySelector(
-          ".adm360-company-details-btn"
-        );
-
-
-      if (
-        button &&
-        button !== currentButton
-      ) {
-
-        button.classList
-          .remove("is-open");
-
-
-        button.textContent =
-          "FICHA GERENCIAL";
-
-      }
-
-    });
+    );
 }
 
 
@@ -1331,15 +1537,16 @@ function instalarProtecaoExclusao() {
 
 
       /* ===================================================
-         JÁ CONFIRMADO
+         CLIQUE JÁ AUTORIZADO
 
-         Libera uma única execução para
-         o professor.js.
+         Libera apenas uma execução
+         para o professor.js.
       =================================================== */
 
       if (
         button.dataset
-          .adm360DeleteConfirmed === "1"
+          .adm360DeleteConfirmed ===
+        "1"
       ) {
 
         delete button.dataset
@@ -1382,7 +1589,7 @@ function instalarProtecaoExclusao() {
           `da Arena e não deve ser utilizada ` +
           `durante a partida por engano.\n\n` +
 
-          `Deseja continuar para a confirmação final?`
+          `Deseja continuar?`
 
         );
 
@@ -1402,7 +1609,8 @@ function instalarProtecaoExclusao() {
           `CONFIRMAÇÃO DE SEGURANÇA\n\n` +
 
           `Para liberar a exclusão de ` +
-          `"${companyName}", digite exatamente:\n\n` +
+          `"${companyName}", ` +
+          `digite exatamente:\n\n` +
 
           `EXCLUIR`
 
@@ -1411,7 +1619,8 @@ function instalarProtecaoExclusao() {
 
       if (
         String(
-          typed || ""
+          typed ||
+          ""
         )
           .trim()
           .toUpperCase() !==
@@ -1455,7 +1664,8 @@ function instalarProtecaoExclusao() {
       =================================================== */
 
       button.dataset
-        .adm360DeleteConfirmed = "1";
+        .adm360DeleteConfirmed =
+        "1";
 
 
       button.click();
@@ -1469,10 +1679,12 @@ function instalarProtecaoExclusao() {
 
 
 /* =========================================================
-   ESCAPE DE HTML
+   ESCAPE HTML
 ========================================================= */
 
-function escapeHtml(value) {
+function escapeHtml(
+  value
+) {
 
   return String(
     value ?? ""
