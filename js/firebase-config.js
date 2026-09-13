@@ -35,12 +35,16 @@ export const FIREBASE = {
 ========================================================= */
 
 if (
-  typeof window !== "undefined"
+  typeof window !==
+  "undefined"
 ) {
 
   const page =
     String(
-      window.location.pathname || ""
+      window
+        .location
+        .pathname ||
+      ""
     )
       .split("/")
       .pop()
@@ -60,20 +64,24 @@ if (
 
 
   if (
-    timerPages.has(page)
+    timerPages.has(
+      page
+    )
   ) {
 
     import(
       "./cronometro.js"
     )
-      .catch(error => {
+      .catch(
+        error => {
 
-        console.error(
-          "ADM Arena 360 — cronômetro:",
-          error
-        );
+          console.error(
+            "ADM Arena 360 — cronômetro:",
+            error
+          );
 
-      });
+        }
+      );
 
   }
 
@@ -87,40 +95,64 @@ if (
     "professor.html"
   ) {
 
-    /*
-      Gestão compacta
-      dos componentes
-    */
+    /* =====================================================
+       NAVEGAÇÃO POR TELAS INTERNAS
+
+       Apenas visual.
+       Não altera Firebase nem dados da Arena.
+    ===================================================== */
+
+    import(
+      "./professor-pages.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — telas do professor:",
+            error
+          );
+
+        }
+      );
+
+
+    /* =====================================================
+       COMPONENTES
+    ===================================================== */
 
     import(
       "./componentes-ui.js"
     )
-      .catch(error => {
+      .catch(
+        error => {
 
-        console.error(
-          "ADM Arena 360 — interface de componentes:",
-          error
-        );
+          console.error(
+            "ADM Arena 360 — interface de componentes:",
+            error
+          );
 
-      });
+        }
+      );
 
 
-    /*
-      Núcleo Empresas:
-      detalhes + proteção de exclusão
-    */
+    /* =====================================================
+       EMPRESAS
+    ===================================================== */
 
     import(
       "./empresas-ui.js"
     )
-      .catch(error => {
+      .catch(
+        error => {
 
-        console.error(
-          "ADM Arena 360 — interface de empresas:",
-          error
-        );
+          console.error(
+            "ADM Arena 360 — interface de empresas:",
+            error
+          );
 
-      });
+        }
+      );
 
   }
 
