@@ -170,6 +170,21 @@ if (
         }
       );
 
+
+    import(
+      "./rodada11.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — Rodada 11:",
+            error
+          );
+
+        }
+      );
+
   }
 
 
