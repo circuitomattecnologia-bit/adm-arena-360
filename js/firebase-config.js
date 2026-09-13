@@ -41,9 +41,7 @@ if (
 
   const page =
     String(
-      window
-        .location
-        .pathname ||
+      window.location.pathname ||
       ""
     )
       .split("/")
@@ -87,6 +85,41 @@ if (
 
 
   /* =======================================================
+     INTELIGÊNCIA MOBILE
+     Professor + Empresa
+  ======================================================= */
+
+  const mobilePages =
+    new Set([
+      "professor.html",
+      "empresa.html"
+    ]);
+
+
+  if (
+    mobilePages.has(
+      page
+    )
+  ) {
+
+    import(
+      "./mobile-inteligencia.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — Inteligência Mobile:",
+            error
+          );
+
+        }
+      );
+
+  }
+
+
+  /* =======================================================
      PROFESSOR
   ======================================================= */
 
@@ -94,13 +127,6 @@ if (
     page ===
     "professor.html"
   ) {
-
-    /* =====================================================
-       NAVEGAÇÃO POR TELAS INTERNAS
-
-       Apenas visual.
-       Não altera Firebase nem dados da Arena.
-    ===================================================== */
 
     import(
       "./professor-pages.js"
@@ -117,10 +143,6 @@ if (
       );
 
 
-    /* =====================================================
-       COMPONENTES
-    ===================================================== */
-
     import(
       "./componentes-ui.js"
     )
@@ -135,10 +157,6 @@ if (
         }
       );
 
-
-    /* =====================================================
-       EMPRESAS
-    ===================================================== */
 
     import(
       "./empresas-ui.js"
