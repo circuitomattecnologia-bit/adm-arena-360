@@ -30,14 +30,7 @@ export const FIREBASE = {
 
 /* =========================================================
    ADM ARENA 360
-   CARREGAMENTO SEGURO DO CRONÔMETRO
-
-   O módulo é carregado SOMENTE:
-   - no painel do professor;
-   - na tela da empresa.
-
-   Não é carregado no ranking,
-   na capa ou em outras páginas.
+   CARREGAMENTO SEGURO DOS MÓDULOS COMPLEMENTARES
 ========================================================= */
 
 if (
@@ -52,6 +45,10 @@ if (
       .pop()
       .toLowerCase();
 
+
+  /* CRONÔMETRO:
+     professor + empresa
+  */
 
   const timerPages =
     new Set([
@@ -69,6 +66,27 @@ if (
 
         console.error(
           "ADM Arena 360 — cronômetro:",
+          error
+        );
+
+      });
+
+  }
+
+
+  /* GESTÃO COMPACTA DOS COMPONENTES:
+     somente professor
+  */
+
+  if (
+    page === "professor.html"
+  ) {
+
+    import("./componentes-ui.js")
+      .catch(error => {
+
+        console.error(
+          "ADM Arena 360 — interface de componentes:",
           error
         );
 
