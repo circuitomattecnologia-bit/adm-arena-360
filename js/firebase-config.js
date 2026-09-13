@@ -140,6 +140,21 @@ if (
         }
       );
 
+
+    import(
+      "./rodada9.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — Rodada 9:",
+            error
+          );
+
+        }
+      );
+
   }
 
 
@@ -211,10 +226,6 @@ if (
         }
       );
 
-
-    /* =====================================================
-       ACOMPANHAMENTO R5–R8
-    ===================================================== */
 
     import(
       "./professor-gestao-avancada.js"
