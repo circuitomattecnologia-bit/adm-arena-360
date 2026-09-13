@@ -1,7 +1,13 @@
 import { getFirebase } from "./firebase-service.js";
 
-const VIDEO_SRC = "./media/Arena_ADM_360_Abertura_v5_COMPACTADO.mp4";
-const IS_PROFESSOR = !!document.querySelector("#iniciar");
+const VIDEO_SRC =
+  "./media/Arena_ADM_360_Abertura_v5_COMPACTADO.mp4";
+
+const IS_PROFESSOR =
+  !!document.querySelector("#iniciar");
+
+const IS_EMPRESA =
+  !!document.querySelector("#nomeEmpresa");
 
 let roomCode = "";
 let unsubscribe = null;
@@ -15,47 +21,94 @@ let playButton = null;
 
 /* =========================================================
    ADM ARENA 360
-   ABERTURA + RETOMADA SEGURA + LOCALIZADOR DE ARENAS
+   ABERTURA + RETOMADA SEGURA
+   LOCALIZADOR DE ARENAS
+   GESTÃO DE COMPONENTES
 ========================================================= */
 
 
 /* =========================================================
-   CÓDIGO DA SALA
+   UTILIDADES
 ========================================================= */
+
+function snapshotValue(snap) {
+
+  return (
+    snap &&
+    typeof snap.val === "function"
+  )
+    ? snap.val()
+    : snap;
+
+}
+
 
 function normalizeCode(value) {
 
   const match =
     String(value || "")
       .toUpperCase()
-      .match(/ADM-\d{4}/);
+      .match(/\bADM-\d{4}\b/);
 
-  return match
-    ? match[0]
-    : "";
+  if (!match) {
+    return "";
+  }
+
+  if (match[0] === "ADM-0000") {
+    return "";
+  }
+
+  return match[0];
+
+}
+
+
+function normalizeName(value) {
+
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .replace(
+      /\s+/g,
+      " "
+    );
+
+}
+
+
+function escapeHtml(value) {
+
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
 }
 
 
 function detectRoomCode() {
 
+  const url =
+    new URL(location.href);
+
   const candidates = [
 
-    new URLSearchParams(
-      location.search
-    ).get("sala"),
+    url.searchParams.get("sala"),
+
+    url.searchParams.get("room"),
+
+    url.searchParams.get("codigo"),
 
     document.querySelector(
       "#codigo"
     )?.value,
-
-    document.querySelector(
-      "#codigoSala"
-    )?.value,
-
-    document.querySelector(
-      "#codigoSala"
-    )?.textContent,
 
     document.querySelector(
       "#codigoExistente"
@@ -67,21 +120,41 @@ function detectRoomCode() {
 
     document.querySelector(
       "#salaCodigo"
-    )?.textContent,
-
-    ...Array
-      .from(
-        document.querySelectorAll(
-          "input"
-        )
-      )
-      .map(
-        el => el.value
-      ),
-
-    document.body?.innerText
+    )?.textContent
 
   ];
+
+
+  const codigoWrap =
+    document.querySelector(
+      "#codigoWrap"
+    );
+
+  const codigoSala =
+    document.querySelector(
+      "#codigoSala"
+    );
+
+
+  if (
+    codigoSala &&
+    (
+      !codigoWrap ||
+      !codigoWrap.classList.contains(
+        "hidden"
+      )
+    )
+  ) {
+
+    candidates.push(
+      codigoSala.value
+    );
+
+    candidates.push(
+      codigoSala.textContent
+    );
+
+  }
 
 
   for (
@@ -90,14 +163,17 @@ function detectRoomCode() {
   ) {
 
     const code =
-      normalizeCode(
-        item
-      );
+      normalizeCode(item);
 
     if (code) {
 
       localStorage.setItem(
         "adm360:openingRoomCode",
+        code
+      );
+
+      localStorage.setItem(
+        "admArena360Room",
         code
       );
 
@@ -108,35 +184,55 @@ function detectRoomCode() {
   }
 
 
-  return normalizeCode(
+  const storageCandidates = [
 
     localStorage.getItem(
       "adm360:openingRoomCode"
+    ),
+
+    localStorage.getItem(
+      "admArena360Room"
+    ),
+
+    localStorage.getItem(
+      "admArenaRoom"
+    ),
+
+    localStorage.getItem(
+      "admArenaRoomCode"
     )
 
-  );
+  ];
+
+
+  for (
+    const item
+    of storageCandidates
+  ) {
+
+    const code =
+      normalizeCode(item);
+
+    if (code) {
+      return code;
+    }
+
+  }
+
+
+  return "";
 
 }
 
 
 /* =========================================================
-   FIREBASE — LEITURA SEGURA
+   FIREBASE
 ========================================================= */
 
-async function readRoom(code) {
-
-  const normalized =
-    normalizeCode(code);
-
-
-  if (!normalized) {
-    return null;
-  }
-
+async function getFirebaseSafe() {
 
   const f =
     await getFirebase();
-
 
   if (!f) {
 
@@ -145,6 +241,24 @@ async function readRoom(code) {
     );
 
   }
+
+  return f;
+
+}
+
+
+async function readRoom(code) {
+
+  const normalized =
+    normalizeCode(code);
+
+  if (!normalized) {
+    return null;
+  }
+
+
+  const f =
+    await getFirebaseSafe();
 
 
   const snap =
@@ -158,7 +272,10 @@ async function readRoom(code) {
     );
 
 
-  return snap?.val?.() ?? null;
+  return (
+    snapshotValue(snap) ||
+    null
+  );
 
 }
 
@@ -170,7 +287,7 @@ async function readRoom(code) {
 function ensureOverlay() {
 
   if (overlay) {
-    return;
+    return overlay;
   }
 
 
@@ -218,17 +335,12 @@ function ensureOverlay() {
         999px;
       background:
         rgba(0,0,0,.82);
-      color:
-        #fff;
+      color: #fff;
       font:
-        800 18px
-        system-ui;
-      cursor:
-        pointer;
-      display:
-        none;
-      z-index:
-        5;
+        800 18px system-ui;
+      cursor: pointer;
+      display: none;
+      z-index: 5;
     }
 
     #adm360OpeningPlay.show {
@@ -249,51 +361,41 @@ function ensureOverlay() {
       border-radius:
         999px;
       font:
-        700 12px
-        system-ui;
+        700 12px system-ui;
       letter-spacing:
         .08em;
-      pointer-events:
-        none;
+      pointer-events: none;
     }
 
 
-    /* ================================================
-       LOCALIZADOR DE ARENAS
-    ================================================= */
+    /* =============================================
+       LOCALIZADOR
+    ============================================= */
 
     #adm360RoomFinder {
-      margin-top:
-        16px;
-      padding-top:
-        16px;
+      margin-top: 16px;
+      padding-top: 16px;
       border-top:
         1px solid
         rgba(255,255,255,.12);
     }
 
     #adm360FindRoomsBtn {
-      width:
-        100%;
+      width: 100%;
     }
 
     #adm360RoomFinderResults {
-      display:
-        grid;
-      gap:
-        10px;
-      margin-top:
-        12px;
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
     }
 
     .adm360-room-card {
       border:
         1px solid
         rgba(255,255,255,.14);
-      border-radius:
-        16px;
-      padding:
-        13px;
+      border-radius: 16px;
+      padding: 13px;
       background:
         rgba(255,255,255,.045);
     }
@@ -311,55 +413,37 @@ function ensureOverlay() {
     }
 
     .adm360-room-code {
-      display:
-        block;
-      font-size:
-        1.08rem;
-      margin-bottom:
-        6px;
+      display: block;
+      font-size: 1.08rem;
+      margin-bottom: 6px;
     }
 
     .adm360-room-candidate {
-      margin-bottom:
-        8px;
-      color:
-        #ffd862;
-      font-weight:
-        900;
-      font-size:
-        .83rem;
-      letter-spacing:
-        .03em;
+      margin-bottom: 8px;
+      color: #ffd862;
+      font-weight: 900;
+      font-size: .83rem;
     }
 
     .adm360-room-meta {
-      opacity:
-        .82;
-      font-size:
-        .91rem;
-      line-height:
-        1.55;
-      margin-bottom:
-        11px;
+      opacity: .86;
+      font-size: .91rem;
+      line-height: 1.55;
+      margin-bottom: 11px;
     }
 
     .adm360-use-room {
-      width:
-        100%;
+      width: 100%;
     }
 
     .adm360-room-message {
       border:
         1px solid
         rgba(255,255,255,.14);
-      border-radius:
-        12px;
-      padding:
-        11px 12px;
+      border-radius: 12px;
+      padding: 11px 12px;
       background:
         rgba(255,255,255,.05);
-      line-height:
-        1.45;
     }
 
     .adm360-room-error {
@@ -367,6 +451,175 @@ function ensureOverlay() {
         rgba(255,80,80,.5);
       background:
         rgba(255,80,80,.08);
+    }
+
+
+    /* =============================================
+       GESTÃO DE COMPONENTES
+    ============================================= */
+
+    #adm360StudentComponents,
+    #adm360ProfessorComponents {
+      margin-top: 18px;
+      border:
+        1px solid
+        rgba(68,220,255,.25);
+      border-radius: 20px;
+      padding: 18px;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(15,38,72,.88),
+          rgba(19,25,48,.92)
+        );
+      box-shadow:
+        0 18px 50px
+        rgba(0,0,0,.16);
+    }
+
+    .adm360-components-head {
+      display: flex;
+      align-items: center;
+      justify-content:
+        space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .adm360-components-head h3 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .adm360-components-eyebrow {
+      color: #4de2ff;
+      font-weight: 900;
+      font-size: .76rem;
+      letter-spacing: .08em;
+      margin-bottom: 4px;
+    }
+
+    .adm360-members-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin:
+        10px 0 14px;
+    }
+
+    .adm360-member-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border:
+        1px solid
+        rgba(255,255,255,.14);
+      background:
+        rgba(255,255,255,.06);
+      padding:
+        8px 11px;
+      border-radius: 999px;
+      font-size: .88rem;
+    }
+
+    .adm360-add-member-form {
+      display: none;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .adm360-add-member-form.show {
+      display: grid;
+    }
+
+    .adm360-add-member-form input {
+      width: 100%;
+    }
+
+    .adm360-components-status {
+      margin-top: 10px;
+      font-size: .88rem;
+      opacity: .88;
+    }
+
+    .adm360-pending-member {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border:
+        1px solid
+        rgba(255,204,70,.32);
+      border-radius: 12px;
+      background:
+        rgba(255,204,70,.07);
+      color: #ffe18a;
+    }
+
+    .adm360-company-admin {
+      margin-top: 12px;
+      border:
+        1px solid
+        rgba(255,255,255,.10);
+      border-radius: 15px;
+      padding: 14px;
+      background:
+        rgba(255,255,255,.035);
+    }
+
+    .adm360-company-admin-title {
+      font-weight: 900;
+      margin-bottom: 9px;
+    }
+
+    .adm360-member-admin-row {
+      display: flex;
+      align-items: center;
+      justify-content:
+        space-between;
+      gap: 8px;
+      border-top:
+        1px solid
+        rgba(255,255,255,.07);
+      padding:
+        8px 0;
+    }
+
+    .adm360-member-admin-row:first-of-type {
+      border-top: 0;
+    }
+
+    .adm360-member-remove {
+      border:
+        1px solid
+        rgba(255,90,110,.45);
+      background:
+        rgba(255,90,110,.10);
+      color: #ffb6c1;
+      border-radius: 9px;
+      padding: 6px 9px;
+      cursor: pointer;
+    }
+
+    .adm360-component-request {
+      margin-top: 10px;
+      padding: 13px;
+      border:
+        1px solid
+        rgba(255,205,75,.35);
+      border-radius: 14px;
+      background:
+        rgba(255,205,75,.07);
+    }
+
+    .adm360-component-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .adm360-component-actions button {
+      flex: 1 1 160px;
     }
 
   `;
@@ -437,17 +690,13 @@ function ensureOverlay() {
 
       try {
 
-        video.muted =
-          false;
+        video.muted = false;
 
         await video.play();
 
-
         playButton
           .classList
-          .remove(
-            "show"
-          );
+          .remove("show");
 
 
         if (
@@ -470,11 +719,14 @@ function ensureOverlay() {
 
   );
 
+
+  return overlay;
+
 }
 
 
 /* =========================================================
-   MOSTRA ABERTURA
+   ABERTURA
 ========================================================= */
 
 async function showOpening(opening) {
@@ -487,22 +739,13 @@ async function showOpening(opening) {
   }
 
 
-  /*
-    A abertura somente poderá ser
-    apresentada enquanto a Arena
-    não tiver avançado além da
-    Rodada 1.
-  */
-
   const currentRound =
     Number(
       latestRoom?.round || 0
     );
 
 
-  if (
-    currentRound > 1
-  ) {
+  if (currentRound > 1) {
 
     hideOpening();
 
@@ -535,23 +778,18 @@ async function showOpening(opening) {
 
   playButton
     .classList
-    .remove(
-      "show"
-    );
+    .remove("show");
 
 
   try {
 
     video.pause();
-
-    video.currentTime =
-      0;
+    video.currentTime = 0;
 
   } catch {}
 
 
-  video.muted =
-    false;
+  video.muted = false;
 
 
   try {
@@ -560,42 +798,27 @@ async function showOpening(opening) {
 
   } catch {
 
-
-    /*
-      Alguns navegadores bloqueiam
-      reprodução automática com som.
-    */
-
     try {
 
-      video.muted =
-        true;
+      video.muted = true;
 
       await video.play();
-
 
       playButton.textContent =
         "🔊 ATIVAR SOM";
 
-
       playButton
         .classList
-        .add(
-          "show"
-        );
+        .add("show");
 
     } catch {
-
 
       playButton.textContent =
         "▶ INICIAR ABERTURA";
 
-
       playButton
         .classList
-        .add(
-          "show"
-        );
+        .add("show");
 
     }
 
@@ -605,14 +828,12 @@ async function showOpening(opening) {
   video.onended =
     async () => {
 
-      overlay.classList.remove(
-        "show"
-      );
+      overlay
+        .classList
+        .remove("show");
 
 
-      if (
-        IS_PROFESSOR
-      ) {
+      if (IS_PROFESSOR) {
 
         await finishOpening();
 
@@ -623,10 +844,6 @@ async function showOpening(opening) {
 }
 
 
-/* =========================================================
-   ESCONDE ABERTURA
-========================================================= */
-
 function hideOpening() {
 
   if (!overlay) {
@@ -634,9 +851,9 @@ function hideOpening() {
   }
 
 
-  overlay.classList.remove(
-    "show"
-  );
+  overlay
+    .classList
+    .remove("show");
 
 
   try {
@@ -649,8 +866,7 @@ function hideOpening() {
 
 
 /* =========================================================
-   PROFESSOR INICIA UMA ARENA NOVA
-   PROTEÇÃO ABSOLUTA CONTRA REINÍCIO
+   INÍCIO SEGURO
 ========================================================= */
 
 async function startOpening(code) {
@@ -668,12 +884,6 @@ async function startOpening(code) {
   }
 
 
-  /*
-    PRIMEIRO lê a sala.
-    Nenhuma escrita é realizada
-    antes desta conferência.
-  */
-
   const existingRoom =
     await readRoom(
       normalized
@@ -686,22 +896,12 @@ async function startOpening(code) {
     );
 
 
-  /*
-    REGRA PRINCIPAL:
-    se a Arena já chegou a qualquer
-    rodada, a abertura NÃO pode
-    reiniciar a partida.
-  */
-
-  if (
-    currentRound > 0
-  ) {
+  if (currentRound > 0) {
 
     throw new Error(
 
       `Esta Arena já está na Rodada ${currentRound}. ` +
-      `A abertura não será executada novamente. ` +
-      `Use RETOMAR para continuar a partida.`
+      `A abertura não será executada novamente.`
 
     );
 
@@ -709,16 +909,7 @@ async function startOpening(code) {
 
 
   const f =
-    await getFirebase();
-
-
-  if (!f) {
-
-    throw new Error(
-      "Firebase indisponível."
-    );
-
-  }
+    await getFirebaseSafe();
 
 
   const nonce =
@@ -727,24 +918,16 @@ async function startOpening(code) {
 
   const opening = {
 
-    active:
-      true,
+    active: true,
 
     nonce,
 
-    startedAt:
-      nonce,
+    startedAt: nonce,
 
-    video:
-      VIDEO_SRC
+    video: VIDEO_SRC
 
   };
 
-
-  /*
-    IMPORTANTE:
-    NÃO grava round = 0.
-  */
 
   await f.set(
 
@@ -792,9 +975,7 @@ async function finishOpening() {
 
 
   const existingRoom =
-    await readRoom(
-      code
-    );
+    await readRoom(code);
 
 
   const currentRound =
@@ -803,15 +984,7 @@ async function finishOpening() {
     );
 
 
-  /*
-    Se a Arena já avançou,
-    NÃO altera absolutamente
-    nenhuma rodada.
-  */
-
-  if (
-    currentRound > 1
-  ) {
+  if (currentRound > 1) {
 
     hideOpening();
 
@@ -821,12 +994,7 @@ async function finishOpening() {
 
 
   const f =
-    await getFirebase();
-
-
-  if (!f) {
-    return;
-  }
+    await getFirebaseSafe();
 
 
   await f.set(
@@ -865,15 +1033,7 @@ async function finishOpening() {
   );
 
 
-  /*
-    SOMENTE uma Arena realmente nova,
-    ainda sem rodada iniciada,
-    recebe Rodada 1.
-  */
-
-  if (
-    currentRound <= 0
-  ) {
+  if (currentRound <= 0) {
 
     await f.set(
 
@@ -887,6 +1047,1552 @@ async function finishOpening() {
     );
 
   }
+
+
+  hideOpening();
+
+}
+
+
+/* =========================================================
+   COMPONENTES — UTILIDADES
+========================================================= */
+
+function componentsArray(targetCompany) {
+
+  if (!targetCompany) {
+    return [];
+  }
+
+
+  const raw =
+
+    targetCompany.components ??
+
+    targetCompany.componentes ??
+
+    targetCompany.members ??
+
+    [];
+
+
+  if (Array.isArray(raw)) {
+
+    return raw
+      .map(
+        item =>
+          String(item || "")
+            .trim()
+      )
+      .filter(Boolean);
+
+  }
+
+
+  return String(raw || "")
+    .split(/[,;\n•]+/)
+    .map(
+      item =>
+        item.trim()
+    )
+    .filter(Boolean);
+
+}
+
+
+function uniqueComponents(list) {
+
+  const result = [];
+
+  const used =
+    new Set();
+
+
+  for (
+    const item
+    of list || []
+  ) {
+
+    const name =
+      String(item || "")
+        .trim();
+
+    const key =
+      normalizeName(name);
+
+
+    if (
+      !name ||
+      !key ||
+      used.has(key)
+    ) {
+      continue;
+    }
+
+
+    used.add(key);
+
+    result.push(name);
+
+  }
+
+
+  return result;
+
+}
+
+
+function companyEntries(room) {
+
+  return Object.entries(
+    room?.companies || {}
+  );
+
+}
+
+
+function findStudentCompany(room) {
+
+  const visibleName =
+
+    document.querySelector(
+      "#empresaNome"
+    )?.textContent?.trim() ||
+
+    document.querySelector(
+      "#nomeEmpresa"
+    )?.value?.trim() ||
+
+    "";
+
+
+  const normalized =
+    normalizeName(
+      visibleName
+    );
+
+
+  if (
+    !normalized ||
+    normalized === "-"
+  ) {
+    return null;
+  }
+
+
+  const match =
+    companyEntries(room)
+      .find(
+        ([, company]) =>
+          normalizeName(
+            company?.name
+          ) === normalized
+      );
+
+
+  if (!match) {
+    return null;
+  }
+
+
+  return {
+
+    id:
+      match[0],
+
+    company:
+      match[1]
+
+  };
+
+}
+
+
+function componentRequests(room) {
+
+  return Object.entries(
+    room?.componentRequests || {}
+  );
+
+}
+
+
+/* =========================================================
+   COMPONENTES — EMPRESA
+========================================================= */
+
+function installStudentComponents() {
+
+  if (
+    !IS_EMPRESA ||
+    document.querySelector(
+      "#adm360StudentComponents"
+    )
+  ) {
+    return;
+  }
+
+
+  const game =
+    document.querySelector(
+      "#jogo"
+    );
+
+
+  if (!game) {
+    return;
+  }
+
+
+  const box =
+    document.createElement(
+      "section"
+    );
+
+
+  box.id =
+    "adm360StudentComponents";
+
+
+  box.innerHTML = `
+
+    <div
+      class="adm360-components-head"
+    >
+
+      <div>
+
+        <div
+          class="adm360-components-eyebrow"
+        >
+          EQUIPE DA EMPRESA
+        </div>
+
+        <h3>
+          👥 COMPONENTES DA EMPRESA
+        </h3>
+
+      </div>
+
+      <button
+        type="button"
+        id="adm360ShowMemberForm"
+        class="ghost"
+      >
+        ➕ INCLUIR COMPONENTE
+      </button>
+
+    </div>
+
+
+    <div
+      id="adm360StudentMembers"
+      class="adm360-members-list"
+    ></div>
+
+
+    <div
+      id="adm360AddMemberForm"
+      class="adm360-add-member-form"
+    >
+
+      <input
+        id="adm360NewMemberName"
+        type="text"
+        autocomplete="off"
+        placeholder="Nome do novo estudante"
+      >
+
+      <button
+        type="button"
+        id="adm360SendMemberRequest"
+      >
+        📤 ENVIAR SOLICITAÇÃO
+      </button>
+
+      <button
+        type="button"
+        id="adm360CancelMemberRequest"
+        class="ghost"
+      >
+        CANCELAR
+      </button>
+
+    </div>
+
+
+    <div
+      id="adm360StudentComponentStatus"
+      class="adm360-components-status"
+    ></div>
+
+  `;
+
+
+  const header =
+    game.querySelector(
+      ".company-header"
+    );
+
+
+  if (header) {
+
+    header.insertAdjacentElement(
+      "afterend",
+      box
+    );
+
+  } else {
+
+    game.prepend(box);
+
+  }
+
+
+  box
+    .querySelector(
+      "#adm360ShowMemberForm"
+    )
+    ?.addEventListener(
+
+      "click",
+
+      () => {
+
+        box
+          .querySelector(
+            "#adm360AddMemberForm"
+          )
+          ?.classList
+          .toggle("show");
+
+        box
+          .querySelector(
+            "#adm360NewMemberName"
+          )
+          ?.focus();
+
+      }
+
+    );
+
+
+  box
+    .querySelector(
+      "#adm360CancelMemberRequest"
+    )
+    ?.addEventListener(
+
+      "click",
+
+      () => {
+
+        box
+          .querySelector(
+            "#adm360AddMemberForm"
+          )
+          ?.classList
+          .remove("show");
+
+      }
+
+    );
+
+
+  box
+    .querySelector(
+      "#adm360SendMemberRequest"
+    )
+    ?.addEventListener(
+
+      "click",
+
+      sendComponentRequest
+
+    );
+
+}
+
+
+function renderStudentComponents() {
+
+  if (!IS_EMPRESA) {
+    return;
+  }
+
+
+  installStudentComponents();
+
+
+  const membersBox =
+    document.querySelector(
+      "#adm360StudentMembers"
+    );
+
+
+  const statusBox =
+    document.querySelector(
+      "#adm360StudentComponentStatus"
+    );
+
+
+  const addButton =
+    document.querySelector(
+      "#adm360ShowMemberForm"
+    );
+
+
+  if (
+    !membersBox ||
+    !statusBox
+  ) {
+    return;
+  }
+
+
+  const match =
+    findStudentCompany(
+      latestRoom
+    );
+
+
+  if (!match) {
+
+    membersBox.innerHTML = "";
+
+    statusBox.textContent =
+      "Entre na empresa para visualizar a equipe.";
+
+    return;
+
+  }
+
+
+  const members =
+    uniqueComponents(
+      componentsArray(
+        match.company
+      )
+    );
+
+
+  membersBox.innerHTML =
+
+    members.length
+
+      ? members
+          .map(
+            name => `
+
+              <span
+                class="adm360-member-pill"
+              >
+                👤 ${escapeHtml(name)}
+              </span>
+
+            `
+          )
+          .join("")
+
+      : `
+
+          <span
+            class="adm360-member-pill"
+          >
+            Nenhum componente informado
+          </span>
+
+        `;
+
+
+  const requests =
+    componentRequests(
+      latestRoom
+    )
+      .filter(
+        ([, request]) =>
+          request?.companyId ===
+            match.id &&
+          request?.status ===
+            "pending"
+      );
+
+
+  if (requests.length) {
+
+    statusBox.innerHTML =
+
+      requests
+        .map(
+          ([, request]) => `
+
+            <div
+              class="adm360-pending-member"
+            >
+              ⏳ Inclusão de
+              <strong>
+                ${escapeHtml(
+                  request.componentName
+                )}
+              </strong>
+              aguardando aprovação
+              do professor.
+            </div>
+
+          `
+        )
+        .join("");
+
+  } else {
+
+    statusBox.textContent =
+      "Para acrescentar outro estudante, envie uma solicitação ao professor.";
+
+  }
+
+
+  if (addButton) {
+
+    addButton.disabled =
+      latestRoom?.status ===
+      "Pausado";
+
+    addButton.title =
+      latestRoom?.status ===
+      "Pausado"
+        ? "A Arena está pausada."
+        : "";
+
+  }
+
+}
+
+
+async function sendComponentRequest() {
+
+  const code =
+    roomCode ||
+    detectRoomCode();
+
+
+  if (!code) {
+
+    alert(
+      "Sala não identificada."
+    );
+
+    return;
+
+  }
+
+
+  const freshRoom =
+    await readRoom(code);
+
+
+  if (!freshRoom) {
+
+    alert(
+      "Sala não encontrada."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    freshRoom.status ===
+    "Pausado"
+  ) {
+
+    alert(
+      "A Arena está pausada. A inclusão poderá ser solicitada quando a partida for retomada."
+    );
+
+    return;
+
+  }
+
+
+  const match =
+    findStudentCompany(
+      freshRoom
+    );
+
+
+  if (!match) {
+
+    alert(
+      "Empresa não identificada."
+    );
+
+    return;
+
+  }
+
+
+  const input =
+    document.querySelector(
+      "#adm360NewMemberName"
+    );
+
+
+  const componentName =
+    String(
+      input?.value || ""
+    )
+      .trim();
+
+
+  if (
+    componentName.length < 2
+  ) {
+
+    alert(
+      "Informe o nome do estudante."
+    );
+
+    input?.focus();
+
+    return;
+
+  }
+
+
+  const existingMembers =
+    uniqueComponents(
+      componentsArray(
+        match.company
+      )
+    );
+
+
+  const alreadyExists =
+    existingMembers
+      .some(
+        item =>
+          normalizeName(item) ===
+          normalizeName(
+            componentName
+          )
+      );
+
+
+  if (alreadyExists) {
+
+    alert(
+      "Esse estudante já está cadastrado nesta empresa."
+    );
+
+    return;
+
+  }
+
+
+  const duplicatePending =
+    componentRequests(
+      freshRoom
+    )
+      .some(
+        ([, request]) =>
+
+          request?.companyId ===
+            match.id &&
+
+          request?.status ===
+            "pending" &&
+
+          normalizeName(
+            request.componentName
+          ) ===
+          normalizeName(
+            componentName
+          )
+
+      );
+
+
+  if (duplicatePending) {
+
+    alert(
+      "Já existe uma solicitação pendente para esse estudante."
+    );
+
+    return;
+
+  }
+
+
+  const requestId =
+    `component-${match.id}-${Date.now()}`;
+
+
+  const request = {
+
+    id:
+      requestId,
+
+    companyId:
+      match.id,
+
+    companyName:
+      match.company?.name ||
+      match.id,
+
+    componentName,
+
+    status:
+      "pending",
+
+    requestedAt:
+      Date.now(),
+
+    requestedRound:
+      Number(
+        freshRoom.round || 0
+      ),
+
+    requestedBy:
+      "empresa"
+
+  };
+
+
+  const f =
+    await getFirebaseSafe();
+
+
+  await f.set(
+
+    f.ref(
+      f.db,
+      `rooms/${code}/componentRequests/${requestId}`
+    ),
+
+    request
+
+  );
+
+
+  if (input) {
+    input.value = "";
+  }
+
+
+  document
+    .querySelector(
+      "#adm360AddMemberForm"
+    )
+    ?.classList
+    .remove("show");
+
+
+  alert(
+    `Solicitação enviada ao professor para incluir ${componentName}.`
+  );
+
+}
+
+
+/* =========================================================
+   COMPONENTES — PROFESSOR
+========================================================= */
+
+function installProfessorComponents() {
+
+  if (
+    !IS_PROFESSOR ||
+    document.querySelector(
+      "#adm360ProfessorComponents"
+    )
+  ) {
+    return;
+  }
+
+
+  const main =
+    document.querySelector(
+      "main"
+    ) ||
+    document.querySelector(
+      ".shell"
+    ) ||
+    document.body;
+
+
+  const box =
+    document.createElement(
+      "section"
+    );
+
+
+  box.id =
+    "adm360ProfessorComponents";
+
+
+  box.className =
+    "card glass";
+
+
+  box.innerHTML = `
+
+    <div
+      class="adm360-components-head"
+    >
+
+      <div>
+
+        <div
+          class="adm360-components-eyebrow"
+        >
+          GESTÃO DAS EQUIPES
+        </div>
+
+        <h3>
+          👥 COMPONENTES DAS EMPRESAS
+        </h3>
+
+      </div>
+
+      <span>
+        Inclusões e ajustes sem alterar
+        o progresso da empresa
+      </span>
+
+    </div>
+
+
+    <div
+      id="adm360ProfessorComponentRequests"
+    ></div>
+
+
+    <div
+      id="adm360ProfessorCompanies"
+    ></div>
+
+  `;
+
+
+  main.appendChild(
+    box
+  );
+
+}
+
+
+function renderProfessorComponents() {
+
+  if (!IS_PROFESSOR) {
+    return;
+  }
+
+
+  installProfessorComponents();
+
+
+  const requestsBox =
+    document.querySelector(
+      "#adm360ProfessorComponentRequests"
+    );
+
+
+  const companiesBox =
+    document.querySelector(
+      "#adm360ProfessorCompanies"
+    );
+
+
+  if (
+    !requestsBox ||
+    !companiesBox
+  ) {
+    return;
+  }
+
+
+  if (
+    !latestRoom ||
+    !roomCode
+  ) {
+
+    requestsBox.innerHTML = `
+
+      <div
+        class="adm360-room-message"
+      >
+        Acesse uma Arena para
+        administrar os componentes.
+      </div>
+
+    `;
+
+    companiesBox.innerHTML = "";
+
+    return;
+
+  }
+
+
+  const pending =
+    componentRequests(
+      latestRoom
+    )
+      .filter(
+        ([, request]) =>
+          request?.status ===
+          "pending"
+      )
+      .sort(
+        (a, b) =>
+          Number(
+            a[1]?.requestedAt || 0
+          ) -
+          Number(
+            b[1]?.requestedAt || 0
+          )
+      );
+
+
+  if (pending.length) {
+
+    requestsBox.innerHTML = `
+
+      <div
+        class="adm360-components-eyebrow"
+      >
+        SOLICITAÇÕES PENDENTES
+      </div>
+
+      ${
+        pending
+          .map(
+            ([requestId, request]) => `
+
+              <div
+                class="adm360-component-request"
+              >
+
+                <strong>
+                  🏢 ${escapeHtml(
+                    request.companyName
+                  )}
+                </strong>
+
+                <div>
+                  👤 Novo componente:
+                  <strong>
+                    ${escapeHtml(
+                      request.componentName
+                    )}
+                  </strong>
+                </div>
+
+                <small>
+                  Solicitação feita na
+                  Rodada
+                  ${
+                    Number(
+                      request.requestedRound ||
+                      latestRoom.round ||
+                      0
+                    )
+                  }
+                </small>
+
+                <div
+                  class="adm360-component-actions"
+                >
+
+                  <button
+                    type="button"
+                    class="adm360ApproveComponent"
+                    data-request-id="${escapeHtml(
+                      requestId
+                    )}"
+                  >
+                    ✅ APROVAR
+                  </button>
+
+                  <button
+                    type="button"
+                    class="adm360DenyComponent ghost"
+                    data-request-id="${escapeHtml(
+                      requestId
+                    )}"
+                  >
+                    ❌ NEGAR
+                  </button>
+
+                </div>
+
+              </div>
+
+            `
+          )
+          .join("")
+      }
+
+    `;
+
+  } else {
+
+    requestsBox.innerHTML = `
+
+      <div
+        class="adm360-room-message"
+      >
+        ✅ Nenhuma solicitação
+        de inclusão pendente.
+      </div>
+
+    `;
+
+  }
+
+
+  requestsBox
+    .querySelectorAll(
+      ".adm360ApproveComponent"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          () =>
+            respondComponentRequest(
+              button.dataset.requestId,
+              true
+            );
+
+      }
+    );
+
+
+  requestsBox
+    .querySelectorAll(
+      ".adm360DenyComponent"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          () =>
+            respondComponentRequest(
+              button.dataset.requestId,
+              false
+            );
+
+      }
+    );
+
+
+  const entries =
+    companyEntries(
+      latestRoom
+    );
+
+
+  companiesBox.innerHTML = `
+
+    <div
+      class="adm360-components-eyebrow"
+      style="margin-top:18px"
+    >
+      EMPRESAS E COMPONENTES
+    </div>
+
+    ${
+      entries.length
+
+        ? entries
+            .map(
+              ([companyId, company]) => {
+
+                const members =
+                  uniqueComponents(
+                    componentsArray(
+                      company
+                    )
+                  );
+
+
+                return `
+
+                  <div
+                    class="adm360-company-admin"
+                  >
+
+                    <div
+                      class="adm360-company-admin-title"
+                    >
+                      🏢 ${escapeHtml(
+                        company?.name ||
+                        companyId
+                      )}
+                    </div>
+
+                    ${
+                      members.length
+
+                        ? members
+                            .map(
+                              member => `
+
+                                <div
+                                  class="adm360-member-admin-row"
+                                >
+
+                                  <span>
+                                    👤 ${escapeHtml(member)}
+                                  </span>
+
+                                  <button
+                                    type="button"
+                                    class="adm360-member-remove"
+                                    data-company-id="${escapeHtml(
+                                      companyId
+                                    )}"
+                                    data-member="${escapeHtml(
+                                      member
+                                    )}"
+                                  >
+                                    RETIRAR
+                                  </button>
+
+                                </div>
+
+                              `
+                            )
+                            .join("")
+
+                        : `
+
+                            <div
+                              class="adm360-components-status"
+                            >
+                              Nenhum componente
+                              informado.
+                            </div>
+
+                          `
+                    }
+
+                    <div
+                      class="adm360-component-actions"
+                    >
+
+                      <button
+                        type="button"
+                        class="adm360ProfessorAddMember ghost"
+                        data-company-id="${escapeHtml(
+                          companyId
+                        )}"
+                      >
+                        ➕ INCLUIR COMPONENTE
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                `;
+
+              }
+            )
+            .join("")
+
+        : `
+
+            <div
+              class="adm360-room-message"
+            >
+              Nenhuma empresa cadastrada.
+            </div>
+
+          `
+    }
+
+  `;
+
+
+  companiesBox
+    .querySelectorAll(
+      ".adm360ProfessorAddMember"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          () =>
+            professorAddComponent(
+              button.dataset.companyId
+            );
+
+      }
+    );
+
+
+  companiesBox
+    .querySelectorAll(
+      ".adm360-member-remove"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          () =>
+            professorRemoveComponent(
+
+              button.dataset.companyId,
+
+              button.dataset.member
+
+            );
+
+      }
+    );
+
+}
+
+
+async function respondComponentRequest(
+  requestId,
+  approve
+) {
+
+  const code =
+    roomCode ||
+    detectRoomCode();
+
+
+  if (
+    !code ||
+    !requestId
+  ) {
+    return;
+  }
+
+
+  const freshRoom =
+    await readRoom(code);
+
+
+  const request =
+    freshRoom
+      ?.componentRequests
+      ?.[requestId];
+
+
+  if (!request) {
+
+    alert(
+      "Solicitação não encontrada."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    request.status !==
+    "pending"
+  ) {
+
+    alert(
+      "Esta solicitação já foi respondida."
+    );
+
+    return;
+
+  }
+
+
+  const company =
+    freshRoom
+      ?.companies
+      ?.[request.companyId];
+
+
+  if (!company) {
+
+    alert(
+      "Empresa não encontrada."
+    );
+
+    return;
+
+  }
+
+
+  const f =
+    await getFirebaseSafe();
+
+
+  if (approve) {
+
+    const members =
+      uniqueComponents([
+
+        ...componentsArray(
+          company
+        ),
+
+        request.componentName
+
+      ]);
+
+
+    await f.set(
+
+      f.ref(
+        f.db,
+        `rooms/${code}/companies/${request.companyId}/components`
+      ),
+
+      members
+
+    );
+
+  }
+
+
+  await f.set(
+
+    f.ref(
+      f.db,
+      `rooms/${code}/componentRequests/${requestId}/status`
+    ),
+
+    approve
+      ? "approved"
+      : "denied"
+
+  );
+
+
+  await f.set(
+
+    f.ref(
+      f.db,
+      `rooms/${code}/componentRequests/${requestId}/respondedAt`
+    ),
+
+    Date.now()
+
+  );
+
+
+  await f.set(
+
+    f.ref(
+      f.db,
+      `rooms/${code}/componentRequests/${requestId}/respondedBy`
+    ),
+
+    "Prof. Leopoldo"
+
+  );
+
+
+  alert(
+
+    approve
+
+      ? `Componente ${request.componentName} incluído com sucesso.`
+
+      : `Solicitação de ${request.componentName} negada.`
+
+  );
+
+}
+
+
+async function professorAddComponent(
+  companyId
+) {
+
+  const code =
+    roomCode ||
+    detectRoomCode();
+
+
+  const freshRoom =
+    await readRoom(code);
+
+
+  const company =
+    freshRoom
+      ?.companies
+      ?.[companyId];
+
+
+  if (!company) {
+
+    alert(
+      "Empresa não encontrada."
+    );
+
+    return;
+
+  }
+
+
+  const name =
+    prompt(
+
+      `Novo componente da empresa ${company.name}:`
+
+    );
+
+
+  const componentName =
+    String(name || "")
+      .trim();
+
+
+  if (!componentName) {
+    return;
+  }
+
+
+  const members =
+    uniqueComponents(
+
+      componentsArray(
+        company
+      )
+
+    );
+
+
+  if (
+
+    members.some(
+      member =>
+        normalizeName(member) ===
+        normalizeName(
+          componentName
+        )
+    )
+
+  ) {
+
+    alert(
+      "Esse estudante já pertence à empresa."
+    );
+
+    return;
+
+  }
+
+
+  members.push(
+    componentName
+  );
+
+
+  const f =
+    await getFirebaseSafe();
+
+
+  await f.set(
+
+    f.ref(
+      f.db,
+      `rooms/${code}/companies/${companyId}/components`
+    ),
+
+    members
+
+  );
+
+
+  alert(
+    `${componentName} foi incluído na empresa ${company.name}.`
+  );
+
+}
+
+
+async function professorRemoveComponent(
+  companyId,
+  memberName
+) {
+
+  const code =
+    roomCode ||
+    detectRoomCode();
+
+
+  const freshRoom =
+    await readRoom(code);
+
+
+  const company =
+    freshRoom
+      ?.companies
+      ?.[companyId];
+
+
+  if (!company) {
+    return;
+  }
+
+
+  const confirmed =
+    confirm(
+
+      `Retirar ${memberName} da empresa ${company.name}?\n\n` +
+      `Esta ação altera somente a lista de componentes. ` +
+      `O progresso da empresa será preservado.`
+
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const members =
+    uniqueComponents(
+
+      componentsArray(
+        company
+      )
+
+    )
+      .filter(
+        member =>
+          normalizeName(member) !==
+          normalizeName(
+            memberName
+          )
+      );
+
+
+  const f =
+    await getFirebaseSafe();
+
+
+  await f.set(
+
+    f.ref(
+      f.db,
+      `rooms/${code}/companies/${companyId}/components`
+    ),
+
+    members
+
+  );
+
+
+  alert(
+    `${memberName} foi retirado da lista de componentes.`
+  );
 
 }
 
@@ -924,9 +2630,13 @@ async function subscribeToRoom(code) {
   );
 
 
-  if (
-    unsubscribe
-  ) {
+  localStorage.setItem(
+    "admArena360Room",
+    roomCode
+  );
+
+
+  if (unsubscribe) {
 
     try {
 
@@ -938,12 +2648,7 @@ async function subscribeToRoom(code) {
 
 
   const f =
-    await getFirebase();
-
-
-  if (!f) {
-    return;
-  }
+    await getFirebaseSafe();
 
 
   unsubscribe =
@@ -957,7 +2662,7 @@ async function subscribeToRoom(code) {
       snap => {
 
         const room =
-          snap.val();
+          snapshotValue(snap);
 
 
         latestRoom =
@@ -970,12 +2675,6 @@ async function subscribeToRoom(code) {
           );
 
 
-        /*
-          Não permite que a abertura
-          apareça novamente numa Arena
-          já avançada.
-        */
-
         if (
           room?.opening?.active &&
           currentRound <= 1
@@ -985,13 +2684,16 @@ async function subscribeToRoom(code) {
             room.opening
           );
 
-        } else if (
-          currentNonce
-        ) {
+        } else {
 
           hideOpening();
 
         }
+
+
+        renderStudentComponents();
+
+        renderProfessorComponents();
 
       }
 
@@ -1001,7 +2703,7 @@ async function subscribeToRoom(code) {
 
 
 /* =========================================================
-   BOTÃO INICIAR / RETOMAR DO PROFESSOR
+   BOTÃO INICIAR / RETOMAR
 ========================================================= */
 
 function installProfessorStart() {
@@ -1015,6 +2717,20 @@ function installProfessorStart() {
   if (!startBtn) {
     return;
   }
+
+
+  if (
+    startBtn.dataset
+      .admGuardInstalled ===
+      "1"
+  ) {
+    return;
+  }
+
+
+  startBtn.dataset
+    .admGuardInstalled =
+    "1";
 
 
   startBtn.addEventListener(
@@ -1032,12 +2748,6 @@ function installProfessorStart() {
       }
 
 
-      /*
-        Intercepta o clique para
-        impedir que outra lógica
-        possa reiniciar a partida.
-      */
-
       event.preventDefault();
 
       event.stopImmediatePropagation();
@@ -1045,51 +2755,26 @@ function installProfessorStart() {
 
       try {
 
-        roomCode =
-          code;
-
-
-        const room =
-          await readRoom(
-            code
-          );
+        const existingRoom =
+          await readRoom(code);
 
 
         latestRoom =
-          room || null;
+          existingRoom || null;
 
 
         const currentRound =
           Number(
-            room?.round || 0
+            existingRoom?.round || 0
           );
 
-
-        /*
-          ARENA EXISTENTE:
-          apenas altera status
-          para "Em andamento".
-          Rodada, caixa, XP,
-          decisões, eventos,
-          empresas e progresso
-          são preservados.
-        */
 
         if (
           currentRound > 0
         ) {
 
           const f =
-            await getFirebase();
-
-
-          if (!f) {
-
-            throw new Error(
-              "Firebase indisponível."
-            );
-
-          }
+            await getFirebaseSafe();
 
 
           await f.set(
@@ -1111,7 +2796,7 @@ function installProfessorStart() {
 
           alert(
 
-            `Arena retomada com segurança na Rodada ${currentRound}. ` +
+            `Arena ${code} retomada na Rodada ${currentRound}/16. ` +
             `Nenhum progresso foi reiniciado.`
 
           );
@@ -1121,11 +2806,6 @@ function installProfessorStart() {
 
         }
 
-
-        /*
-          ARENA NOVA:
-          executa abertura.
-        */
 
         await subscribeToRoom(
           code
@@ -1149,7 +2829,8 @@ function installProfessorStart() {
 
         alert(
 
-          "Erro ao iniciar/retomar a Arena: " +
+          "Não foi possível iniciar/retomar a Arena. " +
+          "Nenhum progresso foi alterado.\n\n" +
           error.message
 
         );
@@ -1206,19 +2887,13 @@ function roomCompanyCount(room) {
 
 
 /* =========================================================
-   INSTALA LOCALIZADOR NO PAINEL
+   LOCALIZADOR DE ARENAS
 ========================================================= */
 
 function installRoomFinder() {
 
   if (
-    !IS_PROFESSOR
-  ) {
-    return;
-  }
-
-
-  if (
+    !IS_PROFESSOR ||
     document.querySelector(
       "#adm360RoomFinder"
     )
@@ -1279,17 +2954,15 @@ function installRoomFinder() {
       "#adm360FindRoomsBtn"
     )
     ?.addEventListener(
+
       "click",
+
       findRooms
+
     );
 
 }
 
-
-/* =========================================================
-   LOCALIZA ARENAS
-   SOMENTE LEITURA
-========================================================= */
 
 async function findRooms() {
 
@@ -1312,7 +2985,9 @@ async function findRooms() {
 
   results.innerHTML = `
 
-    <div class="adm360-room-message">
+    <div
+      class="adm360-room-message"
+    >
       🔎 Consultando Arenas salvas...
     </div>
 
@@ -1327,24 +3002,8 @@ async function findRooms() {
   try {
 
     const f =
-      await getFirebase();
+      await getFirebaseSafe();
 
-
-    if (!f) {
-
-      throw new Error(
-        "Firebase indisponível."
-      );
-
-    }
-
-
-    /*
-      SOMENTE LEITURA.
-      Não existe set(), patch(),
-      remove() ou qualquer escrita
-      nesta rotina.
-    */
 
     const snap =
       await f.get(
@@ -1358,14 +3017,14 @@ async function findRooms() {
 
 
     const roomsData =
-      snap?.val?.() || {};
+      snapshotValue(snap) ||
+      {};
 
 
     const rooms =
-      Object
-        .entries(
-          roomsData
-        )
+      Object.entries(
+        roomsData
+      )
         .filter(
           ([code]) =>
             /^ADM-\d{4}$/
@@ -1409,13 +3068,6 @@ async function findRooms() {
                 status
               );
 
-
-            /*
-              Prioridade para:
-              Rodada 4
-              + 6 empresas
-              + pausada.
-            */
 
             const score =
 
@@ -1463,32 +3115,13 @@ async function findRooms() {
           }
         )
         .sort(
-          (a, b) => {
-
-            if (
-              b.score !== a.score
-            ) {
-
-              return (
-                b.score -
-                a.score
-              );
-
-            }
-
-
-            return (
-              b.round -
-              a.round
-            );
-
-          }
+          (a, b) =>
+            b.score -
+            a.score
         );
 
 
-    if (
-      !rooms.length
-    ) {
+    if (!rooms.length) {
 
       results.innerHTML = `
 
@@ -1504,7 +3137,6 @@ async function findRooms() {
         </div>
 
       `;
-
 
       return;
 
@@ -1533,15 +3165,6 @@ async function findRooms() {
           }`;
 
 
-        const actionLabel =
-
-          item.likely
-
-            ? "⭐ USAR ESTA"
-
-            : "USAR ESTA SALA";
-
-
         card.innerHTML = `
 
           ${
@@ -1560,7 +3183,9 @@ async function findRooms() {
           <strong
             class="adm360-room-code"
           >
-            ${item.code}
+            ${escapeHtml(
+              item.code
+            )}
           </strong>
 
           <div
@@ -1569,7 +3194,9 @@ async function findRooms() {
 
             <div>
               <b>Turma:</b>
-              ${item.className}
+              ${escapeHtml(
+                item.className
+              )}
             </div>
 
             <div>
@@ -1579,7 +3206,9 @@ async function findRooms() {
 
             <div>
               <b>Situação:</b>
-              ${item.status}
+              ${escapeHtml(
+                item.status
+              )}
             </div>
 
             <div>
@@ -1596,7 +3225,11 @@ async function findRooms() {
               adm360-use-room
             "
           >
-            ${actionLabel}
+            ${
+              item.likely
+                ? "⭐ USAR ESTA"
+                : "USAR ESTA SALA"
+            }
           </button>
 
         `;
@@ -1624,14 +3257,6 @@ async function findRooms() {
                 );
 
 
-              /*
-                SOMENTE PREENCHE
-                O CÓDIGO.
-
-                NÃO entra sem senha.
-                NÃO escreve no Firebase.
-              */
-
               if (input) {
 
                 input.value =
@@ -1644,9 +3269,22 @@ async function findRooms() {
                 item.code;
 
 
+              latestRoom =
+                item.room;
+
+
               localStorage.setItem(
 
                 "adm360:openingRoomCode",
+
+                item.code
+
+              );
+
+
+              localStorage.setItem(
+
+                "admArena360Room",
 
                 item.code
 
@@ -1701,12 +3339,12 @@ async function findRooms() {
           as Arenas salvas.
         </strong>
 
-        <br>
+        <br><br>
 
-        ${
+        ${escapeHtml(
           error?.message ||
           "Erro desconhecido."
-        }
+        )}
 
         <br><br>
 
@@ -1728,7 +3366,7 @@ async function findRooms() {
 
 
 /* =========================================================
-   BOTÃO TELÃO / RANKING
+   RANKING
 ========================================================= */
 
 function installRankingButton() {
@@ -1828,7 +3466,7 @@ function installRankingButton() {
 
 
 /* =========================================================
-   INICIAR SISTEMA
+   BOOT
 ========================================================= */
 
 function boot() {
@@ -1841,6 +3479,10 @@ function boot() {
 
   installRoomFinder();
 
+  installStudentComponents();
+
+  installProfessorComponents();
+
 
   const scan =
     () => {
@@ -1849,13 +3491,24 @@ function boot() {
         detectRoomCode();
 
 
-      if (code) {
+      if (
+        code &&
+        (
+          code !== roomCode ||
+          !unsubscribe
+        )
+      ) {
 
         subscribeToRoom(
           code
         );
 
       }
+
+
+      renderStudentComponents();
+
+      renderProfessorComponents();
 
     };
 
@@ -1865,7 +3518,7 @@ function boot() {
 
   setInterval(
     scan,
-    500
+    700
   );
 
 }
