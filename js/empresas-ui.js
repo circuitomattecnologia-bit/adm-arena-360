@@ -7,22 +7,21 @@
 
    MÓDULO VISUAL / ADMINISTRATIVO
 
-   IMPORTANTE:
-   - NÃO LÊ FIREBASE
-   - NÃO GRAVA FIREBASE
-   - NÃO ALTERA RODADA
-   - NÃO ALTERA CAIXA
-   - NÃO ALTERA XP
-   - NÃO ALTERA CLIENTES
-   - NÃO ALTERA REPUTAÇÃO
-   - NÃO ALTERA RECURSOS
-   - NÃO ALTERA EMPRESAS
+   NÃO LÊ FIREBASE
+   NÃO GRAVA FIREBASE
+   NÃO ALTERA RODADA
+   NÃO ALTERA CAIXA
+   NÃO ALTERA XP
+   NÃO ALTERA CLIENTES
+   NÃO ALTERA REPUTAÇÃO
+   NÃO ALTERA RECURSOS
+   NÃO ALTERA EMPRESAS
 
    FUNÇÕES:
    1. Ficha Gerencial individual.
    2. Abertura em largura total da linha.
-   3. Visão atual da empresa.
-   4. Estrutura preparada para histórico futuro.
+   3. Visão atual compacta.
+   4. Estrutura para histórico futuro.
    5. Proteção forte contra exclusão acidental.
 ========================================================= */
 
@@ -134,12 +133,6 @@ function instalarEstilo() {
 
     /* =====================================================
        FICHA GERENCIAL
-
-       CORREÇÃO PRINCIPAL:
-       grid-column: 1 / -1
-
-       Isso obriga a ficha a ocupar TODAS
-       as colunas da linha da empresa.
     ===================================================== */
 
     .adm360-company-detail-panel {
@@ -362,7 +355,7 @@ function instalarEstilo() {
 
 
     /* =====================================================
-       VISÃO ATUAL
+       VISÃO ATUAL — COMPACTA
     ===================================================== */
 
     .adm360-company-current {
@@ -376,7 +369,7 @@ function instalarEstilo() {
         20px;
 
       padding:
-        15px 17px;
+        13px 14px;
 
       border-radius:
         14px;
@@ -390,22 +383,66 @@ function instalarEstilo() {
     }
 
 
-    .adm360-company-current-text {
+    .adm360-company-current-grid {
+
+      width: 100%;
+
+      display: flex;
+
+      align-items:
+        stretch;
+
+      flex-wrap: wrap;
+
+      gap: 8px;
+    }
+
+
+    .adm360-company-current-item {
+
+      flex:
+        1 1 145px;
+
+      min-width:
+        120px;
+
+      max-width:
+        260px;
+
+      box-sizing:
+        border-box;
+
+      padding:
+        9px 11px;
+
+      border-radius:
+        10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.075);
+
+      background:
+        rgba(255,255,255,.025);
 
       color:
         rgba(255,255,255,.84);
 
       font-size:
-        .88rem;
+        .78rem;
 
       line-height:
-        1.65;
-
-      white-space:
-        pre-line;
+        1.35;
 
       word-break:
         break-word;
+    }
+
+
+    .adm360-company-current-item:first-child {
+
+      border-color:
+        rgba(92,183,255,.18);
     }
 
 
@@ -695,6 +732,7 @@ function instalarEstilo() {
     ===================================================== */
 
     .delete-company {
+
       display:
         none !important;
     }
@@ -754,6 +792,22 @@ function instalarEstilo() {
       }
 
 
+      .adm360-company-current-grid {
+
+        display: grid;
+
+        grid-template-columns:
+          1fr 1fr;
+      }
+
+
+      .adm360-company-current-item {
+
+        max-width:
+          none;
+      }
+
+
       .adm360-company-sheet-body {
 
         padding:
@@ -768,6 +822,17 @@ function instalarEstilo() {
 
         align-items:
           stretch;
+      }
+
+    }
+
+
+    @media(max-width:480px) {
+
+      .adm360-company-current-grid {
+
+        grid-template-columns:
+          1fr;
       }
 
     }
@@ -976,15 +1041,13 @@ function criarFichaGerencial(
     "FICHA GERENCIAL";
 
 
-  /* =======================================================
-     CAPTURA APENAS DADOS JÁ VISÍVEIS
+  /*
+    Captura somente os dados
+    que já aparecem na linha.
+  */
 
-     Não consulta banco.
-     Não cria valores.
-  ======================================================= */
-
-  const currentText =
-    capturarResumoAtual(
+  const currentItems =
+    capturarItensAtuais(
       row
     );
 
@@ -1052,18 +1115,15 @@ function criarFichaGerencial(
       >
 
         <div
-          class="adm360-company-current-text"
+          class="adm360-company-current-grid"
         >
+
           ${
-            currentText
-              ? escapeHtml(
-                  currentText
-                )
-              : (
-                "Dados atuais não " +
-                "identificados."
-              )
+            criarHtmlVisaoAtual(
+              currentItems
+            )
           }
+
         </div>
 
       </div>
@@ -1308,10 +1368,6 @@ function criarFichaGerencial(
 
   /* =======================================================
      INSERE FICHA
-
-     A ficha fica dentro da linha da empresa,
-     porém CSS grid-column: 1 / -1 faz com que
-     ocupe a linha inteira.
   ======================================================= */
 
   row.appendChild(
@@ -1320,7 +1376,7 @@ function criarFichaGerencial(
 
 
   /* =======================================================
-     MANTÉM BOTÃO ORIGINAL DE EXCLUSÃO
+     MANTÉM BOTÃO ORIGINAL EXCLUIR
   ======================================================= */
 
   const deleteArea =
@@ -1386,15 +1442,19 @@ function criarFichaGerencial(
 
 
 /* =========================================================
-   CAPTURA RESUMO ATUAL
+   CAPTURA DADOS DA VISÃO ATUAL
+
+   Não consulta Firebase.
+   Utiliza exclusivamente o que já está
+   renderizado na linha da empresa.
 ========================================================= */
 
-function capturarResumoAtual(
+function capturarItensAtuais(
   row
 ) {
 
   if (!row) {
-    return "";
+    return [];
   }
 
 
@@ -1419,38 +1479,105 @@ function capturarResumoAtual(
     );
 
 
-  return String(
-    clone.innerText ||
-    ""
-  )
-    .replace(
-      /FICHA GERENCIAL/gi,
+  const text =
+    String(
+      clone.innerText ||
       ""
     )
-    .replace(
-      /FECHAR FICHA/gi,
-      ""
+      .replace(
+        /FICHA GERENCIAL/gi,
+        ""
+      )
+      .replace(
+        /FECHAR FICHA/gi,
+        ""
+      )
+      .replace(
+        /DETALHES/gi,
+        ""
+      )
+      .replace(
+        /EXCLUIR/gi,
+        ""
+      );
+
+
+  /*
+    Cada linha real vira um pequeno
+    cartão compacto.
+    Linhas vazias são eliminadas.
+  */
+
+  const lines =
+    text
+      .split(/\n+/)
+      .map(
+        line =>
+          line
+            .replace(
+              /\s+/g,
+              " "
+            )
+            .trim()
+      )
+      .filter(Boolean);
+
+
+  /*
+    Remove repetições consecutivas
+    eventualmente produzidas pelo HTML.
+  */
+
+  return lines.filter(
+    (item, index) =>
+      index === 0 ||
+      item !==
+        lines[index - 1]
+  );
+}
+
+
+/* =========================================================
+   HTML DA VISÃO ATUAL
+========================================================= */
+
+function criarHtmlVisaoAtual(
+  items
+) {
+
+  if (
+    !Array.isArray(items) ||
+    !items.length
+  ) {
+
+    return `
+      <div
+        class="adm360-company-current-item"
+      >
+        Dados atuais não identificados.
+      </div>
+    `;
+  }
+
+
+  return items
+    .map(
+      item => `
+
+        <div
+          class="adm360-company-current-item"
+        >
+          ${escapeHtml(item)}
+        </div>
+
+      `
     )
-    .replace(
-      /DETALHES/gi,
-      ""
-    )
-    .replace(
-      /EXCLUIR/gi,
-      ""
-    )
-    .replace(
-      /\n{3,}/g,
-      "\n\n"
-    )
-    .trim();
+    .join("");
 }
 
 
 /* =========================================================
    FECHA OUTRAS FICHAS
-
-   Somente uma empresa aberta por vez.
 ========================================================= */
 
 function fecharOutrasFichas(
@@ -1536,12 +1663,11 @@ function instalarProtecaoExclusao() {
       }
 
 
-      /* ===================================================
-         CLIQUE JÁ AUTORIZADO
-
-         Libera apenas uma execução
-         para o professor.js.
-      =================================================== */
+      /*
+        Se já passou pelas confirmações,
+        libera uma única execução para
+        o professor.js.
+      */
 
       if (
         button.dataset
@@ -1556,10 +1682,6 @@ function instalarProtecaoExclusao() {
       }
 
 
-      /* ===================================================
-         BLOQUEIA CLIQUE ORIGINAL
-      =================================================== */
-
       event.preventDefault();
 
       event.stopPropagation();
@@ -1573,9 +1695,7 @@ function instalarProtecaoExclusao() {
         "esta empresa";
 
 
-      /* ===================================================
-         CONFIRMAÇÃO 1
-      =================================================== */
+      /* CONFIRMAÇÃO 1 */
 
       const first =
         window.confirm(
@@ -1599,9 +1719,7 @@ function instalarProtecaoExclusao() {
       }
 
 
-      /* ===================================================
-         CONFIRMAÇÃO 2
-      =================================================== */
+      /* CONFIRMAÇÃO 2 */
 
       const typed =
         window.prompt(
@@ -1636,9 +1754,7 @@ function instalarProtecaoExclusao() {
       }
 
 
-      /* ===================================================
-         CONFIRMAÇÃO 3
-      =================================================== */
+      /* CONFIRMAÇÃO 3 */
 
       const finalConfirm =
         window.confirm(
@@ -1659,9 +1775,10 @@ function instalarProtecaoExclusao() {
       }
 
 
-      /* ===================================================
-         LIBERA UMA EXECUÇÃO DO BOTÃO ORIGINAL
-      =================================================== */
+      /*
+        Libera uma execução
+        do botão original.
+      */
 
       button.dataset
         .adm360DeleteConfirmed =
