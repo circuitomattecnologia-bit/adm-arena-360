@@ -155,6 +155,21 @@ if (
         }
       );
 
+
+    import(
+      "./rodada10.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — Rodada 10:",
+            error
+          );
+
+        }
+      );
+
   }
 
 
