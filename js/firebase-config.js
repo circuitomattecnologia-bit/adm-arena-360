@@ -200,6 +200,21 @@ if (
         }
       );
 
+
+    import(
+      "./rodada13.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — Rodada 13:",
+            error
+          );
+
+        }
+      );
+
   }
 
 
