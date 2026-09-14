@@ -1,28 +1,501 @@
 <!doctype html>
+
 <html lang="pt-BR">
+
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ADM Arena 360 — Ranking</title>
-  <link rel="stylesheet" href="css/style.css">
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <title>
+    ADM Arena 360 — Ranking Oficial
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="css/style.css"
+  >
+
+
+  <style>
+
+    .ranking-page {
+      padding-bottom:48px;
+    }
+
+
+    .ranking-status {
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      margin-top:12px;
+      padding:10px 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+    }
+
+
+    .ranking-status strong {
+      color:#fff;
+      font-size:.78rem;
+      letter-spacing:.05em;
+    }
+
+
+    .ranking-status span {
+      color:rgba(255,255,255,.62);
+      font-size:.76rem;
+    }
+
+
+    .champion-area.hidden {
+      display:none;
+    }
+
+
+    .champion-area {
+      margin-bottom:16px;
+    }
+
+
+    .adm-champion {
+      padding:24px 18px;
+      border-radius:20px;
+      text-align:center;
+      border:1px solid rgba(255,203,67,.42);
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255,203,67,.14),
+          rgba(157,63,198,.12)
+        );
+      box-shadow:
+        0 15px 45px rgba(0,0,0,.22);
+    }
+
+
+    .adm-champion-crown {
+      font-size:2.8rem;
+      line-height:1;
+      margin-bottom:10px;
+    }
+
+
+    .adm-champion small {
+      display:block;
+      color:#ffe194;
+      font-weight:950;
+      letter-spacing:.10em;
+    }
+
+
+    .adm-champion h2 {
+      margin:8px 0 3px;
+      color:#fff;
+      font-size:1.8rem;
+    }
+
+
+    .adm-champion p {
+      margin:0 0 12px;
+      color:rgba(255,255,255,.62);
+    }
+
+
+    .adm-champion > strong {
+      display:block;
+      color:#fff;
+      font-size:2rem;
+      margin-bottom:5px;
+    }
+
+
+    .adm-champion > span {
+      color:#ffe5a0;
+      font-weight:900;
+    }
+
+
+    .adm-rank-row {
+      display:grid;
+      grid-template-columns:
+        110px
+        minmax(180px,1fr)
+        minmax(110px,160px);
+      gap:14px;
+      align-items:center;
+      position:relative;
+    }
+
+
+    .adm-final-row {
+      grid-template-columns:
+        125px
+        minmax(190px,1fr)
+        150px;
+    }
+
+
+    .adm-rank-position {
+      font-size:.85rem;
+      font-weight:950;
+      color:#fff;
+      text-align:center;
+    }
+
+
+    .adm-medal {
+      display:block;
+      font-size:1.4rem;
+      margin-bottom:3px;
+    }
+
+
+    .adm-rank-company {
+      min-width:0;
+    }
+
+
+    .adm-rank-company strong {
+      display:block;
+      color:#fff;
+      font-size:1rem;
+    }
+
+
+    .adm-rank-company small {
+      display:block;
+      margin-top:3px;
+      color:rgba(255,255,255,.52);
+    }
+
+
+    .adm-rank-company em {
+      display:block;
+      width:fit-content;
+      margin-top:6px;
+      padding:4px 7px;
+      border-radius:999px;
+      background:rgba(71,220,154,.08);
+      color:#bdf4d9;
+      font-style:normal;
+      font-size:.65rem;
+      font-weight:900;
+    }
+
+
+    .adm-rank-company em.waiting {
+      background:rgba(255,202,66,.08);
+      color:#ffe39a;
+    }
+
+
+    .adm-rank-operational,
+    .adm-rank-final-score {
+      text-align:right;
+    }
+
+
+    .adm-rank-operational strong,
+    .adm-rank-final-score strong {
+      display:block;
+      color:#fff;
+      font-size:1.15rem;
+    }
+
+
+    .adm-rank-operational small,
+    .adm-rank-final-score small {
+      color:rgba(255,255,255,.48);
+      font-size:.68rem;
+    }
+
+
+    .adm-final-details {
+      grid-column:2 / -1;
+      display:grid;
+      grid-template-columns:
+        repeat(4,minmax(90px,1fr));
+      gap:6px;
+      padding-top:9px;
+      border-top:
+        1px solid rgba(255,255,255,.07);
+    }
+
+
+    .adm-final-details span {
+      padding:7px;
+      border-radius:8px;
+      background:rgba(255,255,255,.035);
+      color:rgba(255,255,255,.53);
+      font-size:.65rem;
+    }
+
+
+    .adm-final-details strong {
+      display:block;
+      margin-top:2px;
+      color:#fff;
+      font-size:.78rem;
+    }
+
+
+    .podium-1 {
+      border-color:
+        rgba(255,203,67,.42) !important;
+
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255,203,67,.11),
+          rgba(255,255,255,.025)
+        ) !important;
+    }
+
+
+    .podium-2 {
+      border-color:
+        rgba(203,214,225,.30) !important;
+    }
+
+
+    .podium-3 {
+      border-color:
+        rgba(205,127,50,.28) !important;
+    }
+
+
+    .adm-ranking-info {
+      margin-top:16px;
+      padding:15px;
+      border-radius:15px;
+      border:
+        1px solid rgba(255,255,255,.09);
+      background:
+        rgba(255,255,255,.035);
+    }
+
+
+    .adm-ranking-info > strong {
+      color:#fff;
+      font-size:.82rem;
+    }
+
+
+    .adm-ranking-info p {
+      margin:10px 0 0;
+      color:rgba(255,255,255,.62);
+      font-size:.78rem;
+      line-height:1.5;
+    }
+
+
+    .adm-criteria-grid {
+      display:grid;
+      grid-template-columns:
+        repeat(4,1fr);
+      gap:7px;
+      margin-top:11px;
+    }
+
+
+    .adm-criteria-grid span {
+      padding:9px;
+      border-radius:10px;
+      background:rgba(255,255,255,.04);
+      color:rgba(255,255,255,.65);
+      font-size:.70rem;
+    }
+
+
+    .adm-criteria-grid b {
+      display:block;
+      color:#fff;
+      font-size:.90rem;
+      margin-bottom:2px;
+    }
+
+
+    .ticker {
+      margin-top:16px;
+    }
+
+
+    @media(max-width:800px) {
+
+      .adm-final-details {
+        grid-template-columns:
+          repeat(2,1fr);
+      }
+
+
+      .adm-criteria-grid {
+        grid-template-columns:
+          repeat(2,1fr);
+      }
+
+    }
+
+
+    @media(max-width:600px) {
+
+      .adm-rank-row,
+      .adm-final-row {
+        grid-template-columns:
+          75px
+          minmax(120px,1fr);
+      }
+
+
+      .adm-rank-operational,
+      .adm-rank-final-score {
+        grid-column:2;
+        text-align:left;
+      }
+
+
+      .adm-final-details {
+        grid-column:1 / -1;
+      }
+
+
+      .adm-champion h2 {
+        font-size:1.4rem;
+      }
+
+    }
+
+  </style>
+
 </head>
+
+
 <body>
-<div class="bg-grid"></div>
-<main class="shell wide">
-<header class="hero compact">
-  <div class="eyebrow">TELÃO OFICIAL</div>
-  <h1>🏆 RANKING <span>ADM ARENA 360</span></h1>
-  <p id="sub">Aguardando empresas...</p>
-</header>
-<section class="card glass">
-  <div id="ranking" class="ranking">
-    <div class="rank-row"><b>1</b><span>Modo demonstração</span><strong>0 XP</strong></div>
-  </div>
-</section>
-<section class="ticker">
-  <span>💰 Gestão financeira</span><span>🤝 Negociação</span><span>👥 Pessoas</span>
-  <span>📣 Marketing</span><span>💡 Inovação</span><span>🛡️ Gestão de crises</span>
-</section>
-</main>
-<script type="module" src="js/ranking.js"></script>
+
+  <div class="bg-grid"></div>
+
+
+  <main class="shell wide ranking-page">
+
+
+    <header class="hero compact">
+
+      <div class="eyebrow">
+        TELÃO OFICIAL
+      </div>
+
+      <h1>
+        🏆 RANKING
+        <span>
+          ADM ARENA 360
+        </span>
+      </h1>
+
+      <p id="sub">
+        Aguardando empresas...
+      </p>
+
+      <div
+        id="rankingStatus"
+        class="ranking-status"
+      >
+        <strong>
+          RANKING DA ARENA
+        </strong>
+
+        <span>
+          Aguardando dados...
+        </span>
+      </div>
+
+    </header>
+
+
+    <section
+      id="championArea"
+      class="champion-area hidden"
+    >
+    </section>
+
+
+    <section class="card glass">
+
+      <div
+        id="ranking"
+        class="ranking"
+      >
+
+        <div class="rank-row">
+
+          <b>
+            —
+          </b>
+
+          <span>
+            Aguardando empresas
+          </span>
+
+          <strong>
+            —
+          </strong>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <section id="criteriaArea">
+    </section>
+
+
+    <section class="ticker">
+
+      <span>
+        💰 Gestão financeira
+      </span>
+
+      <span>
+        📈 Mercado
+      </span>
+
+      <span>
+        ⭐ Reputação
+      </span>
+
+      <span>
+        👥 Pessoas
+      </span>
+
+      <span>
+        💡 Inovação
+      </span>
+
+      <span>
+        🎯 Estratégia
+      </span>
+
+      <span>
+        🤝 Responsabilidade Social
+      </span>
+
+    </section>
+
+
+  </main>
+
+
+  <script
+    type="module"
+    src="js/ranking.js"
+  ></script>
+
 </body>
+
 </html>
