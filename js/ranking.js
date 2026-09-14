@@ -5,29 +5,33 @@ import {
 
 
 /* =========================================================
-   ADM ARENA 360 — RANKING OFICIAL
+   ADM ARENA 360 — RANKING OFICIAL DINÂMICO
 
-   REGRAS
+   PROJETO EMPREENDEDOR
+   PROF. ADILSON LEOPOLDO DOS SANTOS
+
+   FUNCIONAMENTO
    ---------------------------------------------------------
    R1–R15
-   → ranking operacional por XP
+   → classificação operacional por XP
 
    R16
-   → ranking por Pontuação Final de Gestão
+   → classificação pela Pontuação Final de Gestão
 
-   PROCLAMAÇÃO
+   MOVIMENTAÇÃO VISUAL
    ---------------------------------------------------------
-   A Campeã só é proclamada quando TODAS as empresas
-   cadastradas tiverem concluído a R16.
+   ▲ SUBIU
+   ▼ CAIU
+   — MANTEVE
 
-   A Pontuação Final já é calculada em rodada16.js:
-   25% Financeiro
-   20% Clientes / Mercado
-   15% Reputação
-   15% Pessoas
-   10% Inovação
-   10% Estratégia / XP
-    5% Responsabilidade Social
+   Os cards utilizam animação FLIP:
+   a mudança de posição acontece visualmente,
+   sem alterar nenhum dado da empresa.
+
+   CAMPEÃ
+   ---------------------------------------------------------
+   Só será proclamada quando TODAS as empresas
+   concluírem a Rodada 16.
 ========================================================= */
 
 
@@ -50,6 +54,25 @@ const code =
 
 
 /* =========================================================
+   MEMÓRIA VISUAL DO RANKING
+========================================================= */
+
+const previousOrder = {
+  operational: new Map(),
+  final: new Map()
+};
+
+
+let previousLeader = {
+  operational: "",
+  final: ""
+};
+
+
+let currentMode = "";
+
+
+/* =========================================================
    UTILIDADES
 ========================================================= */
 
@@ -63,15 +86,34 @@ function escapeHtml(value) {
 }
 
 
-function money(value) {
-  return Number(value || 0)
-    .toLocaleString("pt-BR");
-}
-
-
 function score(value) {
   return Number(value || 0)
     .toFixed(1);
+}
+
+
+function companyKey(company) {
+  return String(
+    company?.id ||
+    company?.companyId ||
+    company?.name ||
+    ""
+  )
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .replace(
+      /[^a-z0-9]+/g,
+      "-"
+    )
+    .replace(
+      /^-+|-+$/g,
+      ""
+    );
 }
 
 
@@ -84,7 +126,9 @@ function getCompanies(room) {
 
 function isFinalPhase(room) {
   return (
-    Number(room?.round || 0) >= 16
+    Number(
+      room?.round || 0
+    ) >= 16
   );
 }
 
@@ -96,120 +140,39 @@ function companyCompleted(company) {
       company?.completedRound || 0
     ) >= 16 &&
     Number.isFinite(
-      Number(company?.finalScore)
+      Number(
+        company?.finalScore
+      )
     )
   );
 }
 
 
-function allCompaniesCompleted(companies) {
+function allCompaniesCompleted(
+  companies
+) {
   return (
     companies.length > 0 &&
     companies.every(
       company =>
-        companyCompleted(company)
+        companyCompleted(
+          company
+        )
     )
   );
 }
 
 
 /* =========================================================
-   ORDENAÇÃO
+   ORDENAÇÃO OPERACIONAL
 ========================================================= */
 
-function operationalRanking(companies) {
+function operationalRanking(
+  companies
+) {
   return [...companies]
     .sort(
       (a, b) => {
-
-        const xpDiff =
-          Number(b?.xp || 0) -
-          Number(a?.xp || 0);
-
-        if (xpDiff !== 0) {
-          return xpDiff;
-        }
-
-        const repDiff =
-          Number(
-            b?.reputacao || 0
-          ) -
-          Number(
-            a?.reputacao || 0
-          );
-
-        if (repDiff !== 0) {
-          return repDiff;
-        }
-
-        return String(
-          a?.name || ""
-        ).localeCompare(
-          String(
-            b?.name || ""
-          ),
-          "pt-BR"
-        );
-
-      }
-    );
-}
-
-
-function finalRanking(companies) {
-  return [...companies]
-    .sort(
-      (a, b) => {
-
-        const aCompleted =
-          companyCompleted(a);
-
-        const bCompleted =
-          companyCompleted(b);
-
-        if (
-          aCompleted !== bCompleted
-        ) {
-          return aCompleted
-            ? -1
-            : 1;
-        }
-
-        const scoreDiff =
-          Number(
-            b?.finalScore || 0
-          ) -
-          Number(
-            a?.finalScore || 0
-          );
-
-        if (scoreDiff !== 0) {
-          return scoreDiff;
-        }
-
-        const repDiff =
-          Number(
-            b?.reputacao || 0
-          ) -
-          Number(
-            a?.reputacao || 0
-          );
-
-        if (repDiff !== 0) {
-          return repDiff;
-        }
-
-        const clientsDiff =
-          Number(
-            b?.clientes || 0
-          ) -
-          Number(
-            a?.clientes || 0
-          );
-
-        if (clientsDiff !== 0) {
-          return clientsDiff;
-        }
 
         const xpDiff =
           Number(
@@ -223,6 +186,37 @@ function finalRanking(companies) {
           return xpDiff;
         }
 
+
+        const reputationDiff =
+          Number(
+            b?.reputacao || 0
+          ) -
+          Number(
+            a?.reputacao || 0
+          );
+
+        if (
+          reputationDiff !== 0
+        ) {
+          return reputationDiff;
+        }
+
+
+        const clientsDiff =
+          Number(
+            b?.clientes || 0
+          ) -
+          Number(
+            a?.clientes || 0
+          );
+
+        if (
+          clientsDiff !== 0
+        ) {
+          return clientsDiff;
+        }
+
+
         return String(
           a?.name || ""
         ).localeCompare(
@@ -238,7 +232,396 @@ function finalRanking(companies) {
 
 
 /* =========================================================
-   POSIÇÃO / PÓDIO
+   ORDENAÇÃO FINAL
+========================================================= */
+
+function finalRanking(
+  companies
+) {
+  return [...companies]
+    .sort(
+      (a, b) => {
+
+        const aCompleted =
+          companyCompleted(a);
+
+        const bCompleted =
+          companyCompleted(b);
+
+
+        if (
+          aCompleted !==
+          bCompleted
+        ) {
+          return aCompleted
+            ? -1
+            : 1;
+        }
+
+
+        const finalDiff =
+          Number(
+            b?.finalScore || 0
+          ) -
+          Number(
+            a?.finalScore || 0
+          );
+
+        if (
+          finalDiff !== 0
+        ) {
+          return finalDiff;
+        }
+
+
+        const reputationDiff =
+          Number(
+            b?.reputacao || 0
+          ) -
+          Number(
+            a?.reputacao || 0
+          );
+
+        if (
+          reputationDiff !== 0
+        ) {
+          return reputationDiff;
+        }
+
+
+        const clientsDiff =
+          Number(
+            b?.clientes || 0
+          ) -
+          Number(
+            a?.clientes || 0
+          );
+
+        if (
+          clientsDiff !== 0
+        ) {
+          return clientsDiff;
+        }
+
+
+        const xpDiff =
+          Number(
+            b?.xp || 0
+          ) -
+          Number(
+            a?.xp || 0
+          );
+
+        if (
+          xpDiff !== 0
+        ) {
+          return xpDiff;
+        }
+
+
+        return String(
+          a?.name || ""
+        ).localeCompare(
+          String(
+            b?.name || ""
+          ),
+          "pt-BR"
+        );
+
+      }
+    );
+}
+
+
+/* =========================================================
+   MOVIMENTAÇÃO
+========================================================= */
+
+function buildPositionMap(
+  companies
+) {
+  const map =
+    new Map();
+
+  companies.forEach(
+    (company, index) => {
+      map.set(
+        companyKey(company),
+        index
+      );
+    }
+  );
+
+  return map;
+}
+
+
+function movementFor(
+  company,
+  newIndex,
+  mode
+) {
+  const key =
+    companyKey(company);
+
+  const oldMap =
+    previousOrder[mode];
+
+  if (
+    !oldMap ||
+    !oldMap.has(key)
+  ) {
+    return {
+      type: "same",
+      label: "— MANTEVE"
+    };
+  }
+
+
+  const oldIndex =
+    oldMap.get(key);
+
+
+  if (
+    newIndex < oldIndex
+  ) {
+    return {
+      type: "up",
+      label:
+        `▲ SUBIU ${
+          oldIndex - newIndex
+        }`
+    };
+  }
+
+
+  if (
+    newIndex > oldIndex
+  ) {
+    return {
+      type: "down",
+      label:
+        `▼ CAIU ${
+          newIndex - oldIndex
+        }`
+    };
+  }
+
+
+  return {
+    type: "same",
+    label: "— MANTEVE"
+  };
+}
+
+
+/* =========================================================
+   FLIP — CAPTURA POSIÇÃO ANTIGA
+========================================================= */
+
+function capturePositions() {
+  const positions =
+    new Map();
+
+  document
+    .querySelectorAll(
+      "#ranking [data-company-key]"
+    )
+    .forEach(
+      element => {
+
+        const key =
+          element.dataset
+            .companyKey;
+
+        if (!key) return;
+
+
+        positions.set(
+          key,
+          element
+            .getBoundingClientRect()
+        );
+
+      }
+    );
+
+  return positions;
+}
+
+
+/* =========================================================
+   FLIP — ANIMA POSIÇÃO NOVA
+========================================================= */
+
+function animatePositions(
+  oldPositions
+) {
+  document
+    .querySelectorAll(
+      "#ranking [data-company-key]"
+    )
+    .forEach(
+      element => {
+
+        const key =
+          element.dataset
+            .companyKey;
+
+        if (
+          !key ||
+          !oldPositions.has(key)
+        ) {
+          return;
+        }
+
+
+        const oldRect =
+          oldPositions.get(key);
+
+        const newRect =
+          element
+            .getBoundingClientRect();
+
+
+        const deltaX =
+          oldRect.left -
+          newRect.left;
+
+        const deltaY =
+          oldRect.top -
+          newRect.top;
+
+
+        if (
+          Math.abs(deltaX) < 1 &&
+          Math.abs(deltaY) < 1
+        ) {
+          return;
+        }
+
+
+        element.style.transition =
+          "none";
+
+        element.style.transform =
+          `translate(${deltaX}px, ${deltaY}px)`;
+
+        element.style.zIndex =
+          "10";
+
+
+        requestAnimationFrame(
+          () => {
+
+            requestAnimationFrame(
+              () => {
+
+                element.style.transition =
+                  "transform .70s cubic-bezier(.2,.85,.2,1), box-shadow .35s ease, border-color .35s ease, background .35s ease";
+
+                element.style.transform =
+                  "translate(0,0)";
+
+
+                setTimeout(
+                  () => {
+
+                    element.style.zIndex =
+                      "";
+
+                  },
+                  760
+                );
+
+              }
+            );
+
+          }
+        );
+
+      }
+    );
+}
+
+
+/* =========================================================
+   DESTAQUE DE NOVA LIDERANÇA
+========================================================= */
+
+function highlightNewLeader(
+  ranking,
+  mode
+) {
+  if (!ranking.length) return;
+
+
+  const newLeader =
+    companyKey(
+      ranking[0]
+    );
+
+
+  const oldLeader =
+    previousLeader[mode];
+
+
+  if (
+    oldLeader &&
+    newLeader &&
+    oldLeader !== newLeader
+  ) {
+
+    const leaderCard =
+      document.querySelector(
+        `#ranking [data-company-key="${CSS.escape(
+          newLeader
+        )}"]`
+      );
+
+
+    if (leaderCard) {
+
+      leaderCard
+        .classList
+        .remove(
+          "new-leader"
+        );
+
+
+      void leaderCard.offsetWidth;
+
+
+      leaderCard
+        .classList
+        .add(
+          "new-leader"
+        );
+
+
+      setTimeout(
+        () => {
+          leaderCard
+            .classList
+            .remove(
+              "new-leader"
+            );
+        },
+        1700
+      );
+
+    }
+
+  }
+
+
+  previousLeader[mode] =
+    newLeader;
+}
+
+
+/* =========================================================
+   POSIÇÃO FINAL
 ========================================================= */
 
 function positionLabel(
@@ -249,26 +632,38 @@ function positionLabel(
     return `${index + 1}º`;
   }
 
+
   if (index === 0) {
     return "CAMPEÃ";
   }
+
 
   if (index === 1) {
     return "2º LUGAR";
   }
 
+
   if (index === 2) {
     return "3º LUGAR";
   }
+
 
   return `${index + 1}º`;
 }
 
 
 function medal(index) {
-  if (index === 0) return "🏆";
-  if (index === 1) return "🥈";
-  if (index === 2) return "🥉";
+  if (index === 0) {
+    return "🏆";
+  }
+
+  if (index === 1) {
+    return "🥈";
+  }
+
+  if (index === 2) {
+    return "🥉";
+  }
 
   return "";
 }
@@ -288,42 +683,70 @@ function renderHeader(
   const status =
     $("#rankingStatus");
 
+
   if (!room) {
-    sub.textContent =
-      "Informe uma Arena no endereço.";
+
+    if (sub) {
+      sub.textContent =
+        "Informe uma Arena no endereço.";
+    }
+
 
     if (status) {
-      status.textContent =
-        "Aguardando Arena";
+      status.innerHTML = `
+        <strong>
+          AGUARDANDO ARENA
+        </strong>
+
+        <span>
+          Nenhuma sala carregada.
+        </span>
+      `;
     }
 
     return;
   }
 
-  const round =
-    Number(room.round || 0);
 
-  sub.textContent =
-    `${room.className || "ADM ARENA 360"} • ` +
-    `${room.status || ""} • ` +
-    `Rodada ${round}/16`;
+  const round =
+    Number(
+      room.round || 0
+    );
+
+
+  if (sub) {
+    sub.textContent =
+      `${room.className || "ADM ARENA 360"} • ` +
+      `${room.status || ""} • ` +
+      `Rodada ${round}/16`;
+  }
+
 
   if (!status) return;
 
 
   if (round < 16) {
-    status.innerHTML =
-      `<strong>RANKING DA ARENA</strong>` +
-      `<span>Classificação operacional por XP</span>`;
+
+    status.innerHTML = `
+      <strong>
+        RANKING DA ARENA
+      </strong>
+
+      <span>
+        Classificação operacional por XP
+      </span>
+    `;
 
     return;
   }
 
 
   const completed =
-    companies.filter(
-      companyCompleted
-    ).length;
+    companies
+      .filter(
+        companyCompleted
+      )
+      .length;
 
 
   if (
@@ -331,104 +754,41 @@ function renderHeader(
       companies
     )
   ) {
-    status.innerHTML =
-      `<strong>RESULTADO FINAL OFICIAL</strong>` +
-      `<span>${companies.length} de ${companies.length} empresas concluíram o Conselho Final</span>`;
+
+    status.innerHTML = `
+      <strong>
+        RESULTADO FINAL OFICIAL
+      </strong>
+
+      <span>
+        ${companies.length}
+        de
+        ${companies.length}
+        empresas concluíram o Conselho Final
+      </span>
+    `;
 
     return;
   }
 
 
-  status.innerHTML =
-    `<strong>CONSELHO FINAL EM ANDAMENTO</strong>` +
-    `<span>${completed} de ${companies.length} empresas concluíram a R16</span>`;
+  status.innerHTML = `
+    <strong>
+      CONSELHO FINAL EM ANDAMENTO
+    </strong>
+
+    <span>
+      ${completed}
+      de
+      ${companies.length}
+      empresas concluíram a R16
+    </span>
+  `;
 }
 
 
 /* =========================================================
-   RANKING R1–R15
-========================================================= */
-
-function renderOperational(
-  companies
-) {
-  const ranking =
-    operationalRanking(
-      companies
-    );
-
-  $("#ranking").innerHTML =
-    ranking.length
-      ? ranking
-          .map(
-            (company, index) => `
-              <div class="rank-row adm-rank-row">
-
-                <div class="adm-rank-position">
-                  ${index + 1}º
-                </div>
-
-                <div class="adm-rank-company">
-
-                  <strong>
-                    ${escapeHtml(
-                      company?.name ||
-                      "Empresa"
-                    )}
-                  </strong>
-
-                  <small>
-                    ${escapeHtml(
-                      company?.segment ||
-                      "Segmento"
-                    )}
-                  </small>
-
-                </div>
-
-                <div class="adm-rank-operational">
-
-                  <strong>
-                    ${Number(
-                      company?.xp || 0
-                    )} XP
-                  </strong>
-
-                  <small>
-                    Reputação:
-                    ${Number(
-                      company?.reputacao ||
-                      0
-                    )}
-                  </small>
-
-                </div>
-
-              </div>
-            `
-          )
-          .join("")
-      : `
-          <div class="rank-row">
-            <b>—</b>
-            <span>
-              Aguardando empresas
-            </span>
-            <strong>
-              0 XP
-            </strong>
-          </div>
-        `;
-
-
-  $("#championArea")
-    ?.classList
-    .add("hidden");
-}
-
-
-/* =========================================================
-   CAMPEÃ
+   CAMPEÃ OFICIAL
 ========================================================= */
 
 function renderChampion(
@@ -439,9 +799,11 @@ function renderChampion(
 
   if (!area) return;
 
+
   area.classList.remove(
     "hidden"
   );
+
 
   area.innerHTML = `
     <div class="adm-champion">
@@ -489,23 +851,28 @@ function renderChampion(
 
 
 /* =========================================================
-   DETALHAMENTO FINAL
+   DETALHAMENTO DO RESULTADO FINAL
 ========================================================= */
 
-function finalDetails(company) {
+function finalDetails(
+  company
+) {
   const details =
     company?.finalScoreDetails ||
     company?.round16
       ?.finalScore ||
     {};
 
+
   const weighted =
     details?.weighted || {};
+
 
   const penalty =
     Number(
       details?.penalty || 0
     );
+
 
   return `
     <div class="adm-final-details">
@@ -519,6 +886,7 @@ function finalDetails(company) {
         </strong>
       </span>
 
+
       <span>
         Mercado
         <strong>
@@ -527,6 +895,7 @@ function finalDetails(company) {
           )}
         </strong>
       </span>
+
 
       <span>
         Reputação
@@ -537,6 +906,7 @@ function finalDetails(company) {
         </strong>
       </span>
 
+
       <span>
         Pessoas
         <strong>
@@ -545,6 +915,7 @@ function finalDetails(company) {
           )}
         </strong>
       </span>
+
 
       <span>
         Inovação
@@ -555,6 +926,7 @@ function finalDetails(company) {
         </strong>
       </span>
 
+
       <span>
         Estratégia
         <strong>
@@ -563,6 +935,7 @@ function finalDetails(company) {
           )}
         </strong>
       </span>
+
 
       <span>
         Social
@@ -573,15 +946,184 @@ function finalDetails(company) {
         </strong>
       </span>
 
+
       <span>
         Penalidades
         <strong>
-          -${score(penalty)}
+          -${score(
+            penalty
+          )}
         </strong>
       </span>
 
     </div>
   `;
+}
+
+
+/* =========================================================
+   RANKING OPERACIONAL
+========================================================= */
+
+function renderOperational(
+  companies
+) {
+  const ranking =
+    operationalRanking(
+      companies
+    );
+
+
+  const mode =
+    "operational";
+
+
+  const oldPositions =
+    capturePositions();
+
+
+  const html =
+    ranking.length
+      ? ranking
+          .map(
+            (
+              company,
+              index
+            ) => {
+
+              const movement =
+                movementFor(
+                  company,
+                  index,
+                  mode
+                );
+
+
+              const key =
+                companyKey(
+                  company
+                );
+
+
+              return `
+                <div
+                  class="rank-row adm-rank-row"
+                  data-company-key="${escapeHtml(
+                    key
+                  )}"
+                >
+
+                  <div class="adm-rank-position">
+
+                    ${index + 1}º
+
+                  </div>
+
+
+                  <div class="adm-rank-company">
+
+                    <strong>
+                      ${escapeHtml(
+                        company?.name ||
+                        "Empresa"
+                      )}
+                    </strong>
+
+                    <small>
+                      ${escapeHtml(
+                        company?.segment ||
+                        "Segmento"
+                      )}
+                    </small>
+
+                    <span
+                      class="rank-movement ${movement.type}"
+                    >
+                      ${movement.label}
+                    </span>
+
+                  </div>
+
+
+                  <div class="adm-rank-operational">
+
+                    <strong>
+                      ${Number(
+                        company?.xp || 0
+                      )}
+                      XP
+                    </strong>
+
+                    <small>
+                      Reputação:
+                      ${Number(
+                        company?.reputacao ||
+                        0
+                      )}
+                    </small>
+
+                  </div>
+
+                </div>
+              `;
+            }
+          )
+          .join("")
+      : `
+          <div class="rank-row">
+
+            <b>
+              —
+            </b>
+
+            <span>
+              Aguardando empresas
+            </span>
+
+            <strong>
+              0 XP
+            </strong>
+
+          </div>
+        `;
+
+
+  const rankingArea =
+    $("#ranking");
+
+
+  if (rankingArea) {
+    rankingArea.innerHTML =
+      html;
+  }
+
+
+  $("#championArea")
+    ?.classList
+    .add(
+      "hidden"
+    );
+
+
+  animatePositions(
+    oldPositions
+  );
+
+
+  highlightNewLeader(
+    ranking,
+    mode
+  );
+
+
+  previousOrder[mode] =
+    buildPositionMap(
+      ranking
+    );
+
+
+  currentMode =
+    mode;
 }
 
 
@@ -597,6 +1139,15 @@ function renderFinal(
       companies
     );
 
+
+  const mode =
+    "final";
+
+
+  const oldPositions =
+    capturePositions();
+
+
   const completedAll =
     allCompaniesCompleted(
       companies
@@ -607,26 +1158,50 @@ function renderFinal(
     completedAll &&
     ranking[0]
   ) {
+
     renderChampion(
       ranking[0]
     );
+
   } else {
+
     $("#championArea")
       ?.classList
-      .add("hidden");
+      .add(
+        "hidden"
+      );
+
   }
 
 
-  $("#ranking").innerHTML =
+  const html =
     ranking.length
       ? ranking
           .map(
-            (company, index) => {
+            (
+              company,
+              index
+            ) => {
 
               const completed =
                 companyCompleted(
                   company
                 );
+
+
+              const movement =
+                movementFor(
+                  company,
+                  index,
+                  mode
+                );
+
+
+              const key =
+                companyKey(
+                  company
+                );
+
 
               const topClass =
                 completedAll &&
@@ -634,20 +1209,28 @@ function renderFinal(
                   ? ` podium-${index + 1}`
                   : "";
 
+
               return `
                 <div
                   class="rank-row adm-rank-row adm-final-row${topClass}"
+                  data-company-key="${escapeHtml(
+                    key
+                  )}"
                 >
 
                   <div class="adm-rank-position">
 
-                    <span class="adm-medal">
-                      ${
-                        completedAll
-                          ? medal(index)
-                          : ""
-                      }
-                    </span>
+                    ${
+                      completedAll
+                        ? `
+                          <span class="adm-medal">
+                            ${medal(
+                              index
+                            )}
+                          </span>
+                        `
+                        : ""
+                    }
 
                     ${positionLabel(
                       index,
@@ -673,6 +1256,7 @@ function renderFinal(
                       )}
                     </small>
 
+
                     ${
                       completed
                         ? `
@@ -690,6 +1274,13 @@ function renderFinal(
                           </em>
                         `
                     }
+
+
+                    <span
+                      class="rank-movement ${movement.type}"
+                    >
+                      ${movement.label}
+                    </span>
 
                   </div>
 
@@ -739,20 +1330,57 @@ function renderFinal(
           .join("")
       : `
           <div class="rank-row">
-            <b>—</b>
+
+            <b>
+              —
+            </b>
+
             <span>
               Aguardando empresas
             </span>
+
             <strong>
               —
             </strong>
+
           </div>
         `;
+
+
+  const rankingArea =
+    $("#ranking");
+
+
+  if (rankingArea) {
+    rankingArea.innerHTML =
+      html;
+  }
+
+
+  animatePositions(
+    oldPositions
+  );
+
+
+  highlightNewLeader(
+    ranking,
+    mode
+  );
+
+
+  previousOrder[mode] =
+    buildPositionMap(
+      ranking
+    );
+
+
+  currentMode =
+    mode;
 }
 
 
 /* =========================================================
-   PAINEL DE PESOS
+   PAINEL DE CRITÉRIOS
 ========================================================= */
 
 function renderCriteria(
@@ -763,7 +1391,9 @@ function renderCriteria(
 
   if (!area) return;
 
+
   if (!finalPhase) {
+
     area.innerHTML = `
       <div class="adm-ranking-info">
 
@@ -772,10 +1402,18 @@ function renderCriteria(
         </strong>
 
         <p>
-          Antes do Conselho Final, o telão utiliza XP
-          como referência operacional de acompanhamento.
-          A classificação oficial será definida somente
-          ao término da Rodada 16.
+          O ranking acompanha a evolução das empresas
+          durante a competição.
+
+          As posições podem mudar a cada rodada
+          conforme os resultados obtidos.
+
+          Antes do Conselho Final,
+          a classificação utiliza XP
+          como referência operacional.
+
+          A classificação oficial será definida
+          somente ao término da Rodada 16.
         </p>
 
       </div>
@@ -792,49 +1430,73 @@ function renderCriteria(
         COMO É CALCULADO O RESULTADO FINAL
       </strong>
 
+
       <div class="adm-criteria-grid">
 
         <span>
-          <b>25%</b>
+          <b>
+            25%
+          </b>
           Financeiro
         </span>
 
+
         <span>
-          <b>20%</b>
+          <b>
+            20%
+          </b>
           Clientes / Mercado
         </span>
 
+
         <span>
-          <b>15%</b>
+          <b>
+            15%
+          </b>
           Reputação
         </span>
 
+
         <span>
-          <b>15%</b>
+          <b>
+            15%
+          </b>
           Pessoas
         </span>
 
+
         <span>
-          <b>10%</b>
+          <b>
+            10%
+          </b>
           Inovação
         </span>
 
+
         <span>
-          <b>10%</b>
+          <b>
+            10%
+          </b>
           Estratégia / XP
         </span>
 
+
         <span>
-          <b>5%</b>
+          <b>
+            5%
+          </b>
           Responsabilidade Social
         </span>
 
       </div>
 
+
       <p>
         Ter muito dinheiro não garante o título.
+
         A empresa campeã será aquela que apresentar
-        a melhor gestão global.
+        a melhor gestão global ao término
+        da ADM Arena 360.
       </p>
 
     </div>
@@ -848,32 +1510,54 @@ function renderCriteria(
 
 function render(room) {
   const companies =
-    getCompanies(room);
+    getCompanies(
+      room
+    );
+
 
   renderHeader(
     room,
     companies
   );
 
+
   if (!room) {
-    $("#ranking").innerHTML = `
-      <div class="rank-row">
-        <b>—</b>
-        <span>
-          Arena não informada
-        </span>
-        <strong>
-          —
-        </strong>
-      </div>
-    `;
+
+    const rankingArea =
+      $("#ranking");
+
+
+    if (rankingArea) {
+
+      rankingArea.innerHTML = `
+        <div class="rank-row">
+
+          <b>
+            —
+          </b>
+
+          <span>
+            Arena não informada
+          </span>
+
+          <strong>
+            —
+          </strong>
+
+        </div>
+      `;
+
+    }
 
     return;
   }
 
 
   const finalPhase =
-    isFinalPhase(room);
+    isFinalPhase(
+      room
+    );
+
 
   renderCriteria(
     finalPhase
@@ -881,13 +1565,17 @@ function render(room) {
 
 
   if (finalPhase) {
+
     renderFinal(
       companies
     );
+
   } else {
+
     renderOperational(
       companies
     );
+
   }
 }
 
@@ -908,15 +1596,18 @@ async function start() {
 
 
   if (f) {
+
     f.onValue(
       f.ref(
         f.db,
         `rooms/${code}`
       ),
       snapshot => {
+
         render(
           snapshot.val()
         );
+
       }
     );
 
@@ -926,23 +1617,28 @@ async function start() {
 
   setInterval(
     () => {
+
       render(
         demoGet(
           `room:${code}`,
           null
         )
       );
+
     },
     800
   );
 }
 
 
-start().catch(
-  error => {
-    console.error(
-      "ADM Arena 360 — Ranking:",
-      error
-    );
-  }
-);
+start()
+  .catch(
+    error => {
+
+      console.error(
+        "ADM Arena 360 — Ranking:",
+        error
+      );
+
+    }
+  );
