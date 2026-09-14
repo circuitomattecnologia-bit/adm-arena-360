@@ -245,6 +245,21 @@ if (
         }
       );
 
+
+    import(
+      "./rodada16.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — Rodada 16:",
+            error
+          );
+
+        }
+      );
+
   }
 
 
