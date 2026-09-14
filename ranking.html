@@ -20,17 +20,20 @@
 
   <style>
     :root {
-      --bg:#050b14;
-      --panel:#081321;
-      --panel-soft:#0c1827;
-      --line:#17314d;
-      --blue:#1696ff;
-      --cyan:#54c8ff;
-      --gold:#ffcc43;
-      --green:#48dca1;
-      --red:#ff6b77;
+      --bg:#020914;
+      --bg2:#071523;
+      --panel:#061526;
+      --panel2:#0a1d31;
+      --line:#0d83d7;
+      --line-soft:rgba(35,157,232,.30);
+      --blue:#22b4ff;
+      --blue-soft:#8fd4ff;
+      --gold:#ffc62f;
+      --gold2:#ffdb63;
       --white:#f7fbff;
-      --muted:#8ca1b7;
+      --muted:#91a7bd;
+      --green:#4dde9f;
+      --red:#ff6f7c;
     }
 
     * {
@@ -40,9 +43,25 @@
     html,
     body {
       width:100%;
-      min-height:100%;
+      height:100%;
       margin:0;
-      background:var(--bg);
+      overflow:hidden;
+      background:
+        radial-gradient(
+          circle at 18% 14%,
+          rgba(22,121,215,.13),
+          transparent 28%
+        ),
+        radial-gradient(
+          circle at 88% 12%,
+          rgba(65,57,145,.12),
+          transparent 28%
+        ),
+        linear-gradient(
+          180deg,
+          #03101e,
+          #020914
+        );
     }
 
     body {
@@ -56,101 +75,96 @@
         sans-serif;
     }
 
-    .bg-grid {
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      background:
-        linear-gradient(
-          rgba(46,121,183,.045) 1px,
-          transparent 1px
-        ),
-        linear-gradient(
-          90deg,
-          rgba(46,121,183,.045) 1px,
-          transparent 1px
-        );
-      background-size:48px 48px;
-      mask-image:
-        linear-gradient(
-          to bottom,
-          rgba(0,0,0,.85),
-          rgba(0,0,0,.15)
-        );
-    }
-
     .arena-screen {
-      position:relative;
-      z-index:1;
       width:100%;
       height:100vh;
       padding:
-        clamp(12px,1.4vw,24px)
-        clamp(16px,2.2vw,38px);
+        clamp(10px,1vw,16px)
+        clamp(12px,1.1vw,18px);
       display:grid;
-      grid-template-rows:auto minmax(0,1fr);
-      gap:clamp(10px,1.2vh,18px);
-      overflow:hidden;
+      grid-template-rows:
+        auto
+        minmax(0,1fr);
+      gap:
+        clamp(8px,1vh,12px);
     }
+
 
     /* =====================================================
        CABEÇALHO
     ===================================================== */
 
     .arena-header {
+      min-height:0;
       display:grid;
       grid-template-columns:
-        minmax(0,1.35fr)
+        minmax(0,1.45fr)
+        auto
         auto;
+      gap:
+        clamp(18px,2vw,34px);
       align-items:center;
-      gap:24px;
-      padding-bottom:
-        clamp(8px,1vh,14px);
-      border-bottom:
-        1px solid rgba(91,183,255,.20);
+
+      padding:
+        clamp(8px,1vh,12px)
+        clamp(14px,1.5vw,24px);
+
+      border:
+        1px solid
+        rgba(24,159,244,.46);
+
+      border-radius:
+        clamp(12px,1vw,17px);
+
+      background:
+        linear-gradient(
+          110deg,
+          rgba(6,27,51,.95),
+          rgba(4,15,31,.96)
+        );
+
+      box-shadow:
+        0 0 24px
+        rgba(0,134,255,.08);
     }
 
-    .brand-area {
+    .brand {
+      min-width:0;
       display:grid;
       grid-template-columns:
-        clamp(54px,5vw,76px)
+        clamp(92px,10vw,160px)
         minmax(0,1fr);
-      gap:
-        clamp(12px,1.4vw,20px);
       align-items:center;
-      min-width:0;
+      gap:
+        clamp(14px,1.5vw,24px);
     }
 
-    .adm-logo {
-      width:
-        clamp(54px,5vw,76px);
-      aspect-ratio:1;
+
+    /* =====================================================
+       SÍMBOLO VISUAL APROVADO
+       — branco, geométrico, sem hexágono com A
+    ===================================================== */
+
+    .adm-mark {
+      height:
+        clamp(58px,6.7vh,88px);
+      min-width:0;
       display:flex;
       align-items:center;
       justify-content:center;
-      border-radius:18px;
-      border:
-        1px solid rgba(37,153,255,.42);
-      background:
-        radial-gradient(
-          circle at 35% 25%,
-          rgba(55,175,255,.25),
-          rgba(10,33,59,.78)
-        );
-      box-shadow:
-        inset 0 0 25px
-        rgba(20,137,255,.12),
-        0 0 24px
-        rgba(18,122,255,.08);
     }
 
-    .adm-logo svg {
-      width:70%;
-      height:70%;
+    .adm-mark svg {
+      display:block;
+      width:100%;
+      max-width:160px;
+      height:100%;
+      overflow:visible;
+
       filter:
         drop-shadow(
-          0 0 8px
-          rgba(24,151,255,.45)
+          0 4px 8px
+          rgba(0,0,0,.32)
         );
     }
 
@@ -158,459 +172,656 @@
       min-width:0;
     }
 
-    .brand-copy h1 {
+    .brand-title {
       margin:0;
-      color:#fff;
       font-size:
-        clamp(1.45rem,2.4vw,2.35rem);
-      line-height:1;
-      letter-spacing:.02em;
+        clamp(1.7rem,3vw,3.15rem);
+      line-height:.92;
       font-weight:950;
+      letter-spacing:.01em;
+      color:#fff;
+      white-space:nowrap;
     }
 
-    .brand-copy h1 span {
-      color:var(--blue);
+    .brand-title span {
+      color:#13b4ff;
     }
 
-    .brand-copy .school {
-      margin-top:6px;
-      color:#d9e5f0;
+    .brand-discipline {
+      margin-top:
+        clamp(7px,.7vh,10px);
+
+      color:#7ecaff;
       font-size:
-        clamp(.68rem,.82vw,.88rem);
-      font-weight:900;
+        clamp(.70rem,1.15vw,1.12rem);
+      font-weight:850;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+
+    .brand-school {
+      margin-top:
+        clamp(5px,.55vh,8px);
+
+      color:#dce8f3;
+      font-size:
+        clamp(.65rem,.98vw,.98rem);
+      font-weight:850;
       letter-spacing:.035em;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
 
-    .brand-copy .course {
-      margin-top:3px;
+
+    /* =====================================================
+       DADOS DA ARENA / PROFESSOR / TURMA
+    ===================================================== */
+
+    .arena-status-box,
+    .teacher-box,
+    .class-box {
+      min-height:
+        clamp(72px,8.2vh,106px);
+
+      padding:
+        clamp(10px,1vw,15px)
+        clamp(14px,1.3vw,20px);
+
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+
+      border-left:
+        1px solid
+        rgba(36,159,235,.48);
+    }
+
+    .arena-status-box {
+      border:
+        1px solid
+        rgba(36,159,235,.50);
+
+      border-radius:
+        clamp(10px,.8vw,14px);
+
+      min-width:
+        clamp(205px,17vw,285px);
+    }
+
+    .arena-status-row {
+      display:flex;
+      align-items:center;
+      gap:9px;
+      margin:2px 0;
+
+      color:#dce7f2;
+      font-size:
+        clamp(.70rem,.98vw,.98rem);
+      font-weight:700;
+    }
+
+    .arena-status-row strong {
+      color:#fff;
+      font-weight:950;
+    }
+
+    .arena-status-row .round {
       color:var(--gold);
       font-size:
-        clamp(.61rem,.70vw,.75rem);
-      font-weight:950;
-      letter-spacing:.055em;
+        clamp(.92rem,1.4vw,1.35rem);
     }
 
-    .header-meta {
-      display:grid;
-      grid-template-columns:
-        auto auto;
-      gap:
-        clamp(12px,2vw,30px);
-      align-items:center;
-      text-align:left;
+    .teacher-box {
+      min-width:
+        clamp(210px,16vw,280px);
     }
 
-    .meta-block {
-      min-width:0;
+    .class-box {
+      min-width:
+        clamp(180px,14vw,235px);
     }
 
-    .meta-label {
-      display:block;
-      color:#6f88a0;
+    .header-label {
+      color:#96a9bc;
       font-size:
-        clamp(.55rem,.62vw,.68rem);
-      font-weight:950;
+        clamp(.54rem,.66vw,.68rem);
       letter-spacing:.12em;
       text-transform:uppercase;
     }
 
-    .meta-value {
-      display:block;
-      margin-top:3px;
+    .header-value {
+      margin-top:5px;
       color:#fff;
       font-size:
-        clamp(.66rem,.78vw,.86rem);
-      font-weight:900;
-      white-space:nowrap;
+        clamp(.68rem,.88vw,.92rem);
+      line-height:1.38;
+      font-weight:950;
     }
 
-    .meta-value.status {
-      color:#e3edf7;
-    }
 
     /* =====================================================
-       CONTEÚDO PRINCIPAL
+       CONTEÚDO
     ===================================================== */
 
-    .arena-layout {
+    .main-grid {
       min-height:0;
       display:grid;
       grid-template-columns:
-        minmax(0,1.62fr)
-        minmax(285px,.68fr);
+        minmax(0,2.42fr)
+        minmax(310px,.96fr);
       gap:
-        clamp(12px,1.4vw,20px);
+        clamp(9px,1vw,14px);
     }
 
-    .panel {
+    .glass-panel {
       min-height:0;
       border:
-        1px solid rgba(72,151,216,.17);
+        1px solid
+        rgba(20,153,235,.48);
       border-radius:
-        clamp(14px,1.1vw,20px);
+        clamp(12px,1vw,17px);
+
       background:
         linear-gradient(
           145deg,
-          rgba(9,21,35,.96),
-          rgba(6,15,26,.93)
+          rgba(5,26,48,.96),
+          rgba(2,15,29,.96)
         );
+
       box-shadow:
-        0 18px 48px
-        rgba(0,0,0,.20),
-        inset 0 1px 0
-        rgba(255,255,255,.025);
+        0 0 24px
+        rgba(0,108,200,.07);
     }
 
+
     /* =====================================================
-       RANKING
+       PAINEL DO RANKING
     ===================================================== */
 
     .ranking-panel {
       min-height:0;
+      padding:
+        clamp(12px,1.2vw,19px)
+        clamp(14px,1.4vw,24px);
+
       display:grid;
-      grid-template-rows:auto minmax(0,1fr);
+      grid-template-rows:
+        auto
+        auto
+        minmax(0,1fr);
+
       overflow:hidden;
     }
 
-    .ranking-head {
-      padding:
-        clamp(10px,1.2vh,17px)
-        clamp(14px,1.3vw,22px)
-        9px;
-      border-bottom:
-        1px solid rgba(255,255,255,.055);
-    }
-
-    .ranking-title {
-      display:flex;
+    .ranking-top {
+      display:grid;
+      grid-template-columns:
+        minmax(0,1fr)
+        minmax(255px,.62fr);
+      gap:20px;
       align-items:center;
-      gap:9px;
-      margin-bottom:
-        clamp(8px,1vh,12px);
     }
 
-    .ranking-title-mark {
-      color:var(--gold);
-      font-size:
-        clamp(1rem,1.4vw,1.4rem);
-      line-height:1;
+    .ranking-heading {
+      min-width:0;
     }
 
-    .ranking-title h2 {
+    .ranking-heading h2 {
       margin:0;
       color:var(--gold);
       font-size:
-        clamp(.95rem,1.28vw,1.25rem);
+        clamp(1.2rem,2vw,2rem);
+      line-height:1;
       font-weight:950;
-      letter-spacing:.055em;
+      letter-spacing:.025em;
+    }
+
+    .ranking-heading .operational {
+      margin-top:
+        clamp(6px,.7vh,10px);
+
+      color:#f2f6fb;
+      font-size:
+        clamp(.65rem,1vw,1rem);
+      font-weight:800;
+      letter-spacing:.075em;
+    }
+
+    .ranking-message {
+      color:#d0dfec;
+      font-size:
+        clamp(.65rem,.88vw,.9rem);
+      line-height:1.5;
     }
 
     #sub {
-      margin:0 0 8px;
-      color:#8198af;
+      margin:
+        clamp(7px,.8vh,10px)
+        0
+        0;
+
+      color:#9bb0c4;
       font-size:
-        clamp(.62rem,.72vw,.76rem);
-      line-height:1.3;
+        clamp(.58rem,.76vw,.76rem);
     }
 
     #rankingStatus {
       display:flex;
+      gap:7px;
       align-items:center;
-      gap:8px;
-      min-height:22px;
-      color:#8aa1b8;
+      margin-top:5px;
+
+      color:#8198ad;
       font-size:
-        clamp(.58rem,.66vw,.70rem);
+        clamp(.55rem,.68vw,.7rem);
     }
 
     #rankingStatus strong {
-      color:#dbe7f3;
-      font-size:inherit;
+      color:#dbe8f3;
     }
 
-    #rankingStatus span {
-      color:#71879e;
-    }
 
-    .ranking-columns {
-      margin-top:9px;
-      padding:0 4px;
+    /* =====================================================
+       CABEÇALHO DA TABELA
+    ===================================================== */
+
+    .table-head {
       display:grid;
       grid-template-columns:
-        58px
-        minmax(180px,1fr)
-        86px
-        74px
-        92px;
+        88px
+        minmax(210px,1fr)
+        150px
+        92px
+        105px;
+
       gap:10px;
-      color:#6f849a;
-      font-size:
-        clamp(.52rem,.58vw,.62rem);
-      font-weight:950;
-      letter-spacing:.09em;
-      text-transform:uppercase;
-      align-items:end;
-    }
+      align-items:center;
 
-    .ranking-columns span:nth-child(3),
-    .ranking-columns span:nth-child(4),
-    .ranking-columns span:nth-child(5) {
-      text-align:center;
-    }
+      margin-top:
+        clamp(9px,1vh,13px);
 
-    .ranking-list-wrap {
-      min-height:0;
       padding:
-        clamp(8px,.9vh,12px)
-        clamp(10px,.9vw,14px)
-        clamp(10px,1vh,14px);
-      overflow:hidden;
-    }
+        clamp(8px,.85vh,11px)
+        clamp(12px,1vw,16px);
 
-    #ranking {
-      height:100%;
-      min-height:0;
-      display:grid;
-      grid-template-rows:
-        repeat(6,minmax(0,1fr));
-      gap:
-        clamp(5px,.72vh,9px);
-    }
-
-    .adm-rank-row {
-      position:relative;
-      min-height:0 !important;
-      padding:
-        clamp(6px,.72vh,10px)
-        clamp(10px,.85vw,15px) !important;
-      border:
-        1px solid rgba(73,151,219,.13) !important;
       border-radius:
-        clamp(9px,.72vw,13px) !important;
+        clamp(8px,.7vw,11px);
+
       background:
         linear-gradient(
           90deg,
-          rgba(15,31,49,.95),
-          rgba(8,21,35,.92)
-        ) !important;
+          rgba(4,38,67,.98),
+          rgba(4,31,55,.98)
+        );
+
+      color:#65c6ff;
+      font-size:
+        clamp(.50rem,.66vw,.68rem);
+      font-weight:950;
+      letter-spacing:.07em;
+      text-transform:uppercase;
+    }
+
+    .table-head > div:nth-child(3),
+    .table-head > div:nth-child(4),
+    .table-head > div:nth-child(5) {
+      text-align:center;
+    }
+
+
+    /* =====================================================
+       LISTA DAS 6 EMPRESAS
+    ===================================================== */
+
+    #ranking {
+      min-height:0;
+      margin-top:
+        clamp(7px,.7vh,10px);
+
+      display:grid;
+      grid-template-rows:
+        repeat(6,minmax(0,1fr));
+
+      gap:
+        clamp(5px,.64vh,8px);
+    }
+
+    .adm-rank-row {
+      min-height:0 !important;
 
       display:grid !important;
       grid-template-columns:
-        58px
-        minmax(180px,1fr)
-        74px
-        92px !important;
-      gap:10px !important;
+        88px
+        minmax(210px,1fr)
+        150px
+        92px
+        105px !important;
+
+      grid-template-rows:
+        1fr 1fr;
+
+      gap:
+        0 10px !important;
+
       align-items:center !important;
 
+      padding:
+        clamp(6px,.68vh,10px)
+        clamp(12px,1vw,16px) !important;
+
+      border:
+        1px solid
+        rgba(32,144,214,.28) !important;
+
+      border-radius:
+        clamp(8px,.7vw,11px) !important;
+
+      background:
+        linear-gradient(
+          90deg,
+          rgba(6,30,52,.98),
+          rgba(5,24,42,.97)
+        ) !important;
+
       transition:
-        transform .65s
+        transform .68s
           cubic-bezier(.2,.85,.2,1),
-        border-color .3s ease,
-        background .3s ease,
-        box-shadow .3s ease !important;
+        border-color .28s ease,
+        box-shadow .28s ease,
+        background .28s ease !important;
     }
 
     .adm-rank-row:hover {
       border-color:
-        rgba(68,170,255,.28) !important;
-      background:
-        linear-gradient(
-          90deg,
-          rgba(18,42,67,.96),
-          rgba(9,24,39,.94)
-        ) !important;
+        rgba(48,174,248,.50) !important;
     }
+
+
+    /* POSIÇÃO */
 
     .adm-rank-position {
       grid-column:1;
+      grid-row:1 / span 2;
+
+      height:
+        clamp(38px,5.5vh,58px);
+
       display:flex !important;
       align-items:center;
-      justify-content:flex-start !important;
+      justify-content:center !important;
+
+      border:
+        1px solid
+        rgba(61,163,225,.48);
+
+      border-radius:
+        clamp(7px,.65vw,10px);
+
+      background:
+        rgba(11,46,76,.78);
+
       color:#fff !important;
       font-size:
-        clamp(.82rem,1vw,1.02rem) !important;
+        clamp(.92rem,1.45vw,1.55rem) !important;
       font-weight:950 !important;
-      white-space:nowrap;
     }
 
+    .adm-rank-row:nth-child(1)
+    .adm-rank-position {
+      color:#ffe25e !important;
+      border-color:#ffc620;
+      background:
+        linear-gradient(
+          135deg,
+          #796100,
+          #bc9300
+        );
+      box-shadow:
+        inset 0 0 14px
+        rgba(255,216,64,.18);
+    }
+
+    .adm-rank-row:nth-child(2)
+    .adm-rank-position {
+      color:#f4f6f9 !important;
+      border-color:#aeb8c3;
+      background:
+        linear-gradient(
+          135deg,
+          #40464c,
+          #69717a
+        );
+    }
+
+    .adm-rank-row:nth-child(3)
+    .adm-rank-position {
+      color:#fff0df !important;
+      border-color:#db934a;
+      background:
+        linear-gradient(
+          135deg,
+          #71411f,
+          #a4632e
+        );
+    }
+
+
+    /* =====================================================
+       EMPRESA + MOVIMENTAÇÃO
+       display:contents permite separar a movimentação
+       numa coluna própria sem alterar ranking.js
+    ===================================================== */
+
     .adm-rank-company {
-      grid-column:2;
-      min-width:0;
-      display:grid;
-      grid-template-columns:
-        minmax(0,1fr)
-        92px;
-      grid-template-rows:auto auto;
-      column-gap:10px;
-      align-items:center;
+      display:contents !important;
     }
 
     .adm-rank-company strong {
-      grid-column:1;
+      grid-column:2;
       grid-row:1;
-      display:block;
-      min-width:0;
+
+      align-self:end;
+
       color:#fff !important;
       font-size:
-        clamp(.72rem,.9vw,.96rem) !important;
-      line-height:1.15 !important;
+        clamp(.73rem,1vw,1.04rem) !important;
+      line-height:1.1 !important;
       font-weight:950 !important;
+
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
 
     .adm-rank-company small {
-      grid-column:1;
+      grid-column:2;
       grid-row:2;
-      display:block !important;
+
+      align-self:start;
       margin-top:2px !important;
-      color:#667e95 !important;
+
+      color:#b2c0cd !important;
       font-size:
-        clamp(.51rem,.58vw,.62rem) !important;
+        clamp(.55rem,.72vw,.74rem) !important;
       line-height:1.1 !important;
+
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
 
+    .adm-rank-company em {
+      display:none !important;
+    }
+
     .rank-movement {
-      grid-column:2;
+      grid-column:3;
       grid-row:1 / span 2;
+
       justify-self:center;
       align-self:center;
-      margin:0 !important;
+
+      min-width:
+        clamp(78px,8vw,116px);
+
       display:inline-flex !important;
       align-items:center;
       justify-content:center;
-      min-width:72px;
+
+      margin:0 !important;
       padding:
-        4px 7px !important;
+        5px 10px !important;
+
       border-radius:999px !important;
+
       font-size:
-        clamp(.50rem,.56vw,.59rem) !important;
+        clamp(.50rem,.66vw,.68rem) !important;
       font-weight:950 !important;
-      letter-spacing:.025em;
+
       white-space:nowrap;
     }
 
-    .rank-movement.up {
-      color:#6ee7a8 !important;
-      background:
-        rgba(55,215,147,.09) !important;
+    .rank-movement.same {
+      color:#d2dce7 !important;
       border:
         1px solid
-        rgba(55,215,147,.16) !important;
+        rgba(159,181,201,.14) !important;
+      background:
+        rgba(255,255,255,.035) !important;
+    }
+
+    .rank-movement.up {
+      color:#75f0b6 !important;
+      border:
+        1px solid
+        rgba(72,220,157,.25) !important;
+      background:
+        rgba(72,220,157,.08) !important;
     }
 
     .rank-movement.down {
-      color:#ff8490 !important;
-      background:
-        rgba(255,95,106,.08) !important;
+      color:#ff9ca4 !important;
       border:
         1px solid
-        rgba(255,95,106,.15) !important;
+        rgba(255,103,116,.23) !important;
+      background:
+        rgba(255,103,116,.075) !important;
     }
 
-    .rank-movement.same {
-      color:#9caec0 !important;
-      background:
-        rgba(255,255,255,.035) !important;
-      border:
-        1px solid
-        rgba(255,255,255,.07) !important;
-    }
+
+    /* XP E REPUTAÇÃO */
 
     .adm-rank-operational {
       display:contents !important;
     }
 
     .adm-rank-operational strong {
-      grid-column:3;
+      grid-column:4;
+      grid-row:1 / span 2;
+
       justify-self:center;
-      color:var(--blue) !important;
+
+      color:var(--gold) !important;
       font-size:
-        clamp(.78rem,.95vw,1rem) !important;
+        clamp(.82rem,1.25vw,1.3rem) !important;
       font-weight:950 !important;
+
       white-space:nowrap;
     }
 
     .adm-rank-operational small {
-      grid-column:4;
+      grid-column:5;
+      grid-row:1 / span 2;
+
       justify-self:center;
-      color:#f0f5fa !important;
+
+      color:#e8f2fb !important;
       font-size:
-        clamp(.70rem,.85vw,.92rem) !important;
+        clamp(.70rem,.9vw,.94rem) !important;
       font-weight:950 !important;
+
       white-space:nowrap;
     }
 
-    .adm-rank-operational small::first-line {
-      color:#f0f5fa;
-    }
+
+    /* ANIMAÇÃO DE NOVA LIDERANÇA */
 
     .adm-rank-row.new-leader {
       animation:
         leaderPulse
-        1.45s ease 1;
+        1.5s ease 1;
     }
 
     @keyframes leaderPulse {
       0% {
         box-shadow:
           0 0 0
-          rgba(255,204,67,0);
+          rgba(255,199,38,0);
       }
 
       42% {
-        border-color:
-          rgba(255,204,67,.56) !important;
         box-shadow:
-          0 0 30px
-          rgba(255,204,67,.25);
+          0 0 32px
+          rgba(255,199,38,.32);
       }
 
       100% {
         box-shadow:
           0 0 0
-          rgba(255,204,67,0);
+          rgba(255,199,38,0);
       }
     }
 
+
     /* =====================================================
-       FINAL / PÓDIO
+       RESULTADO FINAL
     ===================================================== */
 
     .adm-final-row {
       grid-template-columns:
-        74px
-        minmax(180px,1fr)
-        110px !important;
+        110px
+        minmax(210px,1fr)
+        150px
+        120px !important;
     }
 
     .adm-final-row
-    .adm-rank-company {
+    .adm-rank-position {
+      grid-column:1;
+    }
+
+    .adm-final-row
+    .adm-rank-company strong {
       grid-column:2;
     }
 
-    .adm-rank-final-score {
+    .adm-final-row
+    .adm-rank-company small {
+      grid-column:2;
+    }
+
+    .adm-final-row
+    .rank-movement {
       grid-column:3;
-      text-align:center !important;
+    }
+
+    .adm-rank-final-score {
+      grid-column:4;
+      grid-row:1 / span 2;
+      text-align:center;
     }
 
     .adm-rank-final-score strong {
-      color:var(--gold) !important;
+      display:block;
+      color:var(--gold);
       font-size:
-        clamp(.84rem,1vw,1.06rem) !important;
+        clamp(.9rem,1.2vw,1.25rem);
     }
 
     .adm-rank-final-score small {
-      color:#788fa5 !important;
-      font-size:.57rem !important;
+      color:#89a0b5;
+      font-size:.6rem;
     }
 
     .adm-final-details {
@@ -619,81 +830,77 @@
 
     .podium-1 {
       border-color:
-        rgba(255,204,67,.45) !important;
-      background:
-        linear-gradient(
-          90deg,
-          rgba(59,47,11,.25),
-          rgba(8,21,35,.93)
-        ) !important;
+        rgba(255,199,38,.55) !important;
     }
 
     .podium-2 {
       border-color:
-        rgba(202,216,229,.28) !important;
+        rgba(207,219,230,.38) !important;
     }
 
     .podium-3 {
       border-color:
-        rgba(205,127,50,.30) !important;
+        rgba(207,131,62,.42) !important;
     }
+
 
     /* =====================================================
        COLUNA DIREITA
     ===================================================== */
 
-    .side-column {
+    .side {
       min-height:0;
       display:grid;
       grid-template-rows:
+        minmax(0,1.02fr)
         auto
-        auto
-        minmax(0,1fr);
+        minmax(0,1.46fr);
+
       gap:
-        clamp(8px,1vh,12px);
+        clamp(8px,.85vh,11px);
     }
 
     .side-card {
       min-height:0;
+
       padding:
         clamp(12px,1.2vw,18px);
+
       border:
-        1px solid rgba(73,151,219,.14);
+        1px solid
+        rgba(24,159,244,.40);
+
       border-radius:
-        clamp(13px,1vw,18px);
+        clamp(12px,1vw,17px);
+
       background:
         linear-gradient(
           145deg,
-          rgba(10,23,37,.95),
-          rgba(7,17,29,.93)
+          rgba(6,28,50,.96),
+          rgba(4,18,33,.96)
         );
+
+      overflow:hidden;
     }
 
     .side-title {
-      display:flex;
-      align-items:center;
-      gap:8px;
-      margin:0 0 9px;
-      color:#fff;
-      font-size:
-        clamp(.72rem,.86vw,.93rem);
-      font-weight:950;
-      letter-spacing:.035em;
-    }
+      margin:0;
+      padding-bottom:
+        clamp(7px,.7vh,10px);
 
-    .side-title::before {
-      content:"";
-      width:3px;
-      height:14px;
-      border-radius:3px;
-      background:var(--blue);
-      box-shadow:
-        0 0 10px
-        rgba(22,150,255,.55);
+      border-bottom:
+        1px solid
+        rgba(25,153,230,.28);
+
+      color:#a4d9ff;
+      font-size:
+        clamp(.78rem,1vw,1.02rem);
+      font-weight:950;
     }
 
     #criteriaArea {
-      margin:0;
+      margin-top:
+        clamp(9px,1vh,13px);
     }
 
     #criteriaArea
@@ -701,7 +908,6 @@
       margin:0 !important;
       padding:0 !important;
       border:0 !important;
-      border-radius:0 !important;
       background:none !important;
     }
 
@@ -713,155 +919,245 @@
     #criteriaArea
     .adm-ranking-info p {
       margin:0 !important;
-      color:#758ba1 !important;
+
+      color:#d0dae5 !important;
       font-size:
-        clamp(.58rem,.67vw,.71rem) !important;
-      line-height:1.55 !important;
+        clamp(.61rem,.78vw,.79rem) !important;
+      line-height:1.72 !important;
     }
 
     #criteriaArea
     .adm-criteria-grid {
-      display:grid !important;
-      grid-template-columns:
-        repeat(2,minmax(0,1fr)) !important;
-      gap:5px !important;
-      margin-top:7px !important;
+      display:none !important;
     }
 
-    #criteriaArea
-    .adm-criteria-grid span {
-      padding:6px 7px !important;
-      color:#7f95a9 !important;
-      font-size:.55rem !important;
-    }
 
-    #criteriaArea
-    .adm-criteria-grid b {
-      color:#dfe9f3 !important;
-      font-size:.67rem !important;
-    }
+    /* FRASE */
 
     .quote-card {
       position:relative;
-      overflow:hidden;
-      border-color:
-        rgba(255,204,67,.14);
-      background:
-        linear-gradient(
-          145deg,
-          rgba(29,27,17,.76),
-          rgba(12,21,31,.95)
-        );
-    }
+      padding:
+        clamp(10px,1.05vw,15px)
+        clamp(15px,1.4vw,22px);
 
-    .quote-card::after {
-      content:"“";
-      position:absolute;
-      right:15px;
-      bottom:-26px;
-      color:
-        rgba(255,204,67,.08);
-      font-size:7rem;
-      font-family:Georgia,serif;
-      line-height:1;
-    }
+      border-left:
+        5px solid
+        #11bdfa;
 
-    .quote-main {
-      position:relative;
-      z-index:1;
-      margin:0;
-      color:#fff;
-      font-size:
-        clamp(.78rem,1vw,1.08rem);
-      font-weight:950;
-      line-height:1.34;
-    }
-
-    .quote-main span {
-      color:var(--gold);
-    }
-
-    .quote-sub {
-      position:relative;
-      z-index:1;
-      margin-top:7px;
-      color:#7d91a5;
-      font-size:
-        clamp(.55rem,.62vw,.66rem);
-      line-height:1.4;
-    }
-
-    /* =====================================================
-       ETAPAS 1–16
-    ===================================================== */
-
-    .stages-card {
-      display:grid;
-      grid-template-rows:auto auto minmax(0,1fr);
-      overflow:hidden;
-    }
-
-    .stages-sub {
-      margin:-3px 0 9px;
-      color:#6f8499;
-      font-size:
-        clamp(.54rem,.60vw,.64rem);
-    }
-
-    .stages-grid {
-      min-height:0;
-      display:grid;
-      grid-template-columns:
-        repeat(4,1fr);
-      grid-template-rows:
-        repeat(4,1fr);
-      gap:
-        clamp(4px,.5vw,7px);
-    }
-
-    .stage {
-      min-height:0;
-      border:
-        1px solid rgba(63,116,160,.17);
-      border-radius:
-        clamp(6px,.5vw,9px);
       display:flex;
       align-items:center;
       justify-content:center;
-      color:#526c84;
-      background:
-        rgba(8,20,33,.72);
+
+      text-align:center;
+    }
+
+    .quote {
+      margin:0;
+
+      color:#8bd2ff;
+      font-family:Georgia,serif;
       font-size:
-        clamp(.57rem,.68vw,.73rem);
+        clamp(.95rem,1.45vw,1.42rem);
+      line-height:1.35;
+    }
+
+
+    /* =====================================================
+       ETAPAS — HORIZONTAL 1 A 16
+    ===================================================== */
+
+    .stages-title {
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .stages-title-mark {
+      width:23px;
+      height:18px;
+      position:relative;
+    }
+
+    .stages-title-mark::before {
+      content:"";
+      position:absolute;
+      left:1px;
+      top:4px;
+
+      width:21px;
+      height:9px;
+
+      border:
+        2px solid #b9dcf6;
+
+      transform:
+        skewY(-14deg)
+        rotate(-7deg);
+
+      border-radius:2px;
+    }
+
+    .stages-title h3 {
+      margin:0;
+      color:#a4d9ff;
+      font-size:
+        clamp(.78rem,1vw,1.02rem);
       font-weight:950;
-      transition:
-        border-color .25s ease,
-        background .25s ease,
-        color .25s ease,
-        box-shadow .25s ease;
     }
 
-    .stage.completed {
-      color:#d8eaff;
-      border-color:
-        rgba(22,150,255,.40);
-      background:
-        rgba(22,150,255,.10);
+    .stage-line {
+      position:relative;
+
+      margin-top:
+        clamp(16px,1.9vh,23px);
+
+      padding:
+        0
+        clamp(2px,.3vw,5px);
+
+      display:grid;
+      grid-template-columns:
+        repeat(16,1fr);
+
+      gap:
+        clamp(2px,.22vw,4px);
+
+      align-items:center;
     }
 
-    .stage.current {
-      color:#06111d;
-      border-color:var(--gold);
+    .stage-line::before {
+      content:"";
+      position:absolute;
+
+      left:3%;
+      right:3%;
+      top:
+        clamp(7px,.9vh,10px);
+
+      height:1px;
+
       background:
-        linear-gradient(
-          135deg,
-          #ffd557,
-          #ffb72e
-        );
+        rgba(162,193,218,.38);
+    }
+
+    .stage-wrap {
+      position:relative;
+      z-index:1;
+
+      min-width:0;
+
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:5px;
+    }
+
+    .stage-dot {
+      width:
+        clamp(12px,1.15vw,18px);
+
+      height:
+        clamp(12px,1.15vw,18px);
+
+      border-radius:50%;
+
+      border:
+        1px solid
+        #9bb2c7;
+
+      background:#071423;
+    }
+
+    .stage-number {
+      color:#d4dee7;
+
+      font-size:
+        clamp(.48rem,.58vw,.60rem);
+    }
+
+    .stage-wrap.completed
+    .stage-dot {
+      border-color:#ffd15a;
+      background:#ffc52f;
+
       box-shadow:
-        0 0 17px
-        rgba(255,198,53,.18);
+        0 0 7px
+        rgba(255,197,47,.28);
     }
+
+    .stage-wrap.current
+    .stage-dot {
+      border-color:#ffe088;
+      background:#ffc52f;
+
+      transform:scale(1.24);
+
+      box-shadow:
+        0 0 13px
+        rgba(255,197,47,.44);
+    }
+
+    .stage-current {
+      margin-top:
+        clamp(16px,1.8vh,22px);
+
+      color:#dbe5ee;
+
+      font-size:
+        clamp(.66rem,.82vw,.85rem);
+      font-weight:700;
+    }
+
+    .stage-current strong {
+      color:#fff;
+    }
+
+    .stage-final {
+      margin-top:8px;
+
+      color:#c2d0dc;
+
+      font-size:
+        clamp(.60rem,.76vw,.78rem);
+    }
+
+
+    /* =====================================================
+       IDENTIFICAÇÃO INFERIOR DIREITA
+    ===================================================== */
+
+    .identity-mini {
+      margin-top:
+        clamp(15px,1.7vh,22px);
+
+      padding-top:
+        clamp(10px,1.1vh,14px);
+
+      border-top:
+        1px solid
+        rgba(35,140,209,.25);
+
+      color:#d6e1ea;
+    }
+
+    .identity-mini strong {
+      display:block;
+
+      color:#76caff;
+
+      font-size:
+        clamp(.55rem,.68vw,.7rem);
+    }
+
+    .identity-mini span {
+      display:block;
+
+      margin-top:5px;
+
+      font-size:
+        clamp(.50rem,.62vw,.64rem);
+    }
+
 
     /* =====================================================
        CAMPEÃ
@@ -872,132 +1168,167 @@
     }
 
     .champion-area {
-      position:absolute;
-      inset:
-        clamp(8px,1vw,14px);
-      z-index:20;
+      position:fixed;
+      inset:0;
+
+      z-index:100;
+
       display:flex;
       align-items:center;
       justify-content:center;
-      border-radius:17px;
+
       background:
-        rgba(4,11,19,.93);
-      backdrop-filter:blur(8px);
+        rgba(0,5,12,.92);
+
+      backdrop-filter:blur(10px);
     }
 
     .adm-champion {
-      width:min(560px,86%);
-      padding:24px;
+      width:min(620px,88vw);
+
+      padding:
+        clamp(24px,3vw,40px);
+
       text-align:center;
-      border-radius:20px;
+
       border:
-        1px solid rgba(255,204,67,.45);
+        1px solid
+        rgba(255,199,38,.65);
+
+      border-radius:22px;
+
       background:
         linear-gradient(
           145deg,
-          rgba(52,41,8,.91),
-          rgba(9,25,42,.96)
+          #342806,
+          #061b2e
         );
+
+      box-shadow:
+        0 0 55px
+        rgba(255,199,38,.18);
     }
 
     .adm-champion-crown {
-      font-size:2.4rem;
+      font-size:3rem;
     }
 
     .adm-champion h2 {
       margin:8px 0;
+
+      font-size:
+        clamp(1.7rem,2.7vw,2.8rem);
+    }
+
+    .adm-champion > strong {
+      display:block;
+
+      color:var(--gold);
+
       font-size:
         clamp(1.4rem,2vw,2rem);
     }
 
-    .adm-champion > strong {
-      color:var(--gold);
-      font-size:
-        clamp(1.4rem,1.8vw,1.9rem);
-    }
 
     /* =====================================================
-       AJUSTES DE ALTURA PARA TELÃO
+       TELAS MAIS BAIXAS
     ===================================================== */
 
-    @media (min-width:900px) and (min-height:700px) {
-      body {
-        overflow:hidden;
-      }
-    }
+    @media
+    (min-width:1000px)
+    and
+    (max-height:790px) {
 
-    @media (max-height:800px) and (min-width:900px) {
       .arena-screen {
-        padding-top:10px;
-        padding-bottom:10px;
+        padding-top:7px;
+        padding-bottom:7px;
+        gap:7px;
       }
 
       .arena-header {
-        padding-bottom:7px;
+        padding-top:6px;
+        padding-bottom:6px;
       }
 
-      .adm-logo {
-        width:54px;
+      .adm-mark {
+        height:54px;
       }
 
-      .brand-area {
-        grid-template-columns:
-          54px minmax(0,1fr);
+      .brand-title {
+        font-size:1.85rem;
       }
 
-      .brand-copy h1 {
-        font-size:1.55rem;
-      }
-
-      .ranking-head {
-        padding-top:8px;
-        padding-bottom:7px;
-      }
-
-      .ranking-title {
-        margin-bottom:6px;
-      }
-
-      .side-card {
-        padding:10px 12px;
-      }
-
-      .quote-sub {
-        display:none;
-      }
-    }
-
-    @media (max-height:680px) and (min-width:900px) {
-      .brand-copy .course {
-        display:none;
-      }
-
-      .ranking-title h2 {
-        font-size:.92rem;
-      }
-
-      #rankingStatus {
-        display:none;
-      }
-
-      .ranking-columns {
+      .brand-discipline {
         margin-top:5px;
       }
 
-      .side-column {
-        gap:6px;
+      .brand-school {
+        margin-top:3px;
+      }
+
+      .arena-status-box,
+      .teacher-box,
+      .class-box {
+        min-height:61px;
+        padding-top:6px;
+        padding-bottom:6px;
+      }
+
+      .ranking-panel {
+        padding-top:9px;
+        padding-bottom:9px;
+      }
+
+      .ranking-heading h2 {
+        font-size:1.22rem;
+      }
+
+      .ranking-message {
+        font-size:.68rem;
+      }
+
+      .table-head {
+        margin-top:6px;
+        padding-top:6px;
+        padding-bottom:6px;
+      }
+
+      #ranking {
+        margin-top:5px;
+        gap:4px;
+      }
+
+      .adm-rank-row {
+        padding-top:4px !important;
+        padding-bottom:4px !important;
       }
 
       .side-card {
-        padding:8px 10px;
+        padding-top:9px;
+        padding-bottom:9px;
+      }
+
+      .stage-line {
+        margin-top:12px;
+      }
+
+      .stage-current {
+        margin-top:11px;
+      }
+
+      .identity-mini {
+        margin-top:10px;
       }
     }
+
 
     /* =====================================================
        RESPONSIVO
     ===================================================== */
 
-    @media (max-width:900px) {
+    @media (max-width:1050px) {
+
+      html,
       body {
         overflow:auto;
       }
@@ -1005,78 +1336,75 @@
       .arena-screen {
         height:auto;
         min-height:100vh;
-        overflow:visible;
       }
 
       .arena-header {
         grid-template-columns:1fr;
       }
 
-      .header-meta {
-        justify-content:start;
+      .arena-status-box,
+      .teacher-box,
+      .class-box {
+        border-left:0;
+        border-top:
+          1px solid
+          rgba(36,159,235,.25);
       }
 
-      .arena-layout {
+      .main-grid {
         grid-template-columns:1fr;
       }
 
       .ranking-panel {
-        min-height:620px;
+        min-height:650px;
       }
 
-      .side-column {
+      .side {
         grid-template-rows:auto auto auto;
-      }
-
-      .stages-grid {
-        min-height:230px;
       }
     }
 
-    @media (max-width:620px) {
+    @media (max-width:650px) {
+
       .arena-screen {
-        padding:12px;
+        padding:8px;
       }
 
-      .brand-area {
+      .brand {
         grid-template-columns:
-          48px minmax(0,1fr);
+          78px minmax(0,1fr);
       }
 
-      .adm-logo {
-        width:48px;
-        border-radius:12px;
+      .brand-title {
+        font-size:1.35rem;
       }
 
-      .brand-copy h1 {
-        font-size:1.25rem;
-      }
-
-      .header-meta {
+      .ranking-top {
         grid-template-columns:1fr;
-        gap:7px;
       }
 
-      .ranking-columns {
+      .table-head {
         display:none;
       }
 
       .adm-rank-row {
         grid-template-columns:
-          42px
+          52px
           minmax(120px,1fr)
-          64px !important;
+          74px !important;
       }
 
-      .adm-rank-company {
-        grid-template-columns:1fr;
+      .adm-rank-position {
+        grid-column:1;
+      }
+
+      .adm-rank-company strong,
+      .adm-rank-company small {
+        grid-column:2;
       }
 
       .rank-movement {
-        grid-column:1;
-        grid-row:3;
-        justify-self:start;
-        margin-top:4px !important;
+        display:none !important;
       }
 
       .adm-rank-operational strong {
@@ -1087,19 +1415,24 @@
         display:none !important;
       }
 
-      .stages-grid {
+      .stage-line {
         grid-template-columns:
-          repeat(4,1fr);
+          repeat(8,1fr);
+        row-gap:12px;
+      }
+
+      .stage-line::before {
+        display:none;
       }
     }
   </style>
 </head>
 
+
 <body>
 
-  <div class="bg-grid"></div>
-
   <main class="arena-screen">
+
 
     <!-- ==================================================
          CABEÇALHO
@@ -1107,57 +1440,96 @@
 
     <header class="arena-header">
 
-      <div class="brand-area">
+      <div class="brand">
 
-        <div
-          class="adm-logo"
-          aria-label="Administração"
-        >
+        <div class="adm-mark">
+
+          <!--
+            Símbolo geométrico branco conforme a arte
+            visual aprovada pelo professor.
+          -->
+
           <svg
-            viewBox="0 0 100 100"
-            aria-hidden="true"
+            viewBox="0 0 200 100"
+            aria-label="Administração"
+            role="img"
           >
+
+            <defs>
+              <linearGradient
+                id="admWhite"
+                x1="0"
+                x2="1"
+                y1="0"
+                y2="1"
+              >
+                <stop
+                  offset="0%"
+                  stop-color="#ffffff"
+                />
+                <stop
+                  offset="100%"
+                  stop-color="#cfd6de"
+                />
+              </linearGradient>
+            </defs>
+
+
             <polygon
-              points="50,5 92,28 92,72 50,95 8,72 8,28"
-              fill="none"
-              stroke="#178fff"
-              stroke-width="7"
-            />
-
-            <path
-              d="
-                M30 70
-                L47 29
-                L55 29
-                L72 70
-                L61 70
-                L57 59
-                L44 59
-                L40 70
-                Z
-
-                M48 49
-                L54 49
-                L51 41
-                Z
+              points="
+                8,50
+                54,8
+                81,8
+                48,50
+                81,92
+                54,92
               "
-              fill="#37aaff"
+              fill="url(#admWhite)"
             />
+
+
+            <polygon
+              points="
+                63,50
+                100,8
+                126,8
+                92,50
+                126,92
+                100,92
+              "
+              fill="url(#admWhite)"
+            />
+
+
+            <polygon
+              points="
+                119,8
+                146,8
+                192,50
+                146,92
+                119,92
+                152,50
+              "
+              fill="url(#admWhite)"
+            />
+
           </svg>
+
         </div>
+
 
         <div class="brand-copy">
 
-          <h1>
+          <h1 class="brand-title">
             ADM ARENA <span>360</span>
           </h1>
 
-          <div class="school">
-            EEEFM ILDA FERREIRA DA FONSECA MARTINS
+          <div class="brand-discipline">
+            PROJETO EMPREENDEDOR
           </div>
 
-          <div class="course">
-            DISCIPLINA: PROJETO EMPREENDEDOR
+          <div class="brand-school">
+            EEEFM ILDA FERREIRA DA FONSECA MARTINS
           </div>
 
         </div>
@@ -1165,32 +1537,32 @@
       </div>
 
 
-      <div class="header-meta">
+      <div class="teacher-box">
 
-        <div class="meta-block">
+        <span class="header-label">
+          PROFESSOR
+        </span>
 
-          <span class="meta-label">
-            PROFESSOR
-          </span>
+        <span class="header-value">
+          ADILSON LEOPOLDO
+          <br>
+          DOS SANTOS
+        </span>
 
-          <span class="meta-value">
-            ADILSON LEOPOLDO DOS SANTOS
-          </span>
-
-        </div>
+      </div>
 
 
-        <div class="meta-block">
+      <div class="class-box">
 
-          <span class="meta-label">
-            TURMA
-          </span>
+        <span class="header-label">
+          TURMA
+        </span>
 
-          <span class="meta-value">
-            3ª M01 — TÉCNICO EM ADMINISTRAÇÃO
-          </span>
-
-        </div>
+        <span class="header-value">
+          3ª M01
+          <br>
+          TÉCNICO EM ADMINISTRAÇÃO
+        </span>
 
       </div>
 
@@ -1198,100 +1570,117 @@
 
 
     <!-- ==================================================
-         ÁREA PRINCIPAL
+         CONTEÚDO PRINCIPAL
     =================================================== -->
 
-    <section class="arena-layout">
+    <section class="main-grid">
 
-      <!-- RANKING -->
 
-      <section class="panel ranking-panel">
+      <!-- =================================================
+           RANKING
+      ================================================== -->
 
-        <div class="ranking-head">
+      <section class="glass-panel ranking-panel">
 
-          <div class="ranking-title">
+        <div class="ranking-top">
 
-            <span class="ranking-title-mark">
-              ◆
-            </span>
+          <div class="ranking-heading">
 
             <h2>
               RANKING DA ARENA
             </h2>
 
-          </div>
+            <div class="operational">
+              CLASSIFICAÇÃO OPERACIONAL POR XP
+            </div>
 
-          <p id="sub">
-            Aguardando Arena...
-          </p>
+            <p id="sub">
+              Aguardando Arena...
+            </p>
 
-          <div id="rankingStatus">
-            <strong>
-              RANKING DA ARENA
-            </strong>
-
-            <span>
-              Aguardando dados...
-            </span>
-          </div>
-
-
-          <div class="ranking-columns">
-
-            <span>
-              POSIÇÃO
-            </span>
-
-            <span>
-              EMPRESA / MOVIMENTAÇÃO
-            </span>
-
-            <span>
-              XP
-            </span>
-
-            <span>
-              REPUTAÇÃO
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <div class="ranking-list-wrap">
-
-          <div id="ranking">
-
-            <div class="rank-row">
-              <b>—</b>
-
-              <span>
-                Aguardando empresas
-              </span>
+            <div id="rankingStatus">
 
               <strong>
-                —
+                RANKING DA ARENA
               </strong>
+
+              <span>
+                Aguardando dados...
+              </span>
+
             </div>
 
           </div>
 
+
+          <div class="ranking-message">
+            As posições podem mudar a cada rodada
+            conforme os resultados obtidos.
+          </div>
+
         </div>
 
 
-        <section
-          id="championArea"
-          class="champion-area hidden"
-        >
-        </section>
+        <!-- COLUNAS -->
+
+        <div class="table-head">
+
+          <div>
+            POSIÇÃO
+          </div>
+
+          <div>
+            EMPRESA
+          </div>
+
+          <div>
+            MOVIMENTAÇÃO
+          </div>
+
+          <div>
+            XP
+          </div>
+
+          <div>
+            REPUTAÇÃO
+          </div>
+
+        </div>
+
+
+        <!-- DADOS DINÂMICOS -->
+
+        <div id="ranking">
+
+          <div class="rank-row">
+
+            <b>
+              —
+            </b>
+
+            <span>
+              Aguardando empresas
+            </span>
+
+            <strong>
+              —
+            </strong>
+
+          </div>
+
+        </div>
 
       </section>
 
 
-      <!-- COLUNA DIREITA -->
+      <!-- =================================================
+           COLUNA LATERAL
+      ================================================== -->
 
-      <aside class="side-column">
+      <aside class="side">
+
+
+        <!-- SOBRE O RANKING -->
 
         <section class="side-card">
 
@@ -1304,9 +1693,14 @@
             <div class="adm-ranking-info">
 
               <p>
-                A classificação acompanha o desempenho
-                das empresas ao longo da competição.
-                As posições podem mudar a cada rodada.
+                O ranking acompanha a evolução das empresas
+                durante a competição.
+                As posições podem mudar a cada rodada
+                conforme os resultados obtidos.
+                Antes do Conselho Final, a classificação
+                utiliza XP como referência operacional.
+                A classificação oficial será definida
+                somente ao término da Rodada 16.
               </p>
 
             </div>
@@ -1316,55 +1710,158 @@
         </section>
 
 
+        <!-- FRASE -->
+
         <section class="side-card quote-card">
 
-          <p class="quote-main">
-            Estratégia hoje,
-            <span>resultados amanhã.</span>
-          </p>
-
-          <p class="quote-sub">
-            Cada decisão constrói a trajetória da empresa
-            dentro da ADM Arena 360.
+          <p class="quote">
+            “Estratégia hoje,
+            <br>
+            resultados amanhã.”
           </p>
 
         </section>
 
 
-        <section class="side-card stages-card">
+        <!-- ETAPAS -->
 
-          <h3 class="side-title">
-            ETAPAS DA ARENA
-          </h3>
+        <section class="side-card">
 
-          <p class="stages-sub">
-            Progresso pelas 16 rodadas
-          </p>
+          <div class="stages-title">
+
+            <div class="stages-title-mark">
+            </div>
+
+            <h3>
+              ETAPAS DA ARENA
+            </h3>
+
+          </div>
+
 
           <div
-            id="arenaStages"
-            class="stages-grid"
+            id="stageLine"
+            class="stage-line"
           >
 
-            <div class="stage" data-stage="1">1</div>
-            <div class="stage" data-stage="2">2</div>
-            <div class="stage" data-stage="3">3</div>
-            <div class="stage" data-stage="4">4</div>
+            <div class="stage-wrap" data-stage="1">
+              <span class="stage-dot"></span>
+              <span class="stage-number">1</span>
+            </div>
 
-            <div class="stage" data-stage="5">5</div>
-            <div class="stage" data-stage="6">6</div>
-            <div class="stage" data-stage="7">7</div>
-            <div class="stage" data-stage="8">8</div>
+            <div class="stage-wrap" data-stage="2">
+              <span class="stage-dot"></span>
+              <span class="stage-number">2</span>
+            </div>
 
-            <div class="stage" data-stage="9">9</div>
-            <div class="stage" data-stage="10">10</div>
-            <div class="stage" data-stage="11">11</div>
-            <div class="stage" data-stage="12">12</div>
+            <div class="stage-wrap" data-stage="3">
+              <span class="stage-dot"></span>
+              <span class="stage-number">3</span>
+            </div>
 
-            <div class="stage" data-stage="13">13</div>
-            <div class="stage" data-stage="14">14</div>
-            <div class="stage" data-stage="15">15</div>
-            <div class="stage" data-stage="16">16</div>
+            <div class="stage-wrap" data-stage="4">
+              <span class="stage-dot"></span>
+              <span class="stage-number">4</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="5">
+              <span class="stage-dot"></span>
+              <span class="stage-number">5</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="6">
+              <span class="stage-dot"></span>
+              <span class="stage-number">6</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="7">
+              <span class="stage-dot"></span>
+              <span class="stage-number">7</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="8">
+              <span class="stage-dot"></span>
+              <span class="stage-number">8</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="9">
+              <span class="stage-dot"></span>
+              <span class="stage-number">9</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="10">
+              <span class="stage-dot"></span>
+              <span class="stage-number">10</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="11">
+              <span class="stage-dot"></span>
+              <span class="stage-number">11</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="12">
+              <span class="stage-dot"></span>
+              <span class="stage-number">12</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="13">
+              <span class="stage-dot"></span>
+              <span class="stage-number">13</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="14">
+              <span class="stage-dot"></span>
+              <span class="stage-number">14</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="15">
+              <span class="stage-dot"></span>
+              <span class="stage-number">15</span>
+            </div>
+
+            <div class="stage-wrap" data-stage="16">
+              <span class="stage-dot"></span>
+              <span class="stage-number">16</span>
+            </div>
+
+          </div>
+
+
+          <div
+            id="stageCurrentText"
+            class="stage-current"
+          >
+            Rodada atual:
+            <strong>
+              — / 16
+            </strong>
+          </div>
+
+
+          <div class="stage-final">
+            Conselho Final na Rodada 16
+          </div>
+
+
+          <div class="identity-mini">
+
+            <strong>
+              DISCIPLINA:
+              PROJETO EMPREENDEDOR
+            </strong>
+
+            <span>
+              PROF. ADILSON LEOPOLDO DOS SANTOS
+            </span>
+
+            <span>
+              EEEFM ILDA FERREIRA DA FONSECA MARTINS
+            </span>
+
+            <span>
+              3ª M01 —
+              TÉCNICO EM ADMINISTRAÇÃO
+            </span>
 
           </div>
 
@@ -1374,11 +1871,20 @@
 
     </section>
 
+
+    <!-- CAMPEÃ -->
+
+    <section
+      id="championArea"
+      class="champion-area hidden"
+    >
+    </section>
+
   </main>
 
 
   <!-- ==================================================
-       RANKING DINÂMICO EXISTENTE
+       RANKING DINÂMICO
   =================================================== -->
 
   <script
@@ -1388,15 +1894,23 @@
 
 
   <!-- ==================================================
-       SINCRONIZA VISUALMENTE AS ETAPAS COM A RODADA
-       NÃO ALTERA FIREBASE NEM A ARENA
+       ETAPAS VISUAIS
+       SOMENTE LEITURA DO TEXTO DA RODADA
+       NÃO ALTERA FIREBASE
   =================================================== -->
 
   <script>
     (function () {
 
       const sub =
-        document.querySelector("#sub");
+        document.querySelector(
+          "#sub"
+        );
+
+      const currentText =
+        document.querySelector(
+          "#stageCurrentText"
+        );
 
       const stages =
         Array.from(
@@ -1408,14 +1922,15 @@
 
       function updateStages() {
 
-        const text =
+        const source =
           String(
-            sub?.textContent || ""
+            sub?.textContent ||
+            ""
           );
 
 
         const match =
-          text.match(
+          source.match(
             /Rodada\s+(\d+)\s*\/\s*16/i
           );
 
@@ -1427,45 +1942,51 @@
 
 
         stages.forEach(
-          stage => {
+          item => {
 
             const number =
               Number(
-                stage.dataset.stage
+                item.dataset.stage
               );
 
 
-            stage.classList.remove(
+            item.classList.remove(
               "completed",
               "current"
             );
 
 
             if (
-              current > 0 &&
+              current &&
               number < current
             ) {
-
-              stage.classList.add(
+              item.classList.add(
                 "completed"
               );
-
             }
 
 
             if (
-              current > 0 &&
+              current &&
               number === current
             ) {
-
-              stage.classList.add(
+              item.classList.add(
                 "current"
               );
-
             }
 
           }
         );
+
+
+        if (currentText) {
+
+          currentText.innerHTML =
+            `Rodada atual: <strong>${
+              current || "—"
+            } / 16</strong>`;
+
+        }
 
       }
 
@@ -1475,20 +1996,17 @@
 
       if (sub) {
 
-        const observer =
-          new MutationObserver(
-            updateStages
+        new MutationObserver(
+          updateStages
+        )
+          .observe(
+            sub,
+            {
+              childList:true,
+              characterData:true,
+              subtree:true
+            }
           );
-
-
-        observer.observe(
-          sub,
-          {
-            childList:true,
-            subtree:true,
-            characterData:true
-          }
-        );
 
       }
 
