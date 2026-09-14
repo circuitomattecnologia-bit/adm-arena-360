@@ -230,6 +230,21 @@ if (
         }
       );
 
+
+    import(
+      "./rodada15.js"
+    )
+      .catch(
+        error => {
+
+          console.error(
+            "ADM Arena 360 — Rodada 15:",
+            error
+          );
+
+        }
+      );
+
   }
 
 
