@@ -5,24 +5,14 @@ export const FIREBASE = {
   enabled: true,
 
   config: {
-    apiKey:
-      "AIzaSyBCfG1SkyLCkWcYwAgVduVHG2x8EtpZ0G",
-
-    authDomain:
-      "adm-arena-360.firebaseapp.com",
-
+    apiKey: "AIzaSyBCfG1SkyLCkWcYwAgVduVHG2x8EtpZ0G",
+    authDomain: "adm-arena-360.firebaseapp.com",
     databaseURL:
       "https://adm-arena-360-default-rtdb.firebaseio.com",
-
-    projectId:
-      "adm-arena-360",
-
+    projectId: "adm-arena-360",
     storageBucket:
       "adm-arena-360.firebasestorage.app",
-
-    messagingSenderId:
-      "736682262723",
-
+    messagingSenderId: "736682262723",
     appId:
       "1:736682262723:web:5046de8973355d29f26276"
   }
@@ -32,54 +22,44 @@ export const FIREBASE = {
 /* =========================================================
    ADM ARENA 360
    CARREGAMENTO SEGURO DOS MÓDULOS COMPLEMENTARES
+   EXPANSÃO ATÉ A RODADA 20
 ========================================================= */
 
-if (
-  typeof window !==
-  "undefined"
-) {
+if (typeof window !== "undefined") {
 
   const page =
-    String(
-      window.location.pathname ||
-      ""
-    )
+    String(window.location.pathname || "")
       .split("/")
       .pop()
       .toLowerCase();
+
+
+  function safeImport(path, label) {
+
+    import(path).catch(error => {
+
+      console.error(
+        `ADM Arena 360 — ${label}:`,
+        error
+      );
+
+    });
+  }
 
 
   /* =======================================================
      CRONÔMETRO
   ======================================================= */
 
-  const timerPages =
-    new Set([
-      "professor.html",
-      "empresa.html"
-    ]);
-
-
   if (
-    timerPages.has(
-      page
-    )
+    page === "professor.html" ||
+    page === "empresa.html"
   ) {
 
-    import(
-      "./cronometro.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — cronômetro:",
-            error
-          );
-
-        }
-      );
-
+    safeImport(
+      "./cronometro.js",
+      "cronômetro"
+    );
   }
 
 
@@ -87,33 +67,15 @@ if (
      INTELIGÊNCIA MOBILE
   ======================================================= */
 
-  const mobilePages =
-    new Set([
-      "professor.html",
-      "empresa.html"
-    ]);
-
-
   if (
-    mobilePages.has(
-      page
-    )
+    page === "professor.html" ||
+    page === "empresa.html"
   ) {
 
-    import(
-      "./mobile-inteligencia.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — Inteligência Mobile:",
-            error
-          );
-
-        }
-      );
-
+    safeImport(
+      "./mobile-inteligencia.js",
+      "Inteligência Mobile"
+    );
   }
 
 
@@ -121,145 +83,78 @@ if (
      EMPRESA
   ======================================================= */
 
-  if (
-    page ===
-    "empresa.html"
-  ) {
+  if (page === "empresa.html") {
 
-    import(
-      "./gestao-avancada.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — Gestão Avançada:",
-            error
-          );
-
-        }
-      );
+    safeImport(
+      "./gestao-avancada.js",
+      "Gestão Avançada"
+    );
 
 
-    import(
-      "./rodada9.js"
-    )
-      .catch(
-        error => {
+    safeImport(
+      "./rodada9.js",
+      "Rodada 9"
+    );
 
-          console.error(
-            "ADM Arena 360 — Rodada 9:",
-            error
-          );
+    safeImport(
+      "./rodada10.js",
+      "Rodada 10"
+    );
 
-        }
-      );
+    safeImport(
+      "./rodada11.js",
+      "Rodada 11"
+    );
 
+    safeImport(
+      "./rodada12.js",
+      "Rodada 12"
+    );
 
-    import(
-      "./rodada10.js"
-    )
-      .catch(
-        error => {
+    safeImport(
+      "./rodada13.js",
+      "Rodada 13"
+    );
 
-          console.error(
-            "ADM Arena 360 — Rodada 10:",
-            error
-          );
+    safeImport(
+      "./rodada14.js",
+      "Rodada 14"
+    );
 
-        }
-      );
+    safeImport(
+      "./rodada15.js",
+      "Rodada 15"
+    );
 
-
-    import(
-      "./rodada11.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — Rodada 11:",
-            error
-          );
-
-        }
-      );
+    safeImport(
+      "./rodada16.js",
+      "Rodada 16"
+    );
 
 
-    import(
-      "./rodada12.js"
-    )
-      .catch(
-        error => {
+    /* ===============================================
+       NOVAS RODADAS DA ARENA
+    =============================================== */
 
-          console.error(
-            "ADM Arena 360 — Rodada 12:",
-            error
-          );
+    safeImport(
+      "./rodada17.js",
+      "Rodada 17 — Guerra Comercial"
+    );
 
-        }
-      );
+    safeImport(
+      "./rodada18.js",
+      "Rodada 18 — Crise 360°"
+    );
 
+    safeImport(
+      "./rodada19.js",
+      "Rodada 19 — A Grande Oportunidade"
+    );
 
-    import(
-      "./rodada13.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — Rodada 13:",
-            error
-          );
-
-        }
-      );
-
-
-    import(
-      "./rodada14.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — Rodada 14:",
-            error
-          );
-
-        }
-      );
-
-
-    import(
-      "./rodada15.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — Rodada 15:",
-            error
-          );
-
-        }
-      );
-
-
-    import(
-      "./rodada16.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — Rodada 16:",
-            error
-          );
-
-        }
-      );
-
+    safeImport(
+      "./rodada20.js",
+      "Rodada 20 — Conselho Final"
+    );
   }
 
 
@@ -267,85 +162,31 @@ if (
      PROFESSOR
   ======================================================= */
 
-  if (
-    page ===
-    "professor.html"
-  ) {
+  if (page === "professor.html") {
 
-    import(
-      "./professor-pages.js"
-    )
-      .catch(
-        error => {
+    safeImport(
+      "./professor-pages.js",
+      "telas do professor"
+    );
 
-          console.error(
-            "ADM Arena 360 — telas do professor:",
-            error
-          );
+    safeImport(
+      "./componentes-ui.js",
+      "interface de componentes"
+    );
 
-        }
-      );
+    safeImport(
+      "./empresas-ui.js",
+      "interface de empresas"
+    );
 
+    safeImport(
+      "./mobile-cleanup.js",
+      "organização do Mobile"
+    );
 
-    import(
-      "./componentes-ui.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — interface de componentes:",
-            error
-          );
-
-        }
-      );
-
-
-    import(
-      "./empresas-ui.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — interface de empresas:",
-            error
-          );
-
-        }
-      );
-
-
-    import(
-      "./mobile-cleanup.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — organização do Mobile:",
-            error
-          );
-
-        }
-      );
-
-
-    import(
-      "./professor-gestao-avancada.js"
-    )
-      .catch(
-        error => {
-
-          console.error(
-            "ADM Arena 360 — acompanhamento Gestão Avançada:",
-            error
-          );
-
-        }
-      );
-
+    safeImport(
+      "./professor-gestao-avancada.js",
+      "acompanhamento Gestão Avançada"
+    );
   }
-
 }
