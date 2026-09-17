@@ -19,7 +19,7 @@ import {
    PROF. LEOPOLDO
 
    PAINEL DO PROFESSOR
-   VERSÃO CONSOLIDADA — 16 RODADAS
+   VERSÃO CONSOLIDADA — 20 RODADAS
 
    REGRA DE ACESSO
    ------------------------------------------------------------
