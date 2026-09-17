@@ -237,18 +237,70 @@ const MESSAGE_BANK = {
       "Alguns indicadores apontam melhora gradual. Quem estiver preparado poderá reagir antes."]
   ],
 
-  16: [
-    ["mercado", "Conselho Final",
-      "Chegou o momento de demonstrar a qualidade global da gestão construída durante toda a Arena."],
-    ["oportunidade", "Valorize sua trajetória",
-      "Resultados importam, mas a capacidade de explicar decisões, correções e aprendizados também revela qualidade de gestão."],
-    ["estrategia", "Visão integrada",
-      "Prepare uma leitura conjunta de finanças, clientes, reputação, pessoas, inovação, estratégia e responsabilidade social."],
-    ["alerta", "Não avalie apenas o caixa",
-      "Ter muito dinheiro não garante o título. A gestão global será determinante."],
-    ["confidencial", "Última inteligência",
-      "O Conselho observará não apenas onde a empresa chegou, mas como chegou até aqui."]
-  ]
+ 16: [
+  ["mercado", "Choque de Mercado",
+    "O mercado sofreu uma mudança brusca. Custos, demanda e comportamento dos consumidores podem mudar rapidamente."],
+  ["oportunidade", "Reposicionamento",
+    "Momentos de ruptura também criam espaço para empresas que conseguem ajustar sua estratégia antes da concorrência."],
+  ["estrategia", "Proteja o essencial",
+    "Observe caixa, clientes, reputação e capacidade operacional. Identifique qual indicador não pode sofrer nova pressão."],
+  ["alerta", "Não reaja por impulso",
+    "Uma mudança forte no mercado pode induzir decisões precipitadas. Analise o impacto financeiro antes de comprometer recursos."],
+  ["confidencial", "O mercado ainda está se ajustando",
+    "Os sinais indicam que esta não será a última pressão competitiva. Preserve capacidade de reação para as próximas rodadas."]
+],
+
+17: [
+  ["mercado", "Guerra Comercial",
+    "A disputa por clientes aumentou. Concorrentes podem usar preço, diferenciação, atendimento e inovação para ampliar participação."],
+  ["oportunidade", "Conquiste sem destruir margem",
+    "Há espaço para ganhar mercado, mas crescimento sustentável exige equilíbrio entre aquisição de clientes e resultado financeiro."],
+  ["estrategia", "Escolha sua vantagem",
+    "Defina claramente onde sua empresa pretende competir: fidelização, diferenciação ou ofensiva comercial."],
+  ["alerta", "Cuidado com guerra de preços",
+    "Reduzir preços ou gastar excessivamente para conquistar clientes pode produzir crescimento aparente e fragilidade financeira."],
+  ["confidencial", "Concorrentes estão se movimentando",
+    "Algumas empresas podem assumir posições mais agressivas. Uma estratégia coerente pode ser mais eficiente do que simplesmente imitá-las."]
+],
+
+18: [
+  ["mercado", "Crise 360°",
+    "A pressão agora atinge várias dimensões da empresa ao mesmo tempo. Caixa, clientes, reputação e equipe precisam ser analisados conjuntamente."],
+  ["oportunidade", "Recuperação direcionada",
+    "Mesmo durante uma crise ampla, identificar corretamente a maior fragilidade pode produzir uma recuperação importante."],
+  ["estrategia", "Priorize",
+    "Não tente resolver todos os problemas simultaneamente. Identifique o indicador mais crítico e proteja a continuidade da empresa."],
+  ["alerta", "Desequilíbrio perigoso",
+    "Um caixa aparentemente confortável pode esconder perda de clientes, desgaste da equipe ou deterioração da reputação."],
+  ["confidencial", "A crise pode abrir espaço",
+    "Empresas que atravessarem esta fase preservando capacidade de decisão poderão encontrar uma oportunidade relevante logo adiante."]
+],
+
+19: [
+  ["mercado", "A Grande Oportunidade",
+    "Uma janela especial surgiu no mercado. Esta pode ser a maior oportunidade de recuperação ou crescimento antes do Conselho Final."],
+  ["oportunidade", "Hora de transformar posição",
+    "Empresas que ficaram para trás ainda podem recuperar competitividade por meio de uma decisão estratégica bem calculada."],
+  ["estrategia", "Risco e capacidade",
+    "Compare o potencial de ganho com o caixa disponível, a situação dos clientes e a capacidade da empresa de sustentar a decisão."],
+  ["alerta", "Oportunidade não significa dinheiro fácil",
+    "Uma decisão agressiva sem estrutura pode criar um novo problema justamente antes da etapa final."],
+  ["confidencial", "Última grande janela",
+    "Esta é a principal oportunidade de reposicionamento antes da avaliação global da trajetória empresarial."]
+],
+
+20: [
+  ["mercado", "Conselho Final — O Legado da Empresa",
+    "Chegou o momento de demonstrar a qualidade global da gestão construída durante toda a ADM Arena 360."],
+  ["oportunidade", "Valorize sua trajetória",
+    "Resultados importam, mas recuperação, consistência, escolhas estratégicas e capacidade de adaptação também revelam qualidade de gestão."],
+  ["estrategia", "Visão integrada",
+    "Analise conjuntamente finanças, clientes, reputação, pessoas, inovação, estratégia e responsabilidade social."],
+  ["alerta", "Caixa não decide sozinho",
+    "Uma empresa não será avaliada apenas pelo dinheiro acumulado. O equilíbrio da gestão e a trajetória construída também serão considerados."],
+  ["confidencial", "Última inteligência da Arena",
+    "O Conselho Final observará não apenas onde sua empresa chegou, mas as decisões que construíram esse resultado."]
+]
 };
 
 
