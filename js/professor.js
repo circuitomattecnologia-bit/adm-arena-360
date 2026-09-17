@@ -2210,7 +2210,7 @@ function render() {
     $("#rodada").textContent =
       `${Number(
         roomData.round || 0
-      )}/16`;
+      )}/20`;
 
   }
 
@@ -2750,7 +2750,7 @@ $("#proxima")
 
       roomData.round =
         Math.min(
-          16,
+          20,
           Number(
             roomData.round || 0
           ) + 1
