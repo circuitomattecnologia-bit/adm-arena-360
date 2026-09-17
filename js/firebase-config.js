@@ -191,5 +191,9 @@ if (typeof window !== "undefined") {
       "./professor-gestao-avancada.js",
       "acompanhamento Gestão Avançada"
     );
+    safeImport(
+  "./central-crises-professor.js",
+  "Central de Crises, Eventos e Interferências"
+);
   }
 }
