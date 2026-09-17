@@ -1471,16 +1471,31 @@
           "#teacherSummaryAlerts"
         );
 
+if (summaryRound) {
 
-      if (
-        summaryRound &&
-        round
-      ) {
+  const roundText =
+    round
+      ? String(round.textContent || "")
+      : "";
 
-        summaryRound.textContent =
-          round.textContent.trim();
+  const roundMatch =
+    roundText.match(/\d+/);
 
-      }
+  const currentRound =
+    roundMatch
+      ? Math.max(
+          0,
+          Math.min(
+            20,
+            Number(roundMatch[0]) || 0
+          )
+        )
+      : 0;
+
+  summaryRound.textContent =
+    `${currentRound}/20`;
+
+}
 
 
       if (
