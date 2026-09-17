@@ -89,7 +89,10 @@ if (typeof window !== "undefined") {
       "./gestao-avancada.js",
       "Gestão Avançada"
     );
-
+    safeImport(
+      "./arena-estabilidade.js",
+      "Estabilidade da Arena"
+    );
 
     safeImport(
       "./rodada9.js",
