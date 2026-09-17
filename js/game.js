@@ -86,26 +86,59 @@ export const rounds = [
   {
     id: 15,
     name: "Expansão Estratégica",
-    text: "É hora de decidir entre crescer, investir, negociar, quitar obrigações, proteger caixa ou preparar a empresa para a decisão final."
+    text: "É hora de decidir entre crescer, investir, negociar, quitar obrigações, proteger caixa ou preparar a empresa para os desafios finais."
   },
 
   {
     id: 16,
-    name: "Conselho Final",
-    text: "A última decisão reúne toda a trajetória da empresa. Resultado financeiro, mercado, reputação, pessoas, inovação, estratégia e impacto social definirão o campeonato."
+    name: "Choque de Mercado",
+    text: "Uma mudança brusca no mercado altera custos, demanda e comportamento dos consumidores. Reavalie prioridades e proteja a sustentabilidade da empresa."
+  },
+
+  {
+    id: 17,
+    name: "Guerra Comercial",
+    text: "A concorrência intensifica a disputa por clientes. Preço, diferenciação, atendimento, reputação e inovação entram no centro da estratégia."
+  },
+
+  {
+    id: 18,
+    name: "Crise 360°",
+    text: "Caixa, clientes, reputação e equipe são pressionados simultaneamente. A empresa precisa escolher onde agir primeiro e preservar sua capacidade de recuperação."
+  },
+
+  {
+    id: 19,
+    name: "A Grande Oportunidade",
+    text: "Surge a maior oportunidade antes da decisão final. Avalie risco, capacidade financeira e potencial de crescimento para transformar oportunidade em recuperação ou vantagem competitiva."
+  },
+
+  {
+    id: 20,
+    name: "Conselho Final — O Legado da Empresa",
+    text: "A última decisão reúne toda a trajetória da empresa. Resultado financeiro, mercado, reputação, pessoas, inovação, estratégia e responsabilidade social definirão a Pontuação Final de Gestão."
   }
 ];
 
+
+/* =========================================================
+   EVENTOS DA ADM ARENA 360
+========================================================= */
 
 export const events = {
 
   fornecedor: {
     title: "📦 FORNECEDORES +18%",
-    text: "O custo dos principais fornecedores aumentou 18%. Sua equipe precisa reagir.",
+
+    text:
+      "O custo dos principais fornecedores aumentou 18%. Sua equipe precisa reagir.",
+
     options: [
 
       {
-        label: "Renegociar e buscar alternativas",
+        label:
+          "Renegociar e buscar alternativas",
+
         delta: {
           caixa: -3000,
           reputacao: 2,
@@ -114,7 +147,9 @@ export const events = {
       },
 
       {
-        label: "Repassar todo o aumento ao cliente",
+        label:
+          "Repassar todo o aumento ao cliente",
+
         delta: {
           clientes: -7,
           reputacao: -4,
@@ -124,7 +159,9 @@ export const events = {
       },
 
       {
-        label: "Usar parte da reserva e manter preços",
+        label:
+          "Usar parte da reserva e manter preços",
+
         delta: {
           caixa: -8000,
           reputacao: 4,
@@ -132,18 +169,22 @@ export const events = {
           xp: 8
         }
       }
-
     ]
   },
 
 
   viral: {
     title: "📱 RECLAMAÇÃO VIRAL",
-    text: "Uma reclamação contra sua empresa viralizou. Qual será a resposta?",
+
+    text:
+      "Uma reclamação contra sua empresa viralizou. Qual será a resposta?",
+
     options: [
 
       {
-        label: "Responder com empatia e propor solução",
+        label:
+          "Responder com empatia e propor solução",
+
         delta: {
           caixa: -2000,
           reputacao: 10,
@@ -153,7 +194,9 @@ export const events = {
       },
 
       {
-        label: "Ignorar a postagem",
+        label:
+          "Ignorar a postagem",
+
         delta: {
           reputacao: -12,
           clientes: -6,
@@ -162,25 +205,31 @@ export const events = {
       },
 
       {
-        label: "Responder de forma defensiva",
+        label:
+          "Responder de forma defensiva",
+
         delta: {
           reputacao: -18,
           clientes: -8,
           xp: 0
         }
       }
-
     ]
   },
 
 
   equipe: {
     title: "👥 EQUIPE INSATISFEITA",
-    text: "Funcionários reclamam de sobrecarga e falta de reconhecimento.",
+
+    text:
+      "Funcionários reclamam de sobrecarga e falta de reconhecimento.",
+
     options: [
 
       {
-        label: "Reorganizar tarefas e ouvir a equipe",
+        label:
+          "Reorganizar tarefas e ouvir a equipe",
+
         delta: {
           equipe: 12,
           caixa: -2000,
@@ -190,7 +239,9 @@ export const events = {
       },
 
       {
-        label: "Dar bônus financeiro imediato",
+        label:
+          "Dar bônus financeiro imediato",
+
         delta: {
           equipe: 15,
           caixa: -9000,
@@ -199,25 +250,31 @@ export const events = {
       },
 
       {
-        label: "Ignorar por enquanto",
+        label:
+          "Ignorar por enquanto",
+
         delta: {
           equipe: -18,
           reputacao: -3,
           xp: 1
         }
       }
-
     ]
   },
 
 
   boom: {
     title: "📈 BOOM DE VENDAS",
-    text: "A procura disparou. Há risco de faltar estoque e cair a qualidade.",
+
+    text:
+      "A procura disparou. Há risco de faltar estoque e cair a qualidade.",
+
     options: [
 
       {
-        label: "Expandir com cautela",
+        label:
+          "Expandir com cautela",
+
         delta: {
           caixa: 10000,
           clientes: 10,
@@ -227,7 +284,9 @@ export const events = {
       },
 
       {
-        label: "Aceitar todos os pedidos",
+        label:
+          "Aceitar todos os pedidos",
+
         delta: {
           caixa: 18000,
           clientes: 12,
@@ -238,25 +297,31 @@ export const events = {
       },
 
       {
-        label: "Manter capacidade atual",
+        label:
+          "Manter capacidade atual",
+
         delta: {
           caixa: 5000,
           reputacao: 3,
           xp: 6
         }
       }
-
     ]
   },
 
 
   logistica: {
     title: "🚚 CRISE LOGÍSTICA",
-    text: "Parte das entregas está atrasada. Clientes começaram a reclamar.",
+
+    text:
+      "Parte das entregas está atrasada. Clientes começaram a reclamar.",
+
     options: [
 
       {
-        label: "Contratar apoio emergencial",
+        label:
+          "Contratar apoio emergencial",
+
         delta: {
           caixa: -7000,
           reputacao: 5,
@@ -265,7 +330,9 @@ export const events = {
       },
 
       {
-        label: "Avisar clientes e renegociar prazos",
+        label:
+          "Avisar clientes e renegociar prazos",
+
         delta: {
           reputacao: 3,
           clientes: -2,
@@ -274,25 +341,31 @@ export const events = {
       },
 
       {
-        label: "Esperar normalizar",
+        label:
+          "Esperar normalizar",
+
         delta: {
           reputacao: -10,
           clientes: -6,
           xp: 2
         }
       }
-
     ]
   },
 
 
   credito: {
     title: "🏦 CRÉDITO DISPONÍVEL",
-    text: "O banco oferece ADM$ 20.000, com pagamento futuro de ADM$ 24.000.",
+
+    text:
+      "O banco oferece ADM$ 20.000, com pagamento futuro de ADM$ 24.000.",
+
     options: [
 
       {
-        label: "Contratar para investir",
+        label:
+          "Contratar para investir",
+
         delta: {
           caixa: 20000,
           inovacao: 6,
@@ -301,25 +374,31 @@ export const events = {
       },
 
       {
-        label: "Recusar e preservar endividamento",
+        label:
+          "Recusar e preservar endividamento",
+
         delta: {
           xp: 7
         }
       },
 
       {
-        label: "Contratar e guardar no caixa",
+        label:
+          "Contratar e guardar no caixa",
+
         delta: {
           caixa: 20000,
           xp: 3
         }
       }
-
     ]
   }
-
 };
 
+
+/* =========================================================
+   PROTEÇÃO DOS INDICADORES
+========================================================= */
 
 export function clampCompany(c) {
 
@@ -329,11 +408,13 @@ export function clampCompany(c) {
       c.caixa ?? 100000
     );
 
+
   c.clientes =
     Math.max(
       0,
       c.clientes ?? 50
     );
+
 
   c.reputacao =
     Math.max(
@@ -344,6 +425,7 @@ export function clampCompany(c) {
       )
     );
 
+
   c.equipe =
     Math.max(
       0,
@@ -353,17 +435,20 @@ export function clampCompany(c) {
       )
     );
 
+
   c.inovacao =
     Math.max(
       0,
       c.inovacao ?? 0
     );
 
+
   c.xp =
     Math.max(
       0,
       c.xp ?? 0
     );
+
 
   return c;
 }
