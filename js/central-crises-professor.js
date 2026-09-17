@@ -596,25 +596,21 @@ function createCrisisCenter() {
 
   `;
 
+const firstContent =
+  eventsPanel.firstElementChild;
 
-  const oldEventsCard =
-    eventsPanel.querySelector(
-      ".events-card"
-    );
+if (firstContent) {
 
+  firstContent.insertAdjacentElement(
+    "afterend",
+    center
+  );
 
-  if (oldEventsCard) {
+} else {
 
-    oldEventsCard.insertAdjacentElement(
-      "afterend",
-      center
-    );
+  eventsPanel.appendChild(center);
 
-  } else {
-
-    eventsPanel.appendChild(center);
-
-  }
+}
 
 
   renderCrisisCenter();
