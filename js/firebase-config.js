@@ -191,12 +191,21 @@ if (typeof window !== "undefined") {
       "./professor-gestao-avancada.js",
       "acompanhamento Gestão Avançada"
     );
-    safeImport(
-  "./central-crises-professor.js",
-  "Central de Crises, Eventos e Interferências"
-);
      safeImport(
+      "./central-crises-professor.js",
+      "Central de Crises, Eventos e Interferências"
+    );
+
+    safeImport(
       "./central-crises-operacional.js",
       "Central Operacional de Crises e Interferências"
-    ); }
+    );
+
+    safeImport(
+      "./central-interferencias-professor.js",
+      "Central de Interferências Operacionais"
+    );
+
+  }
+}
 }
