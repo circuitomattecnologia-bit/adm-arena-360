@@ -195,5 +195,8 @@ if (typeof window !== "undefined") {
   "./central-crises-professor.js",
   "Central de Crises, Eventos e Interferências"
 );
-  }
+     safeImport(
+      "./central-crises-operacional.js",
+      "Central Operacional de Crises e Interferências"
+    ); }
 }
