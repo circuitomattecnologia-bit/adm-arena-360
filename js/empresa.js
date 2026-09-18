@@ -3811,9 +3811,29 @@ async function handleNegotiationAction(
     ] =
       negotiation;
 
-    await saveWholeRoom(
-      latest
-    );
+    const f =
+      await getFirebase();
+
+    if (f) {
+
+      await f.set(
+        f.ref(
+          f.db,
+          `rooms/${roomCode}/negotiations/${id}`
+        ),
+        negotiation
+      );
+
+      room =
+        latest;
+
+    } else {
+
+      await saveWholeRoom(
+        latest
+      );
+
+    }
 
     toast(
       "❌ Proposta recusada."
