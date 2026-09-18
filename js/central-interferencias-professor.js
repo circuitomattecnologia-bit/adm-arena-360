@@ -95,7 +95,7 @@ function waitForOperationalCenter() {
 
   setInterval(
     renderCenter,
-    900
+     30000
   );
 
 }
