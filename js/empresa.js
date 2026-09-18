@@ -3212,9 +3212,29 @@ async function sendNegotiation(
 
   };
 
-  await saveWholeRoom(
-    latest
-  );
+  const f =
+    await getFirebase();
+
+  if (f) {
+
+    await f.set(
+      f.ref(
+        f.db,
+        `rooms/${roomCode}/negotiations/${id}`
+      ),
+      latest.negotiations[id]
+    );
+
+    room =
+      latest;
+
+  } else {
+
+    await saveWholeRoom(
+      latest
+    );
+
+  }
 
   return id;
 }
