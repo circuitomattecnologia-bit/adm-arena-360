@@ -4255,9 +4255,29 @@ async function connectMobile() {
   };
 
 
-  await saveWholeRoom(
-    latest
-  );
+  const f =
+    await getFirebase();
+
+  if (f) {
+
+    await f.set(
+      f.ref(
+        f.db,
+        `rooms/${roomCode}/mobileConnections/${companyId}`
+      ),
+      latest.mobileConnections[companyId]
+    );
+
+    room =
+      latest;
+
+  } else {
+
+    await saveWholeRoom(
+      latest
+    );
+
+  }
 
 
   if (
