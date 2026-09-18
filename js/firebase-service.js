@@ -4,15 +4,27 @@ const BASE = (FIREBASE.config.databaseURL || "").replace(/\/+$/, "");
 
 /* ============================================================
    ADM ARENA 360 — CAMADA FIREBASE SEGURA
+   VERSÃO OTIMIZADA DE CONSUMO
    ------------------------------------------------------------
-   Objetivo:
-   • reduzir risco de sobrescrita quando várias empresas agem juntas;
-   • preservar a API já usada por empresa.js e professor.js;
-   • transformar gravações de sala inteira em PATCH granular;
-   • manter gravações diretas em caminhos específicos normalmente.
+   • preserva a API atual do projeto;
+   • mantém PATCH granular para salas;
+   • reduz leituras automáticas;
+   • impede consultas simultâneas redundantes;
+   • preserva professor, empresas, Mobile e rodadas;
+   • não altera dados existentes da Arena.
    ============================================================ */
 
 const cache = new Map();
+
+/*
+  Antes: 700 ms.
+  Agora: 10 segundos.
+
+  Ações feitas pelo usuário continuam sendo gravadas
+  imediatamente. O intervalo abaixo afeta somente a
+  verificação automática de mudanças.
+*/
+const SYNC_INTERVAL = 10000;
 
 function ensureConfigured() {
   if (!FIREBASE.enabled) return false;
@@ -80,15 +92,7 @@ function joinPath(base, child) {
 }
 
 /* ============================================================
-   CRIA PATCH PROFUNDO
-
-   Exemplo:
-
-   companies/empresa-a/caixa: 90000
-   auction/status: "closed"
-
-   Assim uma mudança em UMA empresa não precisa substituir
-   todas as outras empresas da sala.
+   PATCH PROFUNDO
    ============================================================ */
 
 function buildDeepPatch(
@@ -97,25 +101,14 @@ function buildDeepPatch(
   basePath = "",
   out = {}
 ) {
-  if (
-    sameValue(
-      before,
-      after
-    )
-  ) {
+  if (sameValue(before, after)) {
     return out;
   }
 
-  const beforeObj =
-    isPlainObject(before);
+  const beforeObj = isPlainObject(before);
+  const afterObj = isPlainObject(after);
 
-  const afterObj =
-    isPlainObject(after);
-
-  if (
-    !beforeObj ||
-    !afterObj
-  ) {
+  if (!beforeObj || !afterObj) {
     if (basePath) {
       out[basePath] =
         after === undefined
@@ -126,38 +119,22 @@ function buildDeepPatch(
     return out;
   }
 
-  const keys =
-    new Set([
-      ...Object.keys(
-        before || {}
-      ),
+  const keys = new Set([
+    ...Object.keys(before || {}),
+    ...Object.keys(after || {})
+  ]);
 
-      ...Object.keys(
-        after || {}
-      )
-    ]);
-
-  for (
-    const key of keys
-  ) {
+  for (const key of keys) {
     const nextPath =
-      joinPath(
-        basePath,
-        key
-      );
+      joinPath(basePath, key);
 
     const hasAfter =
       Object.prototype
         .hasOwnProperty
-        .call(
-          after,
-          key
-        );
+        .call(after, key);
 
     if (!hasAfter) {
-      out[nextPath] =
-        null;
-
+      out[nextPath] = null;
       continue;
     }
 
@@ -172,16 +149,10 @@ function buildDeepPatch(
   return out;
 }
 
-function isRoomRoot(
-  refPath
-) {
+function isRoomRoot(refPath) {
   return (
     /^rooms\/[^/]+$/
-      .test(
-        String(
-          refPath || ""
-        )
-      )
+      .test(String(refPath || ""))
   );
 }
 
@@ -194,10 +165,7 @@ async function httpJson(
   options = {}
 ) {
   const response =
-    await fetch(
-      url,
-      options
-    );
+    await fetch(url, options);
 
   if (!response.ok) {
     const txt =
@@ -208,9 +176,7 @@ async function httpJson(
     );
   }
 
-  if (
-    response.status === 204
-  ) {
+  if (response.status === 204) {
     return null;
   }
 
@@ -231,21 +197,14 @@ async function safeRoomWrite(
   value
 ) {
   const previous =
-    cache.get(
-      refPath
-    );
+    cache.get(refPath);
 
   /*
-    Se ainda não conhecemos uma versão anterior,
-    fazemos PUT normal.
-
-    Isto acontece principalmente
-    durante a criação inicial da sala.
+    Primeira gravação conhecida:
+    mantém o comportamento original.
   */
 
-  if (
-    previous === undefined
-  ) {
+  if (previous === undefined) {
     await httpJson(
       pathUrl(refPath),
       {
@@ -257,9 +216,7 @@ async function safeRoomWrite(
         },
 
         body:
-          JSON.stringify(
-            value
-          )
+          JSON.stringify(value)
       }
     );
 
@@ -278,13 +235,9 @@ async function safeRoomWrite(
     );
 
   const entries =
-    Object.entries(
-      patch
-    );
+    Object.entries(patch);
 
-  if (
-    !entries.length
-  ) {
+  if (!entries.length) {
     cache.set(
       refPath,
       clone(value)
@@ -292,14 +245,6 @@ async function safeRoomWrite(
 
     return true;
   }
-
-  /*
-    Aqui está a principal blindagem:
-
-    em vez de substituir a sala inteira,
-    somente os campos realmente modificados
-    são enviados ao Firebase.
-  */
 
   await httpJson(
     pathUrl(refPath),
@@ -312,9 +257,7 @@ async function safeRoomWrite(
       },
 
       body:
-        JSON.stringify(
-          patch
-        )
+        JSON.stringify(patch)
     }
   );
 
@@ -331,9 +274,7 @@ async function safeRoomWrite(
    ============================================================ */
 
 export async function getFirebase() {
-  if (
-    !ensureConfigured()
-  ) {
+  if (!ensureConfigured()) {
     return null;
   }
 
@@ -341,28 +282,13 @@ export async function getFirebase() {
 
     db: true,
 
-
-    ref(
-      _db,
-      path
-    ) {
-      return String(
-        path || ""
-      ).replace(
-        /^\/+|\/+$/g,
-        ""
-      );
+    ref(_db, path) {
+      return String(path || "")
+        .replace(/^\/+|\/+$/g, "");
     },
-
 
     /* ========================================================
        SET
-
-       Mantém compatibilidade com o projeto atual.
-
-       Se professor.js ou empresa.js tentarem salvar
-       rooms/ADM-XXXX inteira,
-       esta camada converte automaticamente para PATCH profundo.
        ======================================================== */
 
     async set(
@@ -370,20 +296,12 @@ export async function getFirebase() {
       value
     ) {
       const cleanPath =
-        String(
-          refPath || ""
-        ).replace(
-          /^\/+|\/+$/g,
-          ""
-        );
+        String(refPath || "")
+          .replace(/^\/+|\/+$/g, "");
 
       if (
-        isRoomRoot(
-          cleanPath
-        ) &&
-        isPlainObject(
-          value
-        )
+        isRoomRoot(cleanPath) &&
+        isPlainObject(value)
       ) {
         return safeRoomWrite(
           cleanPath,
@@ -391,18 +309,8 @@ export async function getFirebase() {
         );
       }
 
-      /*
-        Caminhos específicos continuam podendo
-        ser gravados diretamente.
-
-        Exemplo:
-        rooms/ADM-1234/companies/empresa-a
-      */
-
       await httpJson(
-        pathUrl(
-          cleanPath
-        ),
+        pathUrl(cleanPath),
         {
           method: "PUT",
 
@@ -412,23 +320,20 @@ export async function getFirebase() {
           },
 
           body:
-            JSON.stringify(
-              value
-            )
+            JSON.stringify(value)
         }
       );
 
       /*
-        Atualiza o cache local da sala
-        quando um filho é gravado diretamente.
+        Atualiza caches de sala já existentes,
+        sem realizar nova leitura no Firebase.
       */
 
       for (
         const [
           cachedPath,
           cachedValue
-        ]
-        of cache.entries()
+        ] of cache.entries()
       ) {
 
         if (
@@ -447,29 +352,23 @@ export async function getFirebase() {
             .split("/");
 
         const next =
-          clone(
-            cachedValue
-          ) || {};
+          clone(cachedValue) || {};
 
-        let cursor =
-          next;
+        let cursor = next;
 
         for (
           let i = 0;
-          i <
-          relative.length - 1;
+          i < relative.length - 1;
           i++
         ) {
-          const key =
-            relative[i];
+          const key = relative[i];
 
           if (
             !isPlainObject(
               cursor[key]
             )
           ) {
-            cursor[key] =
-              {};
+            cursor[key] = {};
           }
 
           cursor =
@@ -492,12 +391,8 @@ export async function getFirebase() {
       return true;
     },
 
-
     /* ========================================================
-       PATCH DIRETO
-
-       Deixamos disponível para as próximas melhorias
-       de leilão, negociação, acesso e comandos.
+       PATCH
        ======================================================== */
 
     async patch(
@@ -505,17 +400,11 @@ export async function getFirebase() {
       value
     ) {
       const cleanPath =
-        String(
-          refPath || ""
-        ).replace(
-          /^\/+|\/+$/g,
-          ""
-        );
+        String(refPath || "")
+          .replace(/^\/+|\/+$/g, "");
 
       await httpJson(
-        pathUrl(
-          cleanPath
-        ),
+        pathUrl(cleanPath),
         {
           method: "PATCH",
 
@@ -534,21 +423,14 @@ export async function getFirebase() {
       return true;
     },
 
-
     /* ========================================================
        GET
        ======================================================== */
 
-    async get(
-      refPath
-    ) {
+    async get(refPath) {
       const cleanPath =
-        String(
-          refPath || ""
-        ).replace(
-          /^\/+|\/+$/g,
-          ""
-        );
+        String(refPath || "")
+          .replace(/^\/+|\/+$/g, "");
 
       const value =
         await httpJson(
@@ -560,9 +442,7 @@ export async function getFirebase() {
         );
 
       if (
-        isRoomRoot(
-          cleanPath
-        )
+        isRoomRoot(cleanPath)
       ) {
         cache.set(
           cleanPath,
@@ -570,31 +450,20 @@ export async function getFirebase() {
         );
       }
 
-      return snapshot(
-        value
-      );
+      return snapshot(value);
     },
-
 
     /* ========================================================
        REMOVE
        ======================================================== */
 
-    async remove(
-      refPath
-    ) {
+    async remove(refPath) {
       const cleanPath =
-        String(
-          refPath || ""
-        ).replace(
-          /^\/+|\/+$/g,
-          ""
-        );
+        String(refPath || "")
+          .replace(/^\/+|\/+$/g, "");
 
       await httpJson(
-        pathUrl(
-          cleanPath
-        ),
+        pathUrl(cleanPath),
         {
           method: "DELETE",
 
@@ -608,12 +477,19 @@ export async function getFirebase() {
       return true;
     },
 
-
     /* ========================================================
-       TEMPO REAL
+       TEMPO REAL OTIMIZADO
 
-       Mantém atualização rápida
-       entre professor e empresas.
+       IMPORTANTE:
+       A versão anterior consultava o Firebase a cada 700 ms.
+
+       Agora:
+       • primeira leitura imediata;
+       • atualização automática a cada 10 segundos;
+       • nunca executa duas consultas simultâneas;
+       • callback somente quando os dados mudam;
+       • pausa atualização quando a página não está visível;
+       • ao retornar à página, sincroniza imediatamente.
        ======================================================== */
 
     onValue(
@@ -621,27 +497,37 @@ export async function getFirebase() {
       callback
     ) {
       const cleanPath =
-        String(
-          refPath || ""
-        ).replace(
-          /^\/+|\/+$/g,
-          ""
-        );
+        String(refPath || "")
+          .replace(/^\/+|\/+$/g, "");
 
-      let active =
-        true;
+      let active = true;
+      let running = false;
 
       let last =
-        Symbol(
-          "initial"
-        );
+        Symbol("initial");
 
       const poll =
         async () => {
 
-          if (!active) {
+          if (
+            !active ||
+            running
+          ) {
             return;
           }
+
+          /*
+            Não consome Firebase enquanto a aba
+            estiver em segundo plano.
+          */
+          if (
+            typeof document !== "undefined" &&
+            document.hidden
+          ) {
+            return;
+          }
+
+          running = true;
 
           try {
 
@@ -649,18 +535,13 @@ export async function getFirebase() {
               await httpJson(
                 `${pathUrl(cleanPath)}?t=${Date.now()}`,
                 {
-                  method:
-                    "GET",
-
-                  cache:
-                    "no-store"
+                  method: "GET",
+                  cache: "no-store"
                 }
               );
 
             if (
-              isRoomRoot(
-                cleanPath
-              )
+              isRoomRoot(cleanPath)
             ) {
               cache.set(
                 cleanPath,
@@ -669,66 +550,94 @@ export async function getFirebase() {
             }
 
             const serialized =
-              JSON.stringify(
-                value
-              );
+              JSON.stringify(value);
 
             if (
-              serialized !==
-              last
+              serialized !== last
             ) {
-              last =
-                serialized;
+              last = serialized;
 
               callback(
-                snapshot(
-                  value
-                )
+                snapshot(value)
               );
             }
 
-          } catch (
-            err
-          ) {
+          } catch (err) {
 
             console.error(
               "ADM Arena Firebase:",
               err
             );
 
+          } finally {
+
+            running = false;
           }
         };
 
       /*
-        700 ms:
-        resposta mais rápida entre telas,
-        sem transformar a aplicação em bombardeio
-        excessivo ao Firebase.
+        Primeira sincronização:
+        imediata.
       */
-
       poll();
 
+      /*
+        Demais sincronizações:
+        10 segundos.
+      */
       const timer =
         setInterval(
           poll,
-          700
+          SYNC_INTERVAL
         );
 
+      /*
+        Quando o usuário volta para a aba,
+        atualiza imediatamente.
+      */
+      const visibilityHandler =
+        () => {
+          if (
+            !document.hidden &&
+            active
+          ) {
+            poll();
+          }
+        };
+
+      if (
+        typeof document !== "undefined"
+      ) {
+        document.addEventListener(
+          "visibilitychange",
+          visibilityHandler
+        );
+      }
+
+      /*
+        Retorna função de desligamento,
+        preservando a API já utilizada
+        pelo projeto.
+      */
       return () => {
 
-        active =
-          false;
+        active = false;
 
-        clearInterval(
-          timer
-        );
+        clearInterval(timer);
 
+        if (
+          typeof document !== "undefined"
+        ) {
+          document.removeEventListener(
+            "visibilitychange",
+            visibilityHandler
+          );
+        }
       };
     }
 
   };
 }
-
 
 /* ============================================================
    MODO LOCAL / DEMONSTRAÇÃO
@@ -746,18 +655,14 @@ export function demoGet(
       );
 
     return value
-      ? JSON.parse(
-          value
-        )
+      ? JSON.parse(value)
       : fallback;
 
   } catch {
 
     return fallback;
-
   }
 }
-
 
 export function demoSet(
   key,
@@ -765,12 +670,9 @@ export function demoSet(
 ) {
   localStorage.setItem(
     "adm360:" + key,
-    JSON.stringify(
-      value
-    )
+    JSON.stringify(value)
   );
 }
-
 
 /* ============================================================
    CÓDIGO DE SALA
