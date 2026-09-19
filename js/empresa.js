@@ -5234,7 +5234,7 @@ function bindStaticButtons() {
     );
 
 
-  $("#fecharMobile")
+    $("#fecharMobile")
     ?.addEventListener(
       "click",
       () => {
@@ -5245,7 +5245,9 @@ function bindStaticButtons() {
           );
 
       }
-   document.addEventListener(
+    );
+
+  document.addEventListener(
     "keydown",
     event => {
 
@@ -5260,6 +5262,7 @@ function bindStaticButtons() {
     }
   );
 
+}
 /* ============================================================
    INICIALIZAÇÃO
    ============================================================ */
