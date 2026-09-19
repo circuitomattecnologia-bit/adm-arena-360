@@ -785,6 +785,9 @@ async function respondAccessRequest(
         companyId
       ];
 
+    let passwordUpdated =
+  false;
+
 
     if (
       status === "approved" &&
@@ -808,6 +811,9 @@ async function respondAccessRequest(
         companyId
       ] =
         currentCompany;
+
+      passwordUpdated =
+  true;
 
     }
 
@@ -854,13 +860,58 @@ async function respondAccessRequest(
     ] =
       request;
 
+const f =
+  await getFirebase();
 
-    roomData =
-      latest;
+
+if (f) {
+
+  const patchData = {
+    [`accessRequests/${requestKey}`]:
+      request
+  };
 
 
-    await saveRoom();
+  if (
+    passwordUpdated &&
+    currentCompany
+  ) {
 
+    patchData[
+      `companies/${companyId}`
+    ] =
+      currentCompany;
+
+  }
+
+
+  await f.patch(
+
+    f.ref(
+      f.db,
+      `rooms/${currentRoom}`
+    ),
+
+    patchData
+
+  );
+
+
+  roomData =
+    latest;
+
+
+  render();
+
+} else {
+
+  roomData =
+    latest;
+
+
+  await saveRoom();
+
+}
 
     toast(
 
