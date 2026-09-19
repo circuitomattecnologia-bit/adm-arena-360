@@ -1032,6 +1032,9 @@ async function excluirEmpresa(
       latest.accessRequests ||
       {};
 
+    const accessKeysToDelete =
+  [];
+
 
     Object.keys(
       latest.accessRequests
@@ -1052,6 +1055,9 @@ async function excluirEmpresa(
             `${companyId}__mobile`
         ) {
 
+          accessKeysToDelete.push(
+  key
+);
           delete latest
             .accessRequests[
               key
@@ -1073,11 +1079,61 @@ async function excluirEmpresa(
       ];
 
 
-    roomData =
-      latest;
+    const f =
+  await getFirebase();
 
 
-    await saveRoom();
+if (f) {
+
+  const patchData = {
+
+    [`companies/${companyId}`]:
+      null,
+
+    [`mobileConnections/${companyId}`]:
+      null
+
+  };
+
+
+  accessKeysToDelete
+    .forEach(key => {
+
+      patchData[
+        `accessRequests/${key}`
+      ] =
+        null;
+
+    });
+
+
+  await f.patch(
+
+    f.ref(
+      f.db,
+      `rooms/${currentRoom}`
+    ),
+
+    patchData
+
+  );
+
+
+  roomData =
+    latest;
+
+
+  render();
+
+} else {
+
+  roomData =
+    latest;
+
+
+  await saveRoom();
+
+}
 
 
     toast(
