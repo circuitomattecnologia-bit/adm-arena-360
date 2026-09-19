@@ -4629,22 +4629,8 @@ async function bootMobileMode() {
     );
 
 
-  currentRequestKey =
-  `${companyId}__mobile`;
-
-const existingMobileRequest =
-  room.accessRequests?.[
-    currentRequestKey
-  ];
-
-if (
-  existingMobileRequest?.status ===
-  "approved"
-) {
-
-  hideAuthorizationWaiting();
-
-} else {
+   currentRequestKey =
+    `${companyId}__mobile`;
 
   const requestCreated =
     await createAccessRequest({
@@ -4660,7 +4646,6 @@ if (
 
     return true;
   }
-}
 
 
   await listen();
