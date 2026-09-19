@@ -678,6 +678,19 @@ async function checkAccessAuthorization() {
 
 async function enterCompany() {
 
+    // Entrada normal da empresa nunca deve herdar o modo Mobile.
+  mobileMode = false;
+
+  if (
+    window.location.search
+  ) {
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    );
+  }
+
   roomCode =
     $("#codigo")
       ?.value
