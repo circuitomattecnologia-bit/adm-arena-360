@@ -4281,51 +4281,41 @@ async function connectMobile() {
     !company ||
     !roomCode
   ) {
-
     toast(
       "Entre na empresa primeiro."
     );
-
     return;
   }
-
 
   const latest =
     await getRoom();
 
-
   latest.mobileConnections =
     latest.mobileConnections ||
     {};
-
 
   const existing =
     latest.mobileConnections[
       companyId
     ];
 
-
   const code =
     existing?.code ||
     generateMobileCode();
-
 
   const token =
     existing?.token ||
     generateMobileToken();
 
-
   latest.mobileConnections[
     companyId
   ] = {
-
     companyId,
 
     companyName:
       company.name,
 
     code,
-
     token,
 
     status:
@@ -4337,9 +4327,7 @@ async function connectMobile() {
 
     updatedAt:
       now()
-
   };
-
 
   const f =
     await getFirebase();
@@ -4351,7 +4339,9 @@ async function connectMobile() {
         f.db,
         `rooms/${roomCode}/mobileConnections/${companyId}`
       ),
-      latest.mobileConnections[companyId]
+      latest.mobileConnections[
+        companyId
+      ]
     );
 
     room =
@@ -4362,105 +4352,143 @@ async function connectMobile() {
     await saveWholeRoom(
       latest
     );
-
   }
 
-
-  if (
-    $("#codigoMobile")
-  ) {
-
-    $("#codigoMobile")
-      .textContent =
+  if ($("#codigoMobile")) {
+    $("#codigoMobile").textContent =
       code;
-
   }
-
 
   $("#modalMobile")
     ?.classList.remove(
       "hidden"
     );
 
-
   const card =
     $(".mobile-modal-card");
 
+  if (!card) {
+    return;
+  }
 
-  if (
-    card &&
-    !$("#mobileDirectLink")
-  ) {
-
-    const url =
-      new URL(
-        window.location.href
-      );
-
-
-    url.search =
-      "";
-
-
-    url.searchParams.set(
-      "mode",
-      "mobile"
+  const url =
+    new URL(
+      window.location.href
     );
 
+  url.search = "";
 
-    url.searchParams.set(
-      "room",
-      roomCode
+  url.searchParams.set(
+    "mode",
+    "mobile"
+  );
+
+  url.searchParams.set(
+    "room",
+    roomCode
+  );
+
+  url.searchParams.set(
+    "company",
+    companyId
+  );
+
+  url.searchParams.set(
+    "token",
+    token
+  );
+
+  $("#mobileDirectLink")
+    ?.remove();
+
+  const div =
+    document.createElement(
+      "div"
     );
 
+  div.id =
+    "mobileDirectLink";
 
-    url.searchParams.set(
-      "company",
-      companyId
+  const mobileUrl =
+    url.toString();
+
+  const qrUrl =
+    "https://quickchart.io/qr" +
+    "?size=260" +
+    "&margin=2" +
+    "&text=" +
+    encodeURIComponent(
+      mobileUrl
     );
 
+  div.innerHTML = `
 
-    url.searchParams.set(
-      "token",
-      token
-    );
+    <div
+      style="
+        text-align:center;
+        margin:18px 0;
+      "
+    >
 
-
-    const div =
-      document.createElement(
-        "div"
-      );
-
-
-    div.id =
-      "mobileDirectLink";
-
-
-    div.innerHTML = `
+      <p
+        style="
+          font-weight:800;
+          margin-bottom:10px;
+        "
+      >
+        CONECTAR CELULAR
+      </p>
 
       <p class="muted">
-        Abra no celular:
+        Aponte a câmera do celular
+        para o QR Code.
+      </p>
+
+      <img
+        src="${qrUrl}"
+        alt="QR Code da Central Mobile"
+        width="260"
+        height="260"
+        style="
+          display:block;
+          max-width:100%;
+          margin:14px auto;
+          background:#fff;
+          padding:10px;
+          border-radius:16px;
+        "
+      >
+
+      <p class="muted">
+        Ao abrir o QR Code,
+        a solicitação será enviada
+        ao professor.
       </p>
 
       <a
         class="primary"
-        href="${url.toString()}"
+        href="${mobileUrl}"
       >
-        📱 ABRIR CENTRAL MOBILE
+        ABRIR CENTRAL MOBILE
       </a>
 
-    `;
+      <p
+        class="muted"
+        style="margin-top:12px;"
+      >
+        Código alternativo:
+        <strong>${code}</strong>
+      </p>
 
+    </div>
 
-    card.insertBefore(
-      div,
-      $("#fecharMobile")
-    );
+  `;
 
-  }
+  card.insertBefore(
+    div,
+    $("#fecharMobile")
+  );
 }
-
-
 async function bootMobileMode() {
 
   const params =
