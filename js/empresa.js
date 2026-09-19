@@ -4616,15 +4616,38 @@ async function bootMobileMode() {
     );
 
 
-  await createAccessRequest({
+  currentRequestKey =
+  `${companyId}__mobile`;
 
-  source:
-    "mobile",
+const existingMobileRequest =
+  room.accessRequests?.[
+    currentRequestKey
+  ];
 
-  firstAccess:
-    false
+if (
+  existingMobileRequest?.status ===
+  "approved"
+) {
 
-});
+  hideAuthorizationWaiting();
+
+} else {
+
+  const requestCreated =
+    await createAccessRequest({
+      source: "mobile",
+      firstAccess: false
+    });
+
+  if (!requestCreated) {
+
+    toast(
+      "Não foi possível enviar a solicitação Mobile ao professor."
+    );
+
+    return true;
+  }
+}
 
 
   await listen();
