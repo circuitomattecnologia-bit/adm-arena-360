@@ -3024,7 +3024,7 @@ footer{
 
 
 /* ============================================================
-   MODO MOBILE ESTRATÉGICO
+   MODO MOBILE ESTRATÉGICO — SOMENTE CELULAR
    ============================================================ */
 
 body.mobile-only-mode{
@@ -3037,34 +3037,53 @@ body.mobile-only-mode{
     );
 }
 
-
+/* Centraliza a experiência Mobile */
 body.mobile-only-mode .shell{
   max-width:650px;
+  margin:0 auto;
 }
 
-
-body.mobile-only-mode .company-header{
-  align-items:flex-start;
+/* Esconde o cabeçalho normal da Empresa */
+body.mobile-only-mode .topbar{
+  display:none !important;
 }
 
-
-body.mobile-only-mode .metrics{
-  grid-template-columns:
-    repeat(2,minmax(0,1fr));
+/* No jogo, esconde tudo por padrão */
+body.mobile-only-mode #jogo > *{
+  display:none !important;
 }
 
+/* Mantém SOMENTE a Central Mobile */
+body.mobile-only-mode #jogo > #centralMobile{
+  display:block !important;
+}
 
+/* Dentro da Central Mobile, esconde a apresentação
+   e os controles usados pelo computador da empresa */
+body.mobile-only-mode #centralMobile .mobile-strategy-layout{
+  display:none !important;
+}
+
+/* Mostra somente o feed estratégico */
+body.mobile-only-mode #centralMobile #mobileStrategicFeed{
+  display:block !important;
+}
+
+/* Aparência da Central Mobile */
 body.mobile-only-mode .mobile-strategy-card{
+  display:block !important;
   position:relative;
-
-  border-color:
-    rgba(54,216,255,.35);
-
+  margin:24px auto;
+  border-color:rgba(54,216,255,.35);
   box-shadow:
     0 20px 70px
     rgba(25,128,188,.18);
 }
 
+/* Nunca mostrar a tela de entrada comum no Mobile */
+body.mobile-only-mode #entrada{
+  display:none !important;
+}
 
 /* ============================================================
    RESPONSIVO
