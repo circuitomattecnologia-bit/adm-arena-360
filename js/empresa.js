@@ -4184,9 +4184,55 @@ async function handleNegotiationAction(
       negotiation;
 
 
-    await saveWholeRoom(
-      latest
-    );
+    const f =
+      await getFirebase();
+
+    if (f) {
+
+      const patchData = {
+        [`negotiations/${id}`]:
+          negotiation
+      };
+
+      if (
+        negotiation.type ===
+        "venda-campanha"
+      ) {
+
+        patchData[
+          `companies/${negotiation.fromId}`
+        ] =
+          latest.companies[
+            negotiation.fromId
+          ];
+
+        patchData[
+          `companies/${negotiation.toId}`
+        ] =
+          latest.companies[
+            negotiation.toId
+          ];
+
+      }
+
+      await f.patch(
+        f.ref(
+          f.db,
+          `rooms/${roomCode}`
+        ),
+        patchData
+      );
+
+      room =
+        latest;
+
+    } else {
+
+      await saveWholeRoom(
+        latest
+      );
+
+    }
 
 
     toast(
