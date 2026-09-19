@@ -4687,27 +4687,40 @@ function renderMobileStrategicFeed() {
     [];
 
 
-  Object.values(
-    room?.mobileMessages ||
+   Object.values(
+    room?.mobileIntelligence
+      ?.messages ||
     {}
   )
     .filter(
       message =>
-        message.target ===
-          "all" ||
-        message.companyId ===
+        Array.isArray(
+          message.targets
+        ) &&
+        message.targets.includes(
           companyId
+        )
     )
     .forEach(
       message => {
 
         items.push({
 
+          title:
+            message.title ||
+            "Informação estratégica",
+
+          category:
+            message.category ||
+            message.type ||
+            "INFORMAÇÃO",
+
           text:
             message.text ||
             "Informação estratégica",
 
           at:
+            message.sentAt ||
             message.createdAt ||
             0
 
@@ -4715,7 +4728,6 @@ function renderMobileStrategicFeed() {
 
       }
     );
-
 
   if (
     room?.auction?.status ===
