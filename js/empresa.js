@@ -4465,12 +4465,20 @@ async function connectMobile() {
         ao professor.
       </p>
 
-      <a
-        class="primary"
-        href="${mobileUrl}"
+           <p
+        style="
+          margin:16px auto 4px;
+          font-weight:800;
+          max-width:360px;
+        "
       >
-        ABRIR CENTRAL MOBILE
-      </a>
+        USE O CELULAR
+      </p>
+
+      <p class="muted">
+        Escaneie o QR Code com a câmera do celular.
+        Esta tela deve permanecer aberta no computador da empresa.
+      </p>
 
       <p
         class="muted"
