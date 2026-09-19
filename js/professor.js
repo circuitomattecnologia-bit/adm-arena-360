@@ -2224,9 +2224,7 @@ async function sendMobileMessage() {
   }
 
 
-  latest.mobileMessages[
-    id
-  ] = {
+  const message = {
 
     id,
 
@@ -2255,11 +2253,48 @@ async function sendMobileMessage() {
   };
 
 
-  roomData =
-    latest;
+  latest.mobileMessages[
+    id
+  ] =
+    message;
 
 
-  await saveRoom();
+  const f =
+    await getFirebase();
+
+
+  if (f) {
+
+    await f.patch(
+
+      f.ref(
+        f.db,
+        `rooms/${currentRoom}`
+      ),
+
+      {
+        [`mobileMessages/${id}`]:
+          message
+      }
+
+    );
+
+
+    roomData =
+      latest;
+
+
+    render();
+
+  } else {
+
+    roomData =
+      latest;
+
+
+    await saveRoom();
+
+  }
 
 
   if (
@@ -2297,11 +2332,6 @@ async function sendMobileMessage() {
   );
 
 }
-
-
-/* ============================================================
-   RENDER GERAL
-   ============================================================ */
 
 function render() {
 
