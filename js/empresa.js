@@ -4816,7 +4816,7 @@ function renderMobileStrategicFeed() {
   );
 
 
-  box.innerHTML =
+    box.innerHTML =
     items
       .slice(
         0,
@@ -4828,9 +4828,51 @@ function renderMobileStrategicFeed() {
           <div class="notification">
 
             ${
-              escapeHtml(
+              item.category
+                ? `
+                  <small>
+                    ${escapeHtml(
+                      item.category
+                    )}
+                  </small>
+                `
+                : ""
+            }
+
+            ${
+              item.title
+                ? `
+                  <strong
+                    style="display:block; margin:6px 0;"
+                  >
+                    ${escapeHtml(
+                      item.title
+                    )}
+                  </strong>
+                `
+                : ""
+            }
+
+            <div>
+              ${escapeHtml(
                 item.text
-              )
+              )}
+            </div>
+
+            ${
+              item.at
+                ? `
+                  <small
+                    style="display:block; margin-top:8px; opacity:.7;"
+                  >
+                    ${new Date(
+                      Number(item.at)
+                    ).toLocaleString(
+                      "pt-BR"
+                    )}
+                  </small>
+                `
+                : ""
             }
 
           </div>
