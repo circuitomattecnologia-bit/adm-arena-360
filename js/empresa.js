@@ -5245,10 +5245,20 @@ function bindStaticButtons() {
           );
 
       }
-    );
+   document.addEventListener(
+    "keydown",
+    event => {
 
-}
+      if (event.key === "Escape") {
 
+        $("#modalMobile")
+          ?.classList.add(
+            "hidden"
+          );
+
+      }
+    }
+  );
 
 /* ============================================================
    INICIALIZAÇÃO
