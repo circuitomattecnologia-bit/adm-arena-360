@@ -5524,133 +5524,158 @@ async function sendMobileMessage() {
   const type =
     $("#mobileTipo")
       ?.value ||
-    "alerta";
+    "info";
+
+
+  const title =
+    $("#mobileTitulo")
+      ?.value
+      ?.trim() ||
+    "";
 
 
   const text =
     $("#mobileMensagem")
       ?.value
-      .trim();
+      ?.trim() ||
+    "";
 
 
-  if (!text) {
+  if (!title && !text) {
 
     toast(
-      "Digite a informação estratégica.",
+      "Digite uma mensagem.",
       "error"
     );
-
-    $("#mobileMensagem")
-      ?.focus();
 
     return;
   }
 
 
-  const latest =
-    await getLatestRoom();
+  try {
+
+    const latest =
+      await getLatestRoom();
 
 
-  latest.mobileMessages =
-    latest.mobileMessages ||
-    {};
+    latest.mobileMessages =
+      latest.mobileMessages ||
+      {};
 
 
-  const id =
-    `m-${Date.now()}-${Math.floor(
-      Math.random() * 9999
-    )}`;
+    const id =
+      `msg_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 8)}`;
 
 
-  let companyName =
-    "Todas as empresas";
+    const message = {
+
+      id,
+
+      destination,
+
+      type,
+
+      title,
+
+      text,
+
+      createdAt:
+        Date.now(),
+
+      createdBy:
+        "professor"
+
+    };
 
 
-  if (
-    destination !==
-    "all"
-  ) {
-
-    companyName =
-      latest.companies?.[
-        destination
-      ]?.name ||
-      destination;
-
-  }
+    latest.mobileMessages[
+      id
+    ] =
+      message;
 
 
-  latest.mobileMessages[
-    id
-  ] = {
-
-    id,
-
-    target:
-      destination === "all"
-        ? "all"
-        : "company",
-
-    companyId:
-      destination === "all"
-        ? null
-        : destination,
-
-    companyName,
-
-    type,
-
-    text,
-
-    createdAt:
-      Date.now(),
-
-    createdBy:
-      "Prof. Leopoldo"
-
-  };
+    const f =
+      await getFirebase();
 
 
-  roomData =
-    latest;
+    if (f) {
+
+      await f.patch(
+
+        f.ref(
+          f.db,
+          `rooms/${currentRoom}`
+        ),
+
+        {
+          [`mobileMessages/${id}`]:
+            message
+        }
+
+      );
 
 
-  await saveRoom();
+      roomData =
+        latest;
 
 
-  if (
-    $("#mobileMensagem")
-  ) {
+      render();
 
-    $("#mobileMensagem").value =
-      "";
+    } else {
 
-  }
+      roomData =
+        latest;
 
 
-  if (
-    $("#mobileProfessorConfirmacao")
-  ) {
+      await saveRoom();
 
-    $("#mobileProfessorConfirmacao").textContent =
-      destination === "all"
-        ? "A informação estratégica foi enviada para todas as empresas."
-        : `A informação estratégica foi enviada para ${companyName}.`;
-
-  }
+    }
 
 
-  $("#modalProfessorMobile")
-    ?.classList.remove(
-      "hidden"
+    if ($("#mobileTitulo")) {
+      $("#mobileTitulo").value = "";
+    }
+
+
+    if ($("#mobileMensagem")) {
+      $("#mobileMensagem").value = "";
+    }
+
+
+    closeModal(
+      "modalMobileMessage"
     );
 
 
-  toast(
-    destination === "all"
-      ? "📲 Informação enviada para todas as empresas."
-      : `📲 Informação enviada para ${companyName}.`
-  );
+    const companyName =
+      destination === "all"
+        ? ""
+        : (
+            latest.companies?.[
+              destination
+            ]?.name ||
+            destination
+          );
+
+
+    toast(
+      destination === "all"
+        ? "📲 Informação enviada para todas as empresas."
+        : `📲 Informação enviada para ${companyName}.`
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    toast(
+      `Erro ao enviar mensagem: ${error.message}`,
+      "error"
+    );
+
+  }
 
 }
 
