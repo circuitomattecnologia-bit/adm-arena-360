@@ -1787,7 +1787,7 @@ function renderMarketStage(
       <div class="adm360-r12">
 
         <span class="adm360-r12-badge">
-          R12 · CONCORRÊNCIA
+       RODADA 12 DE 20 · CONCORRÊNCIA E POSICIONAMENTO
         </span>
 
         <div class="adm360-r12-box">
@@ -1838,7 +1838,7 @@ function renderMarketStage(
     <div class="adm360-r12">
 
       <span class="adm360-r12-badge">
-        R12 · CONCORRÊNCIA E POSICIONAMENTO
+       RODADA 12 DE 20 · CONCORRÊNCIA E POSICIONAMENTO
       </span>
 
 
@@ -2163,50 +2163,64 @@ function scheduleRender() {
 ========================================================= */
 
 async function connectRoom() {
-  const finder =
-    setInterval(
-      async () => {
+  const code =
+    detectRoomCode();
 
-        const code =
-          detectRoomCode();
-
-        if (!code) return;
-
-        clearInterval(finder);
-
-        roomCode = code;
-
-        const f =
-          await getFirebase();
-
-        if (!f) return;
-
-        f.onValue(
-          f.ref(
-            f.db,
-            `rooms/${roomCode}`
-          ),
-          snapshot => {
-
-            roomData =
-              snapshot.val() ||
-              {};
-
-            if (
-              Number(
-                roomData.round || 0
-              ) === 12
-            ) {
-              scheduleRender();
-            }
-          }
-        );
-
-      },
-      400
+  if (!code) {
+    console.error(
+      "ADM Arena 360 — R12: sala não identificada."
     );
-}
+    return;
+  }
 
+  roomCode = code;
+
+  const f =
+    await getFirebase();
+
+  if (!f) {
+    return;
+  }
+
+  const roomPath =
+    f.ref(
+      f.db,
+      `rooms/${roomCode}`
+    );
+
+  try {
+    const initialSnapshot =
+      await f.get(roomPath);
+
+    roomData =
+      initialSnapshot.val() || {};
+
+    if (
+      Number(roomData.round || 0) === 12
+    ) {
+      scheduleRender();
+    }
+  } catch (error) {
+    console.error(
+      "ADM Arena 360 — R12: erro na leitura inicial:",
+      error
+    );
+  }
+
+  f.onValue(
+    roomPath,
+    snapshot => {
+      roomData =
+        snapshot.val() || {};
+
+      if (
+        Number(roomData.round || 0) === 12
+      ) {
+        scheduleRender();
+      }
+    }
+  );
+}
 
 /* =========================================================
    INÍCIO
