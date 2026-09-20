@@ -129,33 +129,58 @@ function detectRoomCode() {
   return "";
 }
 
-function getVisibleCompany(data = roomData) {
-  if (!data) return null;
+function getVisibleCompany(
+  data = roomData
+) {
+  if (!data) {
+    return null;
+  }
+
+  const directId =
+    window
+      .__ADM360_ROUND_CONTEXT__
+      ?.companyId;
+
+  if (
+    directId &&
+    data.companies?.[directId]
+  ) {
+    return {
+      id: directId,
+      company:
+        data.companies[directId]
+    };
+  }
 
   const visibleName =
-    document.querySelector("#empresaNome")
-      ?.textContent
-      ?.trim() ||
-    document.querySelector("#nomeEmpresa")
-      ?.value
-      ?.trim() ||
+    document.querySelector(
+      "#empresaNome"
+    )?.textContent?.trim() ||
+    document.querySelector(
+      "#nomeEmpresa"
+    )?.value?.trim() ||
     "";
 
   const normalized =
     normalizeName(visibleName);
 
-  if (!normalized) return null;
+  if (!normalized) {
+    return null;
+  }
 
   const found =
     Object.entries(
       data.companies || {}
     ).find(
       ([, company]) =>
-        normalizeName(company?.name) ===
-        normalized
+        normalizeName(
+          company?.name
+        ) === normalized
     );
 
-  if (!found) return null;
+  if (!found) {
+    return null;
+  }
 
   return {
     id: found[0],
