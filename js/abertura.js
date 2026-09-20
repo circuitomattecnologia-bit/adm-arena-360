@@ -985,22 +985,23 @@ async function finishOpening() {
   }
 
 
-  const existingRoom =
+    const existingRoom =
     await readRoom(code);
-
 
   const currentRound =
     Number(
       existingRoom?.round || 0
     );
 
+  const isPhase2 =
+    existingRoom?.opening?.phase === 2;
 
-  if (currentRound > 1) {
-
+  if (
+    currentRound > 1 &&
+    !isPhase2
+  ) {
     hideOpening();
-
     return;
-
   }
 
 
