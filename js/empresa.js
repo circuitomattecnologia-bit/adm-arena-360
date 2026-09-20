@@ -1067,7 +1067,7 @@ async function onRoomChange() {
     handleCurrentEvent();
     handleNegotiations();
   }
-
+render();
   renderMobileStrategicFeed();
 }
 
@@ -5303,14 +5303,21 @@ function render() {
   }
 
 
-  if (
+    if (
     $("#fasePill")
   ) {
 
+    const currentRound =
+      Number(
+        room.round ||
+        0
+      );
+
     $("#fasePill")
       .textContent =
-      room.status ||
-      "Aguardando";
+      currentRound > 0
+        ? `RODADA ${currentRound}/20 • ${room.status || "Em andamento"}`
+        : room.status || "Aguardando";
 
   }
 
@@ -5474,8 +5481,12 @@ function render() {
   }
 
 
-  if (
-    $("#decisaoArea")
+   if (
+    $("#decisaoArea") &&
+    (
+      roundNumber < 11 ||
+      roundNumber > 20
+    )
   ) {
 
     $("#decisaoArea")
