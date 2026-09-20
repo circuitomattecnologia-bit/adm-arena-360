@@ -869,6 +869,263 @@ async function confirmDecision(
         ${result.title}
       </h2>
 
-      <p style="line-height:1.55;">
-        Sua empresa concluiu a
-        última grande decisão
+            <p style="line-height:1.55;">
+        Sua empresa concluiu uma das decisões decisivas da fase final da ADM Arena 360.
+      </p>
+
+      <div style="
+        margin-top:14px;
+        padding:13px;
+        border-radius:11px;
+        background:rgba(71,220,154,.09);
+        border:1px solid rgba(71,220,154,.28);
+      ">
+        Caixa:
+        ${Number(result.caixa || 0) >= 0 ? "+" : ""}
+        ADM$ ${Number(result.caixa || 0).toLocaleString("pt-BR")}
+        <br>
+
+        Clientes:
+        ${Number(result.clientes || 0) >= 0 ? "+" : ""}
+        ${result.clientes || 0}
+        <br>
+
+        Reputação:
+        ${Number(result.reputacao || 0) >= 0 ? "+" : ""}
+        ${result.reputacao || 0}
+        <br>
+
+        Equipe:
+        ${Number(result.equipe || 0) >= 0 ? "+" : ""}
+        ${result.equipe || 0}
+        <br>
+
+        Inovação:
+        ${Number(result.inovacao || 0) >= 0 ? "+" : ""}
+        ${result.inovacao || 0}
+        <br>
+
+        XP:
+        +${result.xp || 0}
+      </div>
+    `;
+
+  } catch (error) {
+    alert(
+      error?.message ||
+      "Não foi possível registrar a decisão da Rodada 19."
+    );
+
+    button.disabled = false;
+    button.textContent =
+      "CONFIRMAR DECISÃO";
+  }
+}
+
+/* =========================================================
+   INÍCIO
+========================================================= */
+
+async function start() {
+  if (PAGE !== "empresa.html") {
+    return;
+  }
+
+  let connected = false;
+
+  const finder = setInterval(
+    async () => {
+      if (connected) return;
+
+      try {
+        const roomCode =
+          detectRoomCode();
+
+        if (!roomCode) return;
+
+        connected = true;
+        clearInterval(finder);
+
+        const f =
+          await getFirebase();
+
+        const roomRef =
+          f.ref(
+            f.db,
+            `rooms/${roomCode}`
+          );
+
+        const initial =
+          await f.get(roomRef);
+
+        const initialRoom =
+          initial.val();
+
+        if (
+          Number(initialRoom?.round || 0) === ROUND
+        ) {
+          const visible =
+            getVisibleCompany(initialRoom);
+
+          if (visible) {
+            if (
+              visible.company?.round19?.decision
+            ) {
+              renderCompletedDecision(
+                visible.company
+              );
+            } else {
+              injectInterface(
+                visible.company
+              );
+            }
+          }
+        }
+
+        f.onValue(
+          roomRef,
+          snapshot => {
+            const room =
+              snapshot.val();
+
+            if (
+              Number(room?.round || 0) !== ROUND
+            ) {
+              document
+                .querySelector("#adm360R19")
+                ?.remove();
+
+              return;
+            }
+
+            const visible =
+              getVisibleCompany(room);
+
+            if (!visible) return;
+
+            if (
+              visible.company?.round19?.decision
+            ) {
+              renderCompletedDecision(
+                visible.company
+              );
+            } else {
+              injectInterface(
+                visible.company
+              );
+            }
+          }
+        );
+
+      } catch (error) {
+        connected = false;
+
+        console.error(
+          "ADM Arena 360 — R19:",
+          error
+        );
+      }
+    },
+    500
+  );
+}
+
+function renderCompletedDecision(
+  company
+) {
+  const host =
+    document.querySelector(
+      "#decisaoArea"
+    );
+
+  if (!host) return;
+
+  let box =
+    document.querySelector(
+      "#adm360R19"
+    );
+
+  if (!box) {
+    box =
+      document.createElement(
+        "section"
+      );
+
+    box.id = "adm360R19";
+
+    box.style.cssText = `
+      margin-top:16px;
+      padding:20px;
+      border:1px solid rgba(71,220,154,.38);
+      border-radius:17px;
+      background:linear-gradient(145deg,#07162e,#10244a);
+      color:white;
+    `;
+
+    host.appendChild(box);
+  }
+
+  const decision =
+    company?.round19?.decision;
+
+  if (!decision) return;
+
+  const effects =
+    decision.effects || {};
+
+  box.innerHTML = `
+    <div style="
+      color:#6ef0b1;
+      font-size:.77rem;
+      font-weight:950;
+      letter-spacing:.08em;
+    ">
+      RODADA 19 DE 20
+    </div>
+
+    <h2>
+      DECISÃO REGISTRADA
+    </h2>
+
+    <h3>
+      ${decision.title || ""}
+    </h3>
+
+    <div style="
+      margin-top:14px;
+      padding:13px;
+      border-radius:11px;
+      background:rgba(71,220,154,.09);
+      border:1px solid rgba(71,220,154,.28);
+      line-height:1.55;
+    ">
+      Caixa:
+      ${Number(effects.caixa || 0) >= 0 ? "+" : ""}
+      ADM$ ${Number(effects.caixa || 0).toLocaleString("pt-BR")}
+      <br>
+
+      Clientes:
+      ${Number(effects.clientes || 0) >= 0 ? "+" : ""}
+      ${effects.clientes || 0}
+      <br>
+
+      Reputação:
+      ${Number(effects.reputacao || 0) >= 0 ? "+" : ""}
+      ${effects.reputacao || 0}
+      <br>
+
+      Equipe:
+      ${Number(effects.equipe || 0) >= 0 ? "+" : ""}
+      ${effects.equipe || 0}
+      <br>
+
+      Inovação:
+      ${Number(effects.inovacao || 0) >= 0 ? "+" : ""}
+      ${effects.inovacao || 0}
+      <br>
+
+      XP:
+      +${effects.xp || 0}
+    </div>
+  `;
+}
