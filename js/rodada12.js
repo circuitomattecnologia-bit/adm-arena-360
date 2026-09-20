@@ -104,7 +104,21 @@ function signed(value) {
 }
 
 function detectRoomCode() {
-  const url = new URL(window.location.href);
+  const directCode =
+    normalizeCode(
+      window
+        .__ADM360_ROUND_CONTEXT__
+        ?.roomCode
+    );
+
+  if (directCode) {
+    return directCode;
+  }
+
+  const url =
+    new URL(
+      window.location.href
+    );
 
   const candidates = [
     url.searchParams.get("sala"),
@@ -119,7 +133,8 @@ function detectRoomCode() {
   ];
 
   for (const value of candidates) {
-    const code = normalizeCode(value);
+    const code =
+      normalizeCode(value);
 
     if (code) {
       return code;
@@ -128,7 +143,6 @@ function detectRoomCode() {
 
   return "";
 }
-
 function getVisibleCompany(
   data = roomData
 ) {
