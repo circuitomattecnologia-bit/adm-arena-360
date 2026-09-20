@@ -11,7 +11,8 @@ const IS_PROFESSOR =
 
 const IS_EMPRESA =
   !!document.querySelector("#nomeEmpresa");
-
+const IS_RANKING =
+  !!document.querySelector("#ranking");
 let roomCode = "";
 let unsubscribe = null;
 let currentNonce = null;
