@@ -821,7 +821,38 @@ async function enterCompany() {
       return;
     }
 
-    await saveCompany();
+        await saveCompany();
+
+    const previousAccess =
+      room.accessRequests?.[
+        companyId
+      ];
+
+    const alreadyAuthorized =
+      previousAccess?.status ===
+        "approved" &&
+      previousAccess?.sessionAuthorized ===
+        true &&
+      !passwordMismatch &&
+      !legacyPassword;
+
+    if (alreadyAuthorized) {
+
+      currentRequestKey =
+        companyId;
+
+      await listen();
+
+      hideAuthorizationWaiting();
+
+      render();
+
+      toast(
+        "Empresa reconectada à Arena."
+      );
+
+      return;
+    }
 
     await createAccessRequest({
       source:
@@ -841,13 +872,10 @@ async function enterCompany() {
     await listen();
 
     toast(
-      "🔒 Solicitação enviada ao professor."
+      "Solicitação enviada ao professor."
     );
 
     return;
-  }
-
-
   /* ========================================================
      NOVA EMPRESA
      ======================================================== */
