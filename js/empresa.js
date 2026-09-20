@@ -1126,11 +1126,12 @@ async function onRoomChange() {
   if (!mobileMode) {
     handleCurrentEvent();
     handleNegotiations();
+
+    await loadCurrentRoundModule();
   }
-render();
+
   renderMobileStrategicFeed();
 }
-
 
 /* ============================================================
    EVENTOS
