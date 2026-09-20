@@ -2792,7 +2792,47 @@ function bindDecision() {
 
             const d =
               button.dataset.d;
+            const advancedConfig =
+              ADVANCED_ROUND_DECISIONS[
+                Number(room.round)
+              ];
 
+            const advancedOption =
+              advancedConfig?.options
+                ?.find(
+                  option =>
+                    option.code === d
+                );
+
+            if (advancedOption) {
+
+              const delta =
+                advancedOption.delta ||
+                {};
+
+              Object.entries(
+                delta
+              )
+                .forEach(
+                  ([field, value]) => {
+
+                    company[field] =
+                      Number(
+                        company[field] ||
+                        0
+                      ) +
+                      Number(
+                        value ||
+                        0
+                      );
+
+                  }
+                );
+
+              company.lastDecisionLabel =
+                advancedOption.label;
+
+            }
 
             if (
               d ===
@@ -2997,10 +3037,10 @@ function bindDecision() {
             company.lastDecisionCode =
               d;
 
-            company.lastDecisionLabel =
-              DECISION_LABELS[d] ||
-              d;
-
+          company.lastDecisionLabel =
+  advancedOption?.label ||
+  DECISION_LABELS[d] ||
+  d;
             company.lastDecisionAt =
               now();
 
