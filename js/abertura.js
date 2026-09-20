@@ -741,7 +741,15 @@ async function showOpening(opening) {
   ) {
     return;
   }
+  const isPhase2 =
+    opening?.phase === 2;
 
+  if (video) {
+    video.src =
+      isPhase2
+        ? VIDEO_FASE2_SRC
+        : VIDEO_SRC;
+  }
 
   const currentRound =
     Number(
