@@ -1585,7 +1585,7 @@ async function start() {
   if (!IS_EMPRESA) return;
 
   installStyle();
-  observePage();
+  
 
   await connectRoom();
 }
