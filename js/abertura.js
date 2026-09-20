@@ -2686,11 +2686,13 @@ async function subscribeToRoom(code) {
           );
 
 
-        if (
+              if (
           room?.opening?.active &&
-          currentRound <= 1
+          (
+            currentRound <= 1 ||
+            room?.opening?.phase === 2
+          )
         ) {
-
           showOpening(
             room.opening
           );
