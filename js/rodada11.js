@@ -1214,7 +1214,7 @@ async function start() {
   if (!IS_EMPRESA) return;
 
   installStyle();
- 
+  bindRound11Actions();
 
   await connectRoom();
 }
