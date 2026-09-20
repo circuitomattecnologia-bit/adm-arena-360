@@ -283,27 +283,27 @@ async function listen() {
     await getFirebase();
 
   if (unsubscribe) {
-
     unsubscribe();
-
-    unsubscribe =
-      null;
-
+    unsubscribe = null;
   }
 
   if (f) {
 
-    const reference =
+    const roomReference =
       f.ref(
         f.db,
         `rooms/${currentRoom}`
       );
 
-    unsubscribe =
+    const accessReference =
+      f.ref(
+        f.db,
+        `rooms/${currentRoom}/accessRequests`
+      );
+
+    const stopRoom =
       f.onValue(
-
-        reference,
-
+        roomReference,
         snapshot => {
 
           roomData =
@@ -311,16 +311,34 @@ async function listen() {
             roomData;
 
           render();
-
         }
-
       );
+
+    const stopAccess =
+      f.onValue(
+        accessReference,
+        snapshot => {
+
+          if (!roomData) {
+            return;
+          }
+
+          roomData.accessRequests =
+            snapshot.val() || {};
+
+          renderAccessRequests();
+        }
+      );
+
+    unsubscribe = () => {
+      stopRoom?.();
+      stopAccess?.();
+    };
 
   } else {
 
     const timer =
       setInterval(
-
         () => {
 
           roomData =
@@ -332,19 +350,14 @@ async function listen() {
           render();
 
         },
-
         900
-
       );
 
     unsubscribe =
       () =>
         clearInterval(timer);
-
   }
-
 }
-
 
 /* ============================================================
    EVENTOS JÁ UTILIZADOS
