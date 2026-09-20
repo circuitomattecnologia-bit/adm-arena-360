@@ -51,10 +51,7 @@ let listenerStarted = false;
 let loadedRoundModule = null;
 
 async function loadCurrentRoundModule() {
-  if (
-    mobileMode ||
-    !room
-  ) {
+  if (mobileMode || !room || !companyId) {
     return;
   }
 
@@ -69,15 +66,18 @@ async function loadCurrentRoundModule() {
     return;
   }
 
+  window.__ADM360_ROUND_CONTEXT__ = {
+    roomCode,
+    companyId,
+    round: currentRound
+  };
+
   if (
     loadedRoundModule ===
     currentRound
   ) {
     return;
   }
-
-  loadedRoundModule =
-    currentRound;
 
   const decisionArea =
     document.querySelector(
@@ -86,13 +86,20 @@ async function loadCurrentRoundModule() {
 
   if (decisionArea) {
     decisionArea.innerHTML =
-      '<div class="muted">Carregando decisão da rodada...</div>';
+      `<div class="muted">
+        RODADA ${currentRound} DE 20<br>
+        Carregando decisão da rodada...
+      </div>`;
   }
 
   try {
     await import(
-      `./rodada${currentRound}.js`
+      `./rodada${currentRound}.js?v=20260920a`
     );
+
+    loadedRoundModule =
+      currentRound;
+
   } catch (error) {
     loadedRoundModule = null;
 
@@ -103,7 +110,10 @@ async function loadCurrentRoundModule() {
 
     if (decisionArea) {
       decisionArea.innerHTML =
-        '<div class="muted">Não foi possível carregar a decisão desta rodada.</div>';
+        `<div class="muted">
+          RODADA ${currentRound} DE 20<br>
+          Não foi possível carregar a decisão desta rodada.
+        </div>`;
     }
   }
 }
