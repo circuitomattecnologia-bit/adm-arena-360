@@ -48,7 +48,65 @@ let currentRequestKey = null;
 let lastEventNonce = null;
 
 let listenerStarted = false;
+let loadedRoundModule = null;
 
+async function loadCurrentRoundModule() {
+  if (
+    mobileMode ||
+    !room
+  ) {
+    return;
+  }
+
+  const currentRound =
+    Number(room.round || 0);
+
+  if (
+    currentRound < 11 ||
+    currentRound > 20
+  ) {
+    loadedRoundModule = null;
+    return;
+  }
+
+  if (
+    loadedRoundModule ===
+    currentRound
+  ) {
+    return;
+  }
+
+  loadedRoundModule =
+    currentRound;
+
+  const decisionArea =
+    document.querySelector(
+      "#decisaoArea"
+    );
+
+  if (decisionArea) {
+    decisionArea.innerHTML =
+      '<div class="muted">Carregando decisão da rodada...</div>';
+  }
+
+  try {
+    await import(
+      `./rodada${currentRound}.js`
+    );
+  } catch (error) {
+    loadedRoundModule = null;
+
+    console.error(
+      `ADM Arena 360 — erro ao carregar Rodada ${currentRound}:`,
+      error
+    );
+
+    if (decisionArea) {
+      decisionArea.innerHTML =
+        '<div class="muted">Não foi possível carregar a decisão desta rodada.</div>';
+    }
+  }
+}
 /*
    Mantém a empresa selecionada na negociação.
    Isso evita que o Firebase atualize a tela e
@@ -981,37 +1039,39 @@ async function enterCompany() {
   await listen();
 
   toast(
-    "🔒 Empresa cadastrada. Aguardando autorização do professor."
-  );
-}
-
-
-/* ============================================================
-   TEMPO REAL
-   ============================================================ */
-
-async function listen() {
-  if (
-    listenerStarted
-  ) {
+ async function onRoomChange() {
+  if (!room) {
     return;
   }
 
-  listenerStarted =
-    true;
+  if (
+    companyId &&
+    room.companies?.[
+      companyId
+    ]
+  ) {
+    company =
+      room.companies[
+        companyId
+      ];
+  }
 
-  const f =
-    await getFirebase();
+  const authorized =
+    await checkAccessAuthorization();
 
-  if (f) {
+  if (!authorized) {
+    return;
+  }
 
-    f.onValue(
-      f.ref(
-        f.db,
-        `rooms/${roomCode}`
-      ),
+  if (!mobileMode) {
+    handleCurrentEvent();
+    handleNegotiations();
 
-      snapshot => {
+    await loadCurrentRoundModule();
+  }
+
+  renderMobileStrategicFeed();
+}
 
         room =
           snapshot.val();
