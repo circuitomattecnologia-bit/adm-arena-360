@@ -1038,40 +1038,38 @@ async function enterCompany() {
 
   await listen();
 
-  toast(
- async function onRoomChange() {
-  if (!room) {
-    return;
-  }
-
-  if (
-    companyId &&
-    room.companies?.[
-      companyId
-    ]
-  ) {
-    company =
-      room.companies[
-        companyId
-      ];
-  }
-
-  const authorized =
-    await checkAccessAuthorization();
-
-  if (!authorized) {
-    return;
-  }
-
-  if (!mobileMode) {
-    handleCurrentEvent();
-    handleNegotiations();
-
-    await loadCurrentRoundModule();
-  }
-
-  renderMobileStrategicFeed();
+   toast(
+    "🔒 Empresa cadastrada. Aguardando autorização do professor."
+  );
 }
+
+
+/* ============================================================
+   TEMPO REAL
+   ============================================================ */
+
+async function listen() {
+  if (
+    listenerStarted
+  ) {
+    return;
+  }
+
+  listenerStarted =
+    true;
+
+  const f =
+    await getFirebase();
+
+  if (f) {
+
+    f.onValue(
+      f.ref(
+        f.db,
+        `rooms/${roomCode}`
+      ),
+
+      snapshot => {
 
         room =
           snapshot.val();
@@ -1097,8 +1095,6 @@ async function enterCompany() {
 
   }
 }
-
-
 async function onRoomChange() {
   if (!room) {
     return;
