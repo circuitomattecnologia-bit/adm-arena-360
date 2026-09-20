@@ -2577,7 +2577,25 @@ function advancedDecisionHtml(
 function decisionHtml(
   roundNumber
 ) {
+  if (
+    roundNumber >= 11 &&
+    roundNumber <= 20
+  ) {
 
+    if (
+      company?.lastDecisionRound ===
+      roundNumber
+    ) {
+
+      return confirmedDecisionHtml();
+
+    }
+
+    return advancedDecisionHtml(
+      roundNumber
+    );
+
+  }
   if (
     company?.lastDecisionRound ===
       roundNumber &&
