@@ -3,6 +3,9 @@ import { getFirebase } from "./firebase-service.js";
 const VIDEO_SRC =
   "./media/Arena_ADM_360_Abertura_v5_COMPACTADO.mp4";
 
+const VIDEO_FASE2_SRC =
+  "./media/ARENA_ADM_360_R11-R20_IMPACTO_CINEMATOGRAFICO_V3 (2).mp4";
+
 const IS_PROFESSOR =
   !!document.querySelector("#iniciar");
 
