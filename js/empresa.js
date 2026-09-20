@@ -2304,7 +2304,276 @@ async function activateViralCampaign() {
 /* ============================================================
    RODADAS
    ============================================================ */
+const ADVANCED_ROUND_DECISIONS = {
 
+  11: {
+    title: "GESTÃO DE PESSOAS",
+    question: "Como a empresa responderá aos novos desafios da equipe?",
+    options: [
+      {
+        code: "r11-capacitar",
+        label: "Investir em capacitação e desenvolvimento",
+        delta: { caixa: -6000, equipe: 12, reputacao: 3, xp: 12 }
+      },
+      {
+        code: "r11-reconhecer",
+        label: "Criar programa de reconhecimento",
+        delta: { caixa: -3500, equipe: 9, reputacao: 4, xp: 10 }
+      },
+      {
+        code: "r11-conter",
+        label: "Conter gastos e reorganizar a equipe",
+        delta: { caixa: 3000, equipe: -5, xp: 6 }
+      }
+    ]
+  },
+
+  12: {
+    title: "CONCORRÊNCIA TOTAL",
+    question: "Como competir sem perder o equilíbrio da empresa?",
+    options: [
+      {
+        code: "r12-preco",
+        label: "Competir com preço e promoção",
+        delta: { caixa: -5000, clientes: 10, reputacao: -2, xp: 8 }
+      },
+      {
+        code: "r12-qualidade",
+        label: "Fortalecer qualidade e atendimento",
+        delta: { caixa: -4000, clientes: 5, reputacao: 10, xp: 12 }
+      },
+      {
+        code: "r12-diferenciar",
+        label: "Criar uma ação de diferenciação",
+        delta: { caixa: -6500, clientes: 7, reputacao: 6, inovacao: 8, xp: 14 }
+      }
+    ]
+  },
+
+  13: {
+    title: "RESPONSABILIDADE SOCIAL",
+    question: "Qual compromisso social a empresa assumirá?",
+    options: [
+      {
+        code: "r13-projeto",
+        label: "Investir em um projeto social estruturado",
+        delta: { caixa: -7000, reputacao: 12, clientes: 3, xp: 14 }
+      },
+      {
+        code: "r13-local",
+        label: "Apoiar uma iniciativa da comunidade",
+        delta: { caixa: -4000, reputacao: 8, xp: 10 }
+      },
+      {
+        code: "r13-minimo",
+        label: "Manter apenas as ações essenciais",
+        delta: { reputacao: -3, xp: 5 }
+      }
+    ]
+  },
+
+  14: {
+    title: "GRANDE CRISE",
+    question: "Qual será a prioridade para atravessar a crise?",
+    options: [
+      {
+        code: "r14-caixa",
+        label: "Proteger o caixa e reduzir despesas",
+        delta: { caixa: 7000, equipe: -5, reputacao: -2, xp: 9 }
+      },
+      {
+        code: "r14-clientes",
+        label: "Proteger clientes e participação de mercado",
+        delta: { caixa: -7000, clientes: 10, reputacao: 6, xp: 13 }
+      },
+      {
+        code: "r14-equilibrio",
+        label: "Distribuir os esforços entre as áreas",
+        delta: { caixa: -3000, clientes: 4, equipe: 4, reputacao: 4, xp: 15 }
+      }
+    ]
+  },
+
+  15: {
+    title: "EXPANSÃO ESTRATÉGICA",
+    question: "Como preparar a empresa para a reta final?",
+    options: [
+      {
+        code: "r15-expandir",
+        label: "Expandir a operação",
+        delta: { caixa: -12000, clientes: 12, equipe: 5, xp: 14 }
+      },
+      {
+        code: "r15-inovar",
+        label: "Investir em inovação e tecnologia",
+        delta: { caixa: -9000, inovacao: 15, reputacao: 4, xp: 15 }
+      },
+      {
+        code: "r15-reserva",
+        label: "Preservar caixa para os desafios finais",
+        delta: { caixa: 5000, xp: 8 }
+      }
+    ]
+  },
+
+  16: {
+    title: "CHOQUE DE MERCADO",
+    question: "Como reagir à mudança brusca do mercado?",
+    options: [
+      {
+        code: "r16-precos",
+        label: "Readequar preços rapidamente",
+        delta: { caixa: 6000, clientes: -5, reputacao: -3, xp: 8 }
+      },
+      {
+        code: "r16-adaptar",
+        label: "Adaptar produtos e atendimento",
+        delta: { caixa: -6000, clientes: 7, reputacao: 7, inovacao: 5, xp: 14 }
+      },
+      {
+        code: "r16-esperar",
+        label: "Preservar recursos e observar o mercado",
+        delta: { clientes: -4, xp: 6 }
+      }
+    ]
+  },
+
+  17: {
+    title: "GUERRA COMERCIAL",
+    question: "Qual estratégia será usada diante da ofensiva dos concorrentes?",
+    options: [
+      {
+        code: "r17-preco",
+        label: "Entrar na guerra de preços",
+        delta: { caixa: -8000, clientes: 12, reputacao: -4, xp: 10 }
+      },
+      {
+        code: "r17-valor",
+        label: "Defender valor, qualidade e atendimento",
+        delta: { caixa: -5000, clientes: 5, reputacao: 10, xp: 14 }
+      },
+      {
+        code: "r17-inovacao",
+        label: "Responder com inovação e diferenciação",
+        delta: { caixa: -9000, clientes: 7, reputacao: 6, inovacao: 12, xp: 16 }
+      }
+    ]
+  },
+
+  18: {
+    title: "CRISE 360°",
+    question: "Onde a empresa concentrará sua reação?",
+    options: [
+      {
+        code: "r18-financas",
+        label: "Priorizar a recuperação financeira",
+        delta: { caixa: 10000, clientes: -4, equipe: -4, xp: 10 }
+      },
+      {
+        code: "r18-pessoas",
+        label: "Proteger equipe, clientes e reputação",
+        delta: { caixa: -8000, clientes: 5, equipe: 10, reputacao: 8, xp: 15 }
+      },
+      {
+        code: "r18-360",
+        label: "Executar um plano integrado de recuperação",
+        delta: { caixa: -6000, clientes: 5, equipe: 6, reputacao: 6, inovacao: 5, xp: 18 }
+      }
+    ]
+  },
+
+  19: {
+    title: "A GRANDE OPORTUNIDADE",
+    question: "Como aproveitar a maior oportunidade da Arena?",
+    options: [
+      {
+        code: "r19-agressivo",
+        label: "Investir fortemente para crescer",
+        delta: { caixa: -15000, clientes: 15, reputacao: 5, inovacao: 8, xp: 17 }
+      },
+      {
+        code: "r19-calculado",
+        label: "Aproveitar com investimento calculado",
+        delta: { caixa: -8000, clientes: 9, reputacao: 6, inovacao: 5, xp: 16 }
+      },
+      {
+        code: "r19-cautela",
+        label: "Preservar a empresa e assumir pouco risco",
+        delta: { caixa: 3000, xp: 8 }
+      }
+    ]
+  },
+
+  20: {
+    title: "CONSELHO FINAL — O LEGADO DA EMPRESA",
+    question: "Qual decisão representará o legado construído pela empresa?",
+    options: [
+      {
+        code: "r20-crescimento",
+        label: "Consolidar crescimento e liderança",
+        delta: { clientes: 8, reputacao: 6, xp: 20 }
+      },
+      {
+        code: "r20-equilibrio",
+        label: "Consolidar uma gestão equilibrada e sustentável",
+        delta: { equipe: 6, reputacao: 8, inovacao: 4, xp: 22 }
+      },
+      {
+        code: "r20-legado",
+        label: "Priorizar legado, pessoas e responsabilidade",
+        delta: { equipe: 8, reputacao: 10, clientes: 4, xp: 22 }
+      }
+    ]
+  }
+
+};
+
+
+function advancedDecisionHtml(
+  roundNumber
+) {
+
+  const config =
+    ADVANCED_ROUND_DECISIONS[
+      roundNumber
+    ];
+
+  if (!config) {
+    return "";
+  }
+
+  return `
+
+    <div class="notification">
+
+      <strong>
+        ${config.title}
+      </strong>
+
+      <p>
+        ${config.question}
+      </p>
+
+    </div>
+
+    <div class="stack">
+
+      ${config.options
+        .map(
+          option => `
+            <button
+              data-d="${option.code}"
+            >
+              ${option.label}
+            </button>
+          `
+        )
+        .join("")}
+
+    </div>
+
+  `;
+}
 function decisionHtml(
   roundNumber
 ) {
