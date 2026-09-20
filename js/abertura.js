@@ -757,14 +757,13 @@ async function showOpening(opening) {
     );
 
 
-  if (currentRound > 1) {
-
+    if (
+    currentRound > 1 &&
+    !isPhase2
+  ) {
     hideOpening();
-
     return;
-
   }
-
 
   if (
     currentNonce ===
