@@ -2897,7 +2897,21 @@ $("#proxima")
         return;
       }
 
+      const previousRound =
+        Number(
+          roomData.round || 0
+        );
 
+      if (previousRound === 10) {
+        roomData.opening = {
+          active: true,
+          phase: 2,
+          nonce:
+            `fase2-${Date.now()}`,
+          startedAt:
+            Date.now()
+        };
+      }
       roomData.round =
         Math.min(
           20,
