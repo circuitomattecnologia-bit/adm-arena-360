@@ -1706,31 +1706,8 @@ async function start() {
     );
 
 
-  new MutationObserver(
-    () => {
-
-      if (
-        Number(
-          roomData?.round ||
-          0
-        ) === ROUND
-      ) {
-
-        setTimeout(
-          render,
-          70
-        );
-      }
-    }
-  ).observe(
-
-    document.body,
-
-    {
-      childList: true,
-      subtree: true
-    }
-  );
+  
+   
 }
 
 
