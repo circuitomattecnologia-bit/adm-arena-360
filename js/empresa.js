@@ -696,7 +696,17 @@ async function enterCompany() {
       ?.value
       .trim()
       .toUpperCase();
+  if (roomCode) {
+    localStorage.setItem(
+      "admArenaRoomCode",
+      roomCode
+    );
 
+    localStorage.setItem(
+      "admArena360Room",
+      roomCode
+    );
+  }
   const name =
     $("#nomeEmpresa")
       ?.value
