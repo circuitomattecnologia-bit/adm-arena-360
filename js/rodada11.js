@@ -1097,7 +1097,44 @@ function render() {
       confirmAction
     );
 }
+function bindRound11Actions() {
+  document.addEventListener(
+    "click",
+    event => {
+      const option =
+        event.target.closest(
+          "[data-r11-action]"
+        );
 
+      if (option) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        selectedAction =
+          option.dataset.r11Action || "";
+
+        render();
+        return;
+      }
+
+      const confirmButton =
+        event.target.closest(
+          "#adm360R11Confirm"
+        );
+
+      if (
+        confirmButton &&
+        selectedAction
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        confirmAction();
+      }
+    },
+    true
+  );
+}
 
 /* =========================================================
    MISSÃO
