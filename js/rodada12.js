@@ -2155,28 +2155,7 @@ function scheduleRender() {
 }
 
 
-function observePage() {
-  const observer =
-    new MutationObserver(
-      () => {
-        if (
-          Number(
-            roomData?.round || 0
-          ) === 12
-        ) {
-          scheduleRender();
-        }
-      }
-    );
 
-  observer.observe(
-    document.body,
-    {
-      childList: true,
-      subtree: true
-    }
-  );
-}
 
 
 /* =========================================================
@@ -2238,7 +2217,7 @@ async function start() {
 
   installStyle();
 
-  observePage();
+ 
 
   await connectRoom();
 }
